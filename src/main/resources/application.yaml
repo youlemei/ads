@@ -1,0 +1,10 @@
+server:
+  port: 9999
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/lwz_ads?useUnicode=true&characterEncoding=UTF8&useSSL=false
+    driver-class-name: com.mysql.jdbc.Driver
+    username: root
+    password: 123456
+
