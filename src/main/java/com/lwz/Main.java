@@ -3,9 +3,10 @@ package com.lwz;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
+import org.springframework.scheduling.annotation.EnableAsync;
 
-@SpringBootApplication(exclude = RedisAutoConfiguration.class)
+@EnableAsync
+@SpringBootApplication
 @MapperScan("com.lwz.ads.mapper")
 public class Main {
 

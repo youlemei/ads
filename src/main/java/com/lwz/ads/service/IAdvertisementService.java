@@ -13,4 +13,13 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface IAdvertisementService extends IService<Advertisement> {
 
+    /**
+     * 获取json_data中的指定field
+     *
+     * @param ad
+     * @param field
+     * @return
+     */
+    String getJsonField(Advertisement ad, String field);
+
 }

@@ -1,18 +1,12 @@
 package com.lwz.ads.timer;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.lwz.ads.entity.PromoteRecord;
-import com.lwz.ads.mapper.PromoteRecordMapper;
 import com.lwz.ads.service.IPromoteRecordService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
-import javax.sound.sampled.Line;
 import java.util.List;
 
 @Slf4j

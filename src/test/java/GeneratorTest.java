@@ -26,7 +26,7 @@ public class GeneratorTest {
         mpg.setGlobalConfig(globalConfig);
 
         DataSourceConfig dataSourceConfig = new DataSourceConfig();
-        dataSourceConfig.setUrl("jdbc:mysql://localhost:3306/lwz_ads?useUnicode=true&characterEncoding=UTF8&useSSL=false");
+        dataSourceConfig.setUrl("jdbc:mysql://localhost:3306/ads?useUnicode=true&characterEncoding=UTF8&useSSL=false");
         dataSourceConfig.setDriverName("com.mysql.jdbc.Driver");
         dataSourceConfig.setUsername("root");
         dataSourceConfig.setPassword("123456");
@@ -44,6 +44,7 @@ public class GeneratorTest {
         //strategy.setSuperEntityClass("你自己的父类实体,没有就不用设置!");
         strategy.setEntityLombokModel(true);
         strategy.setRestControllerStyle(true);
+        //strategy.setSuperServiceImplClass();
         // 公共父类
         //strategy.setSuperControllerClass("你自己的父类控制器,没有就不用设置!");
         // 写于父类中的公共字段

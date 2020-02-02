@@ -4,23 +4,23 @@ public enum TraceTypeEnum {
 
     ASYNC("async"), REDIRECT("302");
 
-    String code;
+    String type;
 
-    TraceTypeEnum(String code){
-        this.code = code;
+    TraceTypeEnum(String type){
+        this.type = type;
     }
 
-    public String getCode() {
-        return code;
+    public String getType() {
+        return type;
     }
 
-    public static TraceTypeEnum valueOfCode(String code){
+    public static TraceTypeEnum valueOfType(String type){
         for (TraceTypeEnum value : values()) {
-            if (value.code.equals(code)) {
+            if (value.type.equals(type)) {
                 return value;
             }
         }
-        throw new IllegalArgumentException("traceType code is wrong. " + code);
+        return null;
     }
 
 }

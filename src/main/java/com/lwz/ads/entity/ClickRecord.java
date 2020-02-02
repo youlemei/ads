@@ -50,6 +50,11 @@ public class ClickRecord implements Serializable {
     private LocalDateTime createTime;
 
     /**
+     * 追踪方式 ASYNC:异步 REDIRECT:302跳转
+     */
+    private String traceType;
+
+    /**
      * IP
      */
     private String ip;
@@ -65,7 +70,7 @@ public class ClickRecord implements Serializable {
     private String paramJson;
 
     /**
-     * 点击状态 0.未转化 1.已转化 2.已核减
+     * 点击状态 0.收到 1.未转化 2.已转化 3.已核减
      */
     private Integer clickStatus;
 
