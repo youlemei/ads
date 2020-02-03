@@ -34,6 +34,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.IntStream;
 
 /**
  * <p>
@@ -58,6 +59,9 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
     @Value("${system.web.domain:localhost}")
     private String domain;
+
+    @Value("${click_record_create_days:1}")
+    private Integer createDays;
 
     @Transactional
     @Override
@@ -95,7 +99,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         });
 
         String date = clickTime.format(DateUtils.yyyyMMdd);
-        getBaseMapper().insert(clickRecord, date);
+        getBaseMapper().insertWithDate(clickRecord, date);
 
         return clickId;
     }
@@ -105,7 +109,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     @Override
     public void asyncHandleClick(String clickId, LocalDateTime clickTime, Advertisement ad) {
         String date = clickTime.format(DateUtils.yyyyMMdd);
-        ClickRecord clickRecord = getBaseMapper().selectById(clickId, date);
+        ClickRecord clickRecord = getBaseMapper().selectByIdWithDate(clickId, date);
 
         if (clickRecord.getClickStatus().intValue() != ClickStatusEnum.RECEIVED.getStatus()) {
             return;
@@ -127,7 +131,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         to.setEditTime(LocalDateTime.now());
 
         if (resp.getStatusCode().is2xxSuccessful()) {
-            getBaseMapper().update(me, to, date);
+            getBaseMapper().updateWithDate(me, to, date);
         }
     }
 
@@ -144,7 +148,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         if (traceType == TraceTypeEnum.REDIRECT) {
 
             String date = clickTime.format(DateUtils.yyyyMMdd);
-            ClickRecord clickRecord = getBaseMapper().selectById(clickId, date);
+            ClickRecord clickRecord = getBaseMapper().selectByIdWithDate(clickId, date);
 
             UriComponents adUri = buildAdTraceUri(clickId, ad, date, clickRecord);
 
@@ -157,11 +161,11 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
             if (resp != null && resp.getStatusCode().is3xxRedirection()) {
                 to.setClickStatus(ClickStatusEnum.UNCONVERTED.getStatus());
-                getBaseMapper().updateById(to, date);
+                getBaseMapper().updateByIdWithDate(to, date);
                 return resp.getHeaders().getLocation();
             } else {
                 to.setClickStatus(ClickStatusEnum.DISCARDED.getStatus());
-                getBaseMapper().updateById(to, date);
+                getBaseMapper().updateByIdWithDate(to, date);
                 return null;
             }
         }
@@ -213,5 +217,14 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
             }
         });
         return adUri;
+    }
+
+    @Transactional
+    @Override
+    public void createTable() {
+        IntStream.range(0, createDays).forEach(day -> {
+            String date = LocalDateTime.now().plusDays(day).format(DateUtils.yyyyMMdd);
+            getBaseMapper().createTable(date);
+        });
     }
 }

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lwz.ads.mapper.ConvertRecordMapper">
+
+    <select id="countSrcConvertSum" resultType="com.lwz.ads.mapper.bean.CountSum">
+        select ad_id adId, channel_id channelId, count(*) `count` from convert_record
+        where create_time >= #{start} and create_time &lt; #{end} group by ad_id, channel_id
+    </select>
+
+    <select id="countConvertSum" resultType="com.lwz.ads.mapper.bean.CountSum">
+        select ad_id adId, channel_id channelId, count(*) `count` from convert_record
+        where create_time >= #{start} and create_time &lt; #{end} and status = 2 group by ad_id, channel_id
+    </select>
+</mapper>

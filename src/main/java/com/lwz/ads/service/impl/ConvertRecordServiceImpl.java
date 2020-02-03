@@ -99,7 +99,7 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
                     clickTo.setEditor("system");
                     clickTo.setEditTime(now);
                     clickTo.setClickStatus(ClickStatusEnum.DEDUCTED.getStatus());
-                    ((ClickRecordMapper) clickRecordService.getBaseMapper()).updateById(clickTo, clickRecord.getCreateTime().format(DateUtils.yyyyMMdd));
+                    ((ClickRecordMapper) clickRecordService.getBaseMapper()).updateByIdWithDate(clickTo, clickRecord.getCreateTime().format(DateUtils.yyyyMMdd));
                 }
                 return;
             }
@@ -140,7 +140,7 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
             clickTo.setEditor("system");
             clickTo.setEditTime(now);
             clickTo.setClickStatus(ClickStatusEnum.CONVERTED.getStatus());
-            ((ClickRecordMapper) clickRecordService.getBaseMapper()).updateById(clickTo, convertRecord.getClickTime().format(DateUtils.yyyyMMdd));
+            ((ClickRecordMapper) clickRecordService.getBaseMapper()).updateByIdWithDate(clickTo, convertRecord.getClickTime().format(DateUtils.yyyyMMdd));
         }
     }
 

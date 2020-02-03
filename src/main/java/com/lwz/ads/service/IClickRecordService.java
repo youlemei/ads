@@ -51,4 +51,9 @@ public interface IClickRecordService extends IService<ClickRecord> {
      * @return
      */
     URI redirectHandleClick(String clickId, LocalDateTime clickTime, Advertisement ad);
+
+    /**
+     * 建未来30天的分表
+     */
+    void createTable();
 }

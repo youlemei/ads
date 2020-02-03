@@ -13,4 +13,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface IAdvertisementReportService extends IService<AdvertisementReport> {
 
+    /**
+     * 统计每日点击/转化
+     */
+    void countAdReport();
 }

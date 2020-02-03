@@ -51,7 +51,7 @@ public class CallbackController {
             if (date.length() != 8 || clickId.length() != 32 || localDate.isAfter(now)) {
                 return Response.with(HttpStatus.BAD_REQUEST);
             }
-            ClickRecord clickRecord = ((ClickRecordMapper) clickRecordService.getBaseMapper()).selectById(clickId, date);
+            ClickRecord clickRecord = ((ClickRecordMapper) clickRecordService.getBaseMapper()).selectByIdWithDate(clickId, date);
             if (clickRecord == null) {
                 return Response.with(HttpStatus.BAD_REQUEST);
             }

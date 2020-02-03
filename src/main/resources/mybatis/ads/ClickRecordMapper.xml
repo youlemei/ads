@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lwz.ads.mapper.ClickRecordMapper">
+
+    <resultMap id="BaseResultMap" type="com.lwz.ads.entity.ClickRecord">
+        <id column="id" jdbcType="VARCHAR" property="id" />
+        <result column="channel_id" jdbcType="BIGINT" property="channelId" />
+        <result column="ad_id" jdbcType="BIGINT" property="adId" />
+        <result column="channel_creator" jdbcType="VARCHAR" property="channelCreator" />
+        <result column="ad_creator" jdbcType="VARCHAR" property="adCreator" />
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+        <result column="trace_type" jdbcType="VARCHAR" property="traceType" />
+        <result column="ip" jdbcType="VARCHAR" property="ip" />
+        <result column="mac" jdbcType="VARCHAR" property="mac" />
+        <result column="param_json" jdbcType="VARCHAR" property="paramJson" />
+        <result column="click_status" jdbcType="SMALLINT" property="clickStatus" />
+        <result column="edit_time" jdbcType="TIMESTAMP" property="editTime" />
+        <result column="editor" jdbcType="VARCHAR" property="editor" />
+        <result column="status" jdbcType="BOOLEAN" property="status" />
+        <result column="json_data" jdbcType="VARCHAR" property="jsonData" />
+    </resultMap>
+
+    <insert id="insertWithDate">
+        insert into click_record_${date}
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="me.id != null">
+                id,
+            </if>
+            <if test="me.channelId != null">
+                channel_id,
+            </if>
+            <if test="me.adId != null">
+                ad_id,
+            </if>
+            <if test="me.channelCreator != null">
+                channel_creator,
+            </if>
+            <if test="me.adCreator != null">
+                ad_creator,
+            </if>
+            <if test="me.createTime != null">
+                create_time,
+            </if>
+            <if test="me.traceType != null">
+                trace_type,
+            </if>
+            <if test="me.ip != null">
+                ip,
+            </if>
+            <if test="me.mac != null">
+                mac,
+            </if>
+            <if test="me.paramJson != null">
+                param_json,
+            </if>
+            <if test="me.clickStatus != null">
+                click_status,
+            </if>
+            <if test="me.editTime != null">
+                edit_time,
+            </if>
+            <if test="me.editor != null">
+                editor,
+            </if>
+            <if test="me.status != null">
+                `status`,
+            </if>
+            <if test="me.jsonData != null">
+                json_data,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="me.id != null">
+                #{me.id,jdbcType=VARCHAR},
+            </if>
+            <if test="me.channelId != null">
+                #{me.channelId,jdbcType=BIGINT},
+            </if>
+            <if test="me.adId != null">
+                #{me.adId,jdbcType=BIGINT},
+            </if>
+            <if test="me.channelCreator != null">
+                #{me.channelCreator,jdbcType=VARCHAR},
+            </if>
+            <if test="me.adCreator != null">
+                #{me.adCreator,jdbcType=VARCHAR},
+            </if>
+            <if test="me.createTime != null">
+                #{me.createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="me.traceType != null">
+                #{me.traceType,jdbcType=VARCHAR},
+            </if>
+            <if test="me.ip != null">
+                #{me.ip,jdbcType=VARCHAR},
+            </if>
+            <if test="me.mac != null">
+                #{me.mac,jdbcType=VARCHAR},
+            </if>
+            <if test="me.paramJson != null">
+                #{me.paramJson,jdbcType=VARCHAR},
+            </if>
+            <if test="me.clickStatus != null">
+                #{me.clickStatus,jdbcType=SMALLINT},
+            </if>
+            <if test="me.editTime != null">
+                #{me.editTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="me.editor != null">
+                #{me.editor,jdbcType=VARCHAR},
+            </if>
+            <if test="me.status != null">
+                #{me.status,jdbcType=BOOLEAN},
+            </if>
+            <if test="me.jsonData != null">
+                #{me.jsonData,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+
+    <sql id="Base_Column_List">
+        id, channel_id, ad_id, channel_creator, ad_creator, create_time, trace_type, ip,
+        mac, param_json, click_status, edit_time, editor, `status`, json_data
+    </sql>
+    <select id="selectByIdWithDate" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from click_record_${date}
+        where id = #{clickId,jdbcType=VARCHAR}
+    </select>
+
+    <update id="updateByIdWithDate">
+        update click_record_${date}
+        <set>
+            <if test="to.channelId != null">
+                channel_id = #{to.channelId,jdbcType=BIGINT},
+            </if>
+            <if test="to.adId != null">
+                ad_id = #{to.adId,jdbcType=BIGINT},
+            </if>
+            <if test="to.channelCreator != null">
+                channel_creator = #{to.channelCreator,jdbcType=VARCHAR},
+            </if>
+            <if test="to.adCreator != null">
+                ad_creator = #{to.adCreator,jdbcType=VARCHAR},
+            </if>
+            <if test="to.createTime != null">
+                create_time = #{to.createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="to.traceType != null">
+                trace_type = #{to.traceType,jdbcType=VARCHAR},
+            </if>
+            <if test="to.ip != null">
+                ip = #{to.ip,jdbcType=VARCHAR},
+            </if>
+            <if test="to.mac != null">
+                mac = #{to.mac,jdbcType=VARCHAR},
+            </if>
+            <if test="to.paramJson != null">
+                param_json = #{to.paramJson,jdbcType=VARCHAR},
+            </if>
+            <if test="to.clickStatus != null">
+                click_status = #{to.clickStatus,jdbcType=SMALLINT},
+            </if>
+            <if test="to.editTime != null">
+                edit_time = #{to.editTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="to.editor != null">
+                editor = #{to.editor,jdbcType=VARCHAR},
+            </if>
+            <if test="to.status != null">
+                `status` = #{to.status,jdbcType=BOOLEAN},
+            </if>
+            <if test="to.jsonData != null">
+                json_data = #{to.jsonData,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{to.id,jdbcType=VARCHAR}
+    </update>
+
+    <update id="updateWithDate">
+        update click_record_${date}
+        <set>
+            <if test="to.channelId != null">
+                channel_id = #{to.channelId,jdbcType=BIGINT},
+            </if>
+            <if test="to.adId != null">
+                ad_id = #{to.adId,jdbcType=BIGINT},
+            </if>
+            <if test="to.channelCreator != null">
+                channel_creator = #{to.channelCreator,jdbcType=VARCHAR},
+            </if>
+            <if test="to.adCreator != null">
+                ad_creator = #{to.adCreator,jdbcType=VARCHAR},
+            </if>
+            <if test="to.createTime != null">
+                create_time = #{to.createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="to.traceType != null">
+                trace_type = #{to.traceType,jdbcType=VARCHAR},
+            </if>
+            <if test="to.ip != null">
+                ip = #{to.ip,jdbcType=VARCHAR},
+            </if>
+            <if test="to.mac != null">
+                mac = #{to.mac,jdbcType=VARCHAR},
+            </if>
+            <if test="to.paramJson != null">
+                param_json = #{to.paramJson,jdbcType=VARCHAR},
+            </if>
+            <if test="to.clickStatus != null">
+                click_status = #{to.clickStatus,jdbcType=SMALLINT},
+            </if>
+            <if test="to.editTime != null">
+                edit_time = #{to.editTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="to.editor != null">
+                editor = #{to.editor,jdbcType=VARCHAR},
+            </if>
+            <if test="to.status != null">
+                `status` = #{to.status,jdbcType=BOOLEAN},
+            </if>
+            <if test="to.jsonData != null">
+                json_data = #{to.jsonData,jdbcType=VARCHAR},
+            </if>
+        </set>
+        <where>
+            <if test="me.id != null">
+                id = #{me.id,jdbcType=VARCHAR}
+            </if>
+            <if test="me.channelId != null">
+                and channel_id = #{me.channelId,jdbcType=BIGINT}
+            </if>
+            <if test="me.adId != null">
+                and ad_id = #{me.adId,jdbcType=BIGINT}
+            </if>
+            <if test="me.channelCreator != null">
+                and channel_creator = #{me.channelCreator,jdbcType=VARCHAR}
+            </if>
+            <if test="me.adCreator != null">
+                and ad_creator = #{me.adCreator,jdbcType=VARCHAR}
+            </if>
+            <if test="me.createTime != null">
+                and create_time = #{me.createTime,jdbcType=TIMESTAMP}
+            </if>
+            <if test="me.traceType != null">
+                and trace_type = #{me.traceType,jdbcType=VARCHAR}
+            </if>
+            <if test="me.ip != null">
+                and ip = #{me.ip,jdbcType=VARCHAR}
+            </if>
+            <if test="me.mac != null">
+                and mac = #{me.mac,jdbcType=VARCHAR}
+            </if>
+            <if test="me.paramJson != null">
+                and param_json = #{me.paramJson,jdbcType=VARCHAR}
+            </if>
+            <if test="me.clickStatus != null">
+                and click_status = #{me.clickStatus,jdbcType=SMALLINT}
+            </if>
+            <if test="me.editTime != null">
+                and edit_time = #{me.editTime,jdbcType=TIMESTAMP}
+            </if>
+            <if test="me.editor != null">
+                and editor = #{me.editor,jdbcType=VARCHAR}
+            </if>
+            <if test="me.status != null">
+                and `status` = #{me.status,jdbcType=BOOLEAN}
+            </if>
+            <if test="me.jsonData != null">
+                and json_data = #{me.jsonData,jdbcType=VARCHAR}
+            </if>
+        </where>
+    </update>
+
+    <select id="countClickSum" resultType="com.lwz.ads.mapper.bean.CountSum">
+        select ad_id adId, channel_id channelId, count(*) `count` from click_record_${date} group by ad_id, channel_id
+    </select>
+
+    <select id="countDeduplicateClickSum" resultType="com.lwz.ads.mapper.bean.CountSum">
+        select ad_id adId, channel_id channelId, count(*) `count` from
+            (select ad_id, channel_id, ip, mac from click_record_${date} group by ad_id, channel_id, ip, mac) tmp
+        group by ad_id, channel_id
+    </select>
+
+</mapper>
