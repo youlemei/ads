@@ -2,6 +2,27 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.lwz.ads.mapper.ConvertRecordMapper">
 
+    <resultMap id="BaseResultMap" type="com.lwz.ads.entity.ConvertRecord">
+        <id column="click_id" jdbcType="VARCHAR" property="clickId" />
+        <result column="click_time" jdbcType="TIMESTAMP" property="clickTime" />
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+        <result column="channel_id" jdbcType="BIGINT" property="channelId" />
+        <result column="ad_id" jdbcType="BIGINT" property="adId" />
+        <result column="channel_creator" jdbcType="VARCHAR" property="channelCreator" />
+        <result column="ad_creator" jdbcType="VARCHAR" property="adCreator" />
+        <result column="callback" jdbcType="VARCHAR" property="callback" />
+        <result column="convert_status" jdbcType="SMALLINT" property="convertStatus" />
+        <result column="edit_time" jdbcType="TIMESTAMP" property="editTime" />
+        <result column="editor" jdbcType="VARCHAR" property="editor" />
+        <result column="status" jdbcType="BOOLEAN" property="status" />
+        <result column="json_data" jdbcType="VARCHAR" property="jsonData" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        click_id, click_time, create_time, channel_id, ad_id, channel_creator, ad_creator,
+        callback, convert_status, edit_time, editor, `status`, json_data
+    </sql>
+
     <select id="countSrcConvertSum" resultType="com.lwz.ads.mapper.bean.CountSum">
         select ad_id adId, channel_id channelId, count(*) `count` from convert_record
         where create_time >= #{start} and create_time &lt; #{end} group by ad_id, channel_id
@@ -9,6 +30,6 @@
 
     <select id="countConvertSum" resultType="com.lwz.ads.mapper.bean.CountSum">
         select ad_id adId, channel_id channelId, count(*) `count` from convert_record
-        where create_time >= #{start} and create_time &lt; #{end} and status = 2 group by ad_id, channel_id
+        where create_time >= #{start} and create_time &lt; #{end} and convert_status = 2 group by ad_id, channel_id
     </select>
 </mapper>

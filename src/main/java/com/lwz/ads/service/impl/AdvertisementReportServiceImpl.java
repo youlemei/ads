@@ -87,9 +87,8 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
     }
 
     private void updateSrcConvertSum(LocalDate adDate, Map<Long, AdvertisementReport> updateMap) {
-        String start = adDate.atStartOfDay().format(DateUtils.DEFAULT_FORMATTER);
-        String end = adDate.plusDays(1).format(DateUtils.DEFAULT_FORMATTER);
-        List<CountSum> countSumList = ((ConvertRecordMapper) convertRecordService.getBaseMapper()).countSrcConvertSum(start, end);
+        List<CountSum> countSumList = ((ConvertRecordMapper) convertRecordService.getBaseMapper())
+                .countSrcConvertSum(adDate.atStartOfDay(), adDate.atStartOfDay().plusDays(1));
         countSumList.forEach(countSum -> {
             Long reportId = getReportId(adDate, countSum);
             updateMap.compute(reportId, (id, report) -> Optional.ofNullable(report)
@@ -99,9 +98,8 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
     }
 
     private void updateConvertSum(LocalDate adDate, Map<Long, AdvertisementReport> updateMap) {
-        String start = adDate.atStartOfDay().format(DateUtils.DEFAULT_FORMATTER);
-        String end = adDate.plusDays(1).format(DateUtils.DEFAULT_FORMATTER);
-        List<CountSum> countSumList = ((ConvertRecordMapper) convertRecordService.getBaseMapper()).countConvertSum(start, end);
+        List<CountSum> countSumList = ((ConvertRecordMapper) convertRecordService.getBaseMapper())
+                .countConvertSum(adDate.atStartOfDay(), adDate.atStartOfDay().plusDays(1));
         countSumList.forEach(countSum -> {
             Long reportId = getReportId(adDate, countSum);
             updateMap.compute(reportId, (id, report) -> Optional.ofNullable(report)
@@ -111,6 +109,7 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
     }
 
     private Long getReportId(LocalDate adDate, CountSum countSum) {
+        //TODO: 测试 在事务中创建的能否查询到
         AdvertisementReport report = getOne(lambdaQuery()
                 .eq(AdvertisementReport::getAdDate, adDate)
                 .eq(AdvertisementReport::getAdId, countSum.getAdId())

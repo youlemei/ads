@@ -283,4 +283,16 @@
         group by ad_id, channel_id
     </select>
 
+    <select id="selectReceiveClick" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from click_record_${date}
+        <where>
+            <if test="end != null">
+                create_time &lt; #{end}
+            </if>
+            and click_status = 0
+        </where>
+    </select>
+
 </mapper>

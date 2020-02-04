@@ -2,6 +2,7 @@ package com.lwz.ads.mapper;
 
 import com.lwz.ads.constant.ClickStatusEnum;
 import com.lwz.ads.entity.ClickRecord;
+import com.lwz.ads.mapper.bean.CountSum;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.junit.BeforeClass;
@@ -9,6 +10,7 @@ import org.junit.Test;
 
 import java.io.FileNotFoundException;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -75,5 +77,20 @@ public class ClickRecordMapperTest {
         to.setEditTime(LocalDateTime.now());
 
         mapper.updateWithDate(me, to, "20200203");
+    }
+
+    @Test
+    public void testCountClickSum() throws FileNotFoundException {
+        List<CountSum> countSums = mapper.countClickSum("20200203");
+    }
+
+    @Test
+    public void testCountDeduplicateClickSum() throws FileNotFoundException {
+        List<CountSum> countSums = mapper.countDeduplicateClickSum("20200203");
+    }
+
+    @Test
+    public void testSelectReceiveClick() throws FileNotFoundException {
+        List<ClickRecord> clickRecordList = mapper.selectReceiveClick(LocalDateTime.now(), "20200203");
     }
 }

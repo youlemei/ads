@@ -6,6 +6,7 @@ import com.lwz.ads.mapper.bean.CountSum;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -32,4 +33,6 @@ public interface ClickRecordMapper extends BaseMapper<ClickRecord> {
     List<CountSum> countClickSum(String date);
 
     List<CountSum> countDeduplicateClickSum(String date);
+
+    List<ClickRecord> selectReceiveClick(@Param("end") LocalDateTime end, @Param("date") String date);
 }

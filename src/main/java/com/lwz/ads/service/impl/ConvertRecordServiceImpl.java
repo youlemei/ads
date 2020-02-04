@@ -6,8 +6,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lwz.ads.constant.ClickStatusEnum;
 import com.lwz.ads.constant.Const;
 import com.lwz.ads.constant.ConvertStatusEnum;
-import com.lwz.ads.entity.Advertisement;
-import com.lwz.ads.entity.Channel;
 import com.lwz.ads.entity.ClickRecord;
 import com.lwz.ads.entity.ConvertRecord;
 import com.lwz.ads.entity.PromoteRecord;
@@ -55,7 +53,7 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
 
     @Transactional
     @Override
-    public boolean saveConvert(ClickRecord clickRecord, Advertisement ad, Channel channel, PromoteRecord promoteRecord) {
+    public boolean saveConvert(ClickRecord clickRecord, PromoteRecord promoteRecord) {
         if (getById(clickRecord.getId()) != null) {
             return false;
         }
@@ -65,10 +63,10 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
                 .setClickId(clickRecord.getId())
                 .setClickTime(clickRecord.getCreateTime())
                 .setCreateTime(LocalDateTime.now())
-                .setAdId(ad.getId())
-                .setAdCreator(ad.getCreator())
-                .setChannelId(channel.getId())
-                .setChannelCreator(channel.getCreator())
+                .setAdId(promoteRecord.getAdId())
+                .setAdCreator(promoteRecord.getAdCreator())
+                .setChannelId(promoteRecord.getChannelId())
+                .setChannelCreator(promoteRecord.getChannelCreator())
                 .setCallback(paramJson.getString(Const.CALLBACK));
         save(convertRecord);
         return true;
@@ -77,9 +75,9 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
     @Async
     @Transactional
     @Override
-    public void asyncHandleConvert(ClickRecord clickRecord, Advertisement ad, Channel channel, PromoteRecord promoteRecord) {
+    public void asyncHandleConvert(String clickId, LocalDateTime clickTime, PromoteRecord promoteRecord) {
 
-        ConvertRecord convertRecord = getById(clickRecord.getId());
+        ConvertRecord convertRecord = getById(clickId);
         if (convertRecord.getConvertStatus().intValue() != ConvertStatusEnum.RECEIVED.getStatus()) {
             return;
         }
@@ -93,25 +91,26 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
             if (index < promoteRecord.getDeductRate()) {
                 //核减
                 to.setConvertStatus(ConvertStatusEnum.DEDUCTED.getStatus());
-                if (update(to, update().eq("click_id", clickRecord.getId()).eq("convert_status", ConvertStatusEnum.RECEIVED.getStatus()))) {
+                if (update(to, update().eq("click_id", clickId).eq("convert_status", ConvertStatusEnum.RECEIVED.getStatus()))) {
                     ClickRecord clickTo = new ClickRecord();
-                    clickTo.setId(clickRecord.getId());
+                    clickTo.setId(clickId);
                     clickTo.setEditor("system");
                     clickTo.setEditTime(now);
                     clickTo.setClickStatus(ClickStatusEnum.DEDUCTED.getStatus());
-                    ((ClickRecordMapper) clickRecordService.getBaseMapper()).updateByIdWithDate(clickTo, clickRecord.getCreateTime().format(DateUtils.yyyyMMdd));
+                    ((ClickRecordMapper) clickRecordService.getBaseMapper()).updateByIdWithDate(clickTo, clickTime.format(DateUtils.yyyyMMdd));
                 }
                 return;
             }
         }
 
         to.setConvertStatus(ConvertStatusEnum.CONVERTED.getStatus());
-        update(to, update().eq("click_id", clickRecord.getId()).eq("convert_status", ConvertStatusEnum.RECEIVED.getStatus()));
+        update(to, update().eq("click_id", clickId).eq("convert_status", ConvertStatusEnum.RECEIVED.getStatus()));
 
+        //TODO: 测试
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization(){
             @Override
             public void afterCommit() {
-                SpringContextHolder.getBean(IConvertRecordService.class).asyncNotifyConvert(clickRecord.getId());
+                SpringContextHolder.getBean(IConvertRecordService.class).asyncNotifyConvert(clickId);
             }
         });
     }

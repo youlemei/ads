@@ -66,10 +66,10 @@ public class CallbackController {
             }
 
             //保存转化记录
-            if (convertRecordService.saveConvert(clickRecord, ad, channel, promoteRecord)) {
+            if (convertRecordService.saveConvert(clickRecord, promoteRecord)) {
 
                 //异步处理转化, 核减, 回调渠道
-                convertRecordService.asyncHandleConvert(clickRecord, ad, channel, promoteRecord);
+                convertRecordService.asyncHandleConvert(clickRecord.getId(), clickRecord.getCreateTime(), promoteRecord);
             }
 
             return Response.success();

@@ -5,6 +5,7 @@ import com.lwz.ads.entity.ConvertRecord;
 import com.lwz.ads.mapper.bean.CountSum;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -17,7 +18,8 @@ import java.util.List;
  */
 public interface ConvertRecordMapper extends BaseMapper<ConvertRecord> {
 
-    List<CountSum> countSrcConvertSum(@Param("start") String start, @Param("end") String end);
+    List<CountSum> countSrcConvertSum(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
-    List<CountSum> countConvertSum(@Param("start") String start, @Param("end") String end);
+    List<CountSum> countConvertSum(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
 }
