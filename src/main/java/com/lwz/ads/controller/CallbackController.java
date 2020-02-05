@@ -15,6 +15,7 @@ import com.lwz.ads.service.IPromoteRecordService;
 import com.lwz.ads.util.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -65,13 +66,15 @@ public class CallbackController {
                 return Response.fail(400, "已停止推广");
             }
 
-            //保存转化记录
+            //保存转化记录, 核减
             if (convertRecordService.saveConvert(clickRecord, promoteRecord)) {
-
-                //异步处理转化, 核减, 回调渠道
-                convertRecordService.asyncHandleConvert(clickRecord.getId(), clickRecord.getCreateTime(), promoteRecord);
+                //异步回调渠道
+                convertRecordService.asyncNotifyConvert(clickRecord.getId());
             }
 
+            return Response.success();
+        } catch (DuplicateKeyException e) {
+            log.info("callback duplicate date:{} clickId:{}", date, clickId);
             return Response.success();
         } catch (Exception e) {
             log.error("callback fail. date:{} clickId:{} err:{}", date, clickId, e.getMessage(), e);

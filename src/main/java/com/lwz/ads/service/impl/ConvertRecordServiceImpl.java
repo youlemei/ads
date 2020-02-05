@@ -9,12 +9,9 @@ import com.lwz.ads.constant.ConvertStatusEnum;
 import com.lwz.ads.entity.ClickRecord;
 import com.lwz.ads.entity.ConvertRecord;
 import com.lwz.ads.entity.PromoteRecord;
-import com.lwz.ads.mapper.ClickRecordMapper;
 import com.lwz.ads.mapper.ConvertRecordMapper;
-import com.lwz.ads.service.IClickRecordService;
 import com.lwz.ads.service.IConvertRecordService;
 import com.lwz.ads.util.DateUtils;
-import com.lwz.ads.util.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,8 +19,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -46,7 +41,7 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
     private final Random random = new Random();
 
     @Autowired
-    private IClickRecordService clickRecordService;
+    private ClickRecordServiceImpl clickRecordService;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -57,7 +52,7 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
         if (getById(clickRecord.getId()) != null) {
             return false;
         }
-        //存表
+
         JSONObject paramJson = JSON.parseObject(clickRecord.getParamJson());
         ConvertRecord convertRecord = new ConvertRecord()
                 .setClickId(clickRecord.getId())
@@ -68,51 +63,27 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
                 .setChannelId(promoteRecord.getChannelId())
                 .setChannelCreator(promoteRecord.getChannelCreator())
                 .setCallback(paramJson.getString(Const.CALLBACK));
-        save(convertRecord);
-        return true;
-    }
 
-    @Async
-    @Transactional
-    @Override
-    public void asyncHandleConvert(String clickId, LocalDateTime clickTime, PromoteRecord promoteRecord) {
-
-        ConvertRecord convertRecord = getById(clickId);
-        if (convertRecord.getConvertStatus().intValue() != ConvertStatusEnum.RECEIVED.getStatus()) {
-            return;
-        }
-
-        LocalDateTime now = LocalDateTime.now();
-        ConvertRecord to = new ConvertRecord();
-        to.setEditor("system");
-        to.setEditTime(now);
         if (promoteRecord.getDeductRate() != null && promoteRecord.getDeductRate() > 0) {
             int index = random.nextInt(100);
             if (index < promoteRecord.getDeductRate()) {
                 //核减
-                to.setConvertStatus(ConvertStatusEnum.DEDUCTED.getStatus());
-                if (update(to, update().eq("click_id", clickId).eq("convert_status", ConvertStatusEnum.RECEIVED.getStatus()))) {
-                    ClickRecord clickTo = new ClickRecord();
-                    clickTo.setId(clickId);
-                    clickTo.setEditor("system");
-                    clickTo.setEditTime(now);
-                    clickTo.setClickStatus(ClickStatusEnum.DEDUCTED.getStatus());
-                    ((ClickRecordMapper) clickRecordService.getBaseMapper()).updateByIdWithDate(clickTo, clickTime.format(DateUtils.yyyyMMdd));
-                }
-                return;
+                convertRecord.setConvertStatus(ConvertStatusEnum.DEDUCTED.getStatus());
+                save(convertRecord);
+
+                ClickRecord to = new ClickRecord();
+                to.setId(clickRecord.getId());
+                to.setEditor("system");
+                to.setEditTime(LocalDateTime.now());
+                to.setClickStatus(ClickStatusEnum.DEDUCTED.getStatus());
+                clickRecordService.getBaseMapper().updateByIdWithDate(to, clickRecord.getCreateTime().format(DateUtils.yyyyMMdd));
+                return false;
             }
         }
-
-        to.setConvertStatus(ConvertStatusEnum.CONVERTED.getStatus());
-        update(to, update().eq("click_id", clickId).eq("convert_status", ConvertStatusEnum.RECEIVED.getStatus()));
-
-        //TODO: 测试
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization(){
-            @Override
-            public void afterCommit() {
-                SpringContextHolder.getBean(IConvertRecordService.class).asyncNotifyConvert(clickId);
-            }
-        });
+        //转化
+        convertRecord.setConvertStatus(ConvertStatusEnum.CONVERTED.getStatus());
+        save(convertRecord);
+        return true;
     }
 
     @Async
@@ -139,7 +110,7 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
             clickTo.setEditor("system");
             clickTo.setEditTime(now);
             clickTo.setClickStatus(ClickStatusEnum.CONVERTED.getStatus());
-            ((ClickRecordMapper) clickRecordService.getBaseMapper()).updateByIdWithDate(clickTo, convertRecord.getClickTime().format(DateUtils.yyyyMMdd));
+            clickRecordService.getBaseMapper().updateByIdWithDate(clickTo, convertRecord.getClickTime().format(DateUtils.yyyyMMdd));
         }
     }
 

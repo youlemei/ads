@@ -38,7 +38,7 @@ public class RetryClickHandleTimer {
                 .forEach(clickRecord -> doRetry(yesterday, clickRecord));
     }
 
-    private void doRetry(String today, ClickRecord clickRecord) {
+    private void doRetry(String date, ClickRecord clickRecord) {
         Advertisement ad = advertisementService.getById(clickRecord.getAdId());
         TraceTypeEnum adTraceType = TraceTypeEnum.valueOfType(ad.getTraceType());
         if (adTraceType == TraceTypeEnum.REDIRECT) {
@@ -47,7 +47,7 @@ public class RetryClickHandleTimer {
             to.setClickStatus(ClickStatusEnum.DISCARDED.getStatus());
             to.setEditor("system");
             to.setEditTime(LocalDateTime.now());
-            clickRecordService.getBaseMapper().updateByIdWithDate(to, today);
+            clickRecordService.getBaseMapper().updateByIdWithDate(to, date);
         } else {
             clickRecordService.asyncHandleClick(clickRecord.getId(), clickRecord.getCreateTime(), ad);
         }

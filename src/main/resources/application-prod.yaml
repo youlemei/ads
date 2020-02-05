@@ -20,3 +20,7 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 click_record_create_days: 7
+
+system:
+  web:
+    domain: 2020funfantasy.cn

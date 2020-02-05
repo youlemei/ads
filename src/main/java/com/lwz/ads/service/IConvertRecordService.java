@@ -5,8 +5,6 @@ import com.lwz.ads.entity.ClickRecord;
 import com.lwz.ads.entity.ConvertRecord;
 import com.lwz.ads.entity.PromoteRecord;
 
-import java.time.LocalDateTime;
-
 /**
  * <p>
  * 转化记录 服务类
@@ -24,15 +22,6 @@ public interface IConvertRecordService extends IService<ConvertRecord> {
      * @param promoteRecord
      */
     boolean saveConvert(ClickRecord clickRecord, PromoteRecord promoteRecord);
-
-    /**
-     * 异步处理转化
-     *
-     * @param clickId
-     * @param clickTime
-     * @param promoteRecord
-     */
-    void asyncHandleConvert(String clickId, LocalDateTime clickTime, PromoteRecord promoteRecord);
 
     /**
      * 异步通知渠道转化
