@@ -31,26 +31,24 @@ public interface IClickRecordService extends IService<ClickRecord> {
      * @param channel
      * @return 点击id
      */
-    String saveClick(LocalDateTime clickTime, Map<String, Object> request, String type, PromoteRecord promoteRecord, Advertisement ad, Channel channel);
+    ClickRecord saveClick(LocalDateTime clickTime, Map<String, Object> request, String type, PromoteRecord promoteRecord, Advertisement ad, Channel channel);
 
     /**
      * 异步通知广告点击
      *
-     * @param clickId 点击id
-     * @param clickTime
+     * @param clickRecord
      * @param ad
      */
-    void asyncHandleClick(String clickId, LocalDateTime clickTime, Advertisement ad);
+    void asyncHandleClick(ClickRecord clickRecord, Advertisement ad);
 
     /**
      * 通知广告点击, 响应302跳转
      *
-     * @param clickId
-     * @param clickTime
+     * @param clickRecord
      * @param ad
      * @return
      */
-    URI redirectHandleClick(String clickId, LocalDateTime clickTime, Advertisement ad);
+    URI redirectHandleClick(ClickRecord clickRecord, Advertisement ad);
 
     /**
      * 建未来30天的分表

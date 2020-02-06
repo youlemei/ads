@@ -42,7 +42,7 @@ public class PromoteRecordServiceImpl extends ServiceImpl<PromoteRecordMapper, P
     @Value("${system.web.scheme:http}")
     private String scheme;
 
-    @Value("${system.web.domain:localhost}")
+    @Value("${system.web.domain:localhost:9999}")
     private String domain;
 
     @Transactional
@@ -90,7 +90,7 @@ public class PromoteRecordServiceImpl extends ServiceImpl<PromoteRecordMapper, P
 
         update().eq("id", promoteRecord.getId()).eq("promote_status", PromoteStatusEnum.CREATING.getStatus()).update(to);
 
-        log.info("doCreateClickUrl done. adId:{} channelId:{} clickUri:{}", promoteRecord.getAdId(), promoteRecord.getChannelId(), clickUri);
+        log.info("doCreateClickUrl success. adId:{} channelId:{} clickUri:{}", promoteRecord.getAdId(), promoteRecord.getChannelId(), clickUri);
     }
 
 }

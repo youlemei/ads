@@ -31,6 +31,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -57,7 +58,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     @Value("${system.web.scheme:http}")
     private String scheme;
 
-    @Value("${system.web.domain:localhost}")
+    @Value("${system.web.domain:localhost:9999}")
     private String domain;
 
     @Value("${click_record_create_days:1}")
@@ -65,7 +66,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
     @Transactional
     @Override
-    public String saveClick(LocalDateTime clickTime, Map<String, Object> request, String type, PromoteRecord promoteRecord, Advertisement ad, Channel channel) {
+    public ClickRecord saveClick(LocalDateTime clickTime, Map<String, Object> request, String type, PromoteRecord promoteRecord, Advertisement ad, Channel channel) {
 
         String clickId = UUID.randomUUID().toString().replaceAll("-", "");
         ClickRecord clickRecord = new ClickRecord()
@@ -76,7 +77,8 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                 .setChannelCreator(channel.getCreator())
                 .setCreateTime(clickTime)
                 .setTraceType(type)
-                .setParamJson(JSON.toJSONString(request));
+                .setParamJson(JSON.toJSONString(request))
+                .setClickStatus(ClickStatusEnum.RECEIVED.getStatus());
 
         //存表, 分表
         String ip = advertisementService.getJsonField(ad, Const.IP);
@@ -100,25 +102,25 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
         String date = clickTime.format(DateUtils.yyyyMMdd);
         getBaseMapper().insertWithDate(clickRecord, date);
-
-        return clickId;
+        return clickRecord;
     }
 
     @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Override
-    public void asyncHandleClick(String clickId, LocalDateTime clickTime, Advertisement ad) {
-        String date = clickTime.format(DateUtils.yyyyMMdd);
-        ClickRecord clickRecord = getBaseMapper().selectByIdWithDate(clickId, date);
+    public void asyncHandleClick(ClickRecord clickRecord, Advertisement ad) {
 
         if (clickRecord.getClickStatus().intValue() != ClickStatusEnum.RECEIVED.getStatus()) {
             return;
         }
 
-        UriComponents adUri = buildAdTraceUri(clickId, ad, date, clickRecord);
-
+        String date = clickRecord.getCreateTime().format(DateUtils.yyyyMMdd);
+        UriComponents adUri = buildAdTraceUri(clickRecord.getId(), ad, date, clickRecord);
         ResponseEntity<String> resp = requestTraceUri("asyncHandleClick", adUri);
-        if (resp == null) {
+
+        if (resp == null || !resp.getStatusCode().is2xxSuccessful()) {
+            //增加重试次数
+            getBaseMapper().incrRetryTimes(clickRecord.getId(), date);
             return;
         }
 
@@ -129,29 +131,25 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         to.setClickStatus(ClickStatusEnum.UNCONVERTED.getStatus());
         to.setEditor("system");
         to.setEditTime(LocalDateTime.now());
+        getBaseMapper().updateWithDate(me, to, date);
 
-        if (resp.getStatusCode().is2xxSuccessful()) {
-            getBaseMapper().updateWithDate(me, to, date);
-        }
+        log.info("asyncHandleClick success. date:{} clickId:{}", date, clickRecord.getId());
     }
 
     @Transactional
     @Override
-    public URI redirectHandleClick(String clickId, LocalDateTime clickTime, Advertisement ad) {
+    public URI redirectHandleClick(ClickRecord clickRecord, Advertisement ad) {
 
         TraceTypeEnum traceType = TraceTypeEnum.valueOfType(ad.getTraceType());
         if (traceType == TraceTypeEnum.ASYNC) {
-            SpringContextHolder.getBean(IClickRecordService.class).asyncHandleClick(clickId, clickTime, ad);
+            SpringContextHolder.getBean(IClickRecordService.class).asyncHandleClick(clickRecord, ad);
             return URI.create(ad.getPreviewUrl());
         }
 
         if (traceType == TraceTypeEnum.REDIRECT) {
 
-            String date = clickTime.format(DateUtils.yyyyMMdd);
-            ClickRecord clickRecord = getBaseMapper().selectByIdWithDate(clickId, date);
-
-            UriComponents adUri = buildAdTraceUri(clickId, ad, date, clickRecord);
-
+            String date = clickRecord.getCreateTime().format(DateUtils.yyyyMMdd);
+            UriComponents adUri = buildAdTraceUri(clickRecord.getId(), ad, date, clickRecord);
             ResponseEntity<String> resp = requestTraceUri("redirectHandleClick", adUri);
 
             ClickRecord to = new ClickRecord();
@@ -174,30 +172,24 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     }
 
     private ResponseEntity<String> requestTraceUri(String func, UriComponents adUri) {
-        return doRequestTraceUri(func, adUri, 1);
-    }
-
-    private ResponseEntity<String> doRequestTraceUri(String func, UriComponents adUri, int times) {
         try {
-            if (times > 2) {
-                return null;
-            }
             String uri = adUri.toUriString();
             log.info("{} uri:{}", func ,uri);
             ResponseEntity<String> resp = restTemplate.getForEntity(uri, String.class);
             log.info("{} uri:{} resp:{}", func, uri, resp);
             return resp;
         } catch (Exception e) {
-            log.error("doRequestTraceUri fail. func:{} adUri:{} times:{} err:{}", func, adUri, times++, e.getMessage(), e);
-            return doRequestTraceUri(func, adUri, times);
+            log.error("requestTraceUri fail. func:{} adUri:{} err:{}", func, adUri, e.getMessage(), e);
+            return null;
         }
     }
 
     private UriComponents buildAdTraceUri(String clickId, Advertisement ad, String date, ClickRecord clickRecord) {
         JSONObject paramJson = JSON.parseObject(clickRecord.getParamJson());
         String callback = advertisementService.getJsonField(ad, Const.CALLBACK);
-        UriComponents adUri = UriComponentsBuilder.fromHttpUrl(ad.getTraceUrl()).build();
-        adUri.getQueryParams().forEach((key, list) -> {
+        UriComponentsBuilder adUriBuilder = UriComponentsBuilder.fromHttpUrl(ad.getTraceUrl());
+        UriComponents traceUri = adUriBuilder.build();
+        traceUri.getQueryParams().forEach((key, list) -> {
             if (!CollectionUtils.isEmpty(list)) {
                 String value = list.get(0);
                 if (StringUtils.hasLength(value) && PromoteRecordServiceImpl.PARAM_PATTERN.matcher(value).matches()) {
@@ -209,14 +201,14 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                                 .queryParam("date", date)
                                 .queryParam("clickId", clickId)
                                 .build();
-                        list.set(0, callbackUri.toUriString());
+                        adUriBuilder.replaceQueryParam(key, Arrays.asList(callbackUri.toUriString()));
                     } else {
-                        list.set(0, paramJson.getString(key));
+                        adUriBuilder.replaceQueryParam(key, Arrays.asList(paramJson.getString(key)));
                     }
                 }
             }
         });
-        return adUri;
+        return adUriBuilder.build();
     }
 
     @Transactional

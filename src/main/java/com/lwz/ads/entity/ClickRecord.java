@@ -75,6 +75,11 @@ public class ClickRecord implements Serializable {
     private Integer clickStatus;
 
     /**
+     * 重试次数
+     */
+    private Integer retryTimes;
+
+    /**
      * 编辑时间
      */
     private LocalDateTime editTime;

@@ -68,6 +68,11 @@ public class ConvertRecord implements Serializable {
     private Integer convertStatus;
 
     /**
+     * 重试次数
+     */
+    private Integer retryTimes;
+
+    /**
      * 编辑时间
      */
     private LocalDateTime editTime;

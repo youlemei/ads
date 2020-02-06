@@ -27,6 +27,8 @@ public class RetryClickHandleTimer {
 
     @Scheduled(fixedDelay = 20000)
     public void work(){
+
+        //重试1分钟前-两天内
         LocalDateTime now = LocalDateTime.now().plusMinutes(-1);
 
         String today = now.format(DateUtils.yyyyMMdd);
@@ -49,7 +51,7 @@ public class RetryClickHandleTimer {
             to.setEditTime(LocalDateTime.now());
             clickRecordService.getBaseMapper().updateByIdWithDate(to, date);
         } else {
-            clickRecordService.asyncHandleClick(clickRecord.getId(), clickRecord.getCreateTime(), ad);
+            clickRecordService.asyncHandleClick(clickRecord, ad);
         }
     }
 

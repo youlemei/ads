@@ -5,6 +5,7 @@ import com.lwz.ads.constant.PromoteStatusEnum;
 import com.lwz.ads.constant.TraceTypeEnum;
 import com.lwz.ads.entity.Advertisement;
 import com.lwz.ads.entity.Channel;
+import com.lwz.ads.entity.ClickRecord;
 import com.lwz.ads.entity.PromoteRecord;
 import com.lwz.ads.service.IAdvertisementService;
 import com.lwz.ads.service.IChannelService;
@@ -57,6 +58,7 @@ public class ClickController {
             //检查
             TraceTypeEnum traceType = TraceTypeEnum.valueOfType(type);
             if (adId <= 0 || channelId <= 0 || traceType == null) {
+                log.warn("click invalid param. adId:{} channel:{}", adId, channelId);
                 return ResponseEntity.badRequest().build();
             }
             //TODO: 缓存
@@ -81,21 +83,22 @@ public class ClickController {
             }
 
             //保存点击记录
-            String clickId = clickRecordService.saveClick(clickTime, request, type, promoteRecord, ad, channel);
-
-            log.info("click ok. adId:{} channelId:{}", adId, channelId);
+            ClickRecord clickRecord = clickRecordService.saveClick(clickTime, request, type, promoteRecord, ad, channel);
 
             //TODO: 处理器
             switch (traceType) {
                 case ASYNC:
-                    clickRecordService.asyncHandleClick(clickId, clickTime, ad);
+                    clickRecordService.asyncHandleClick(clickRecord, ad);
+                    log.info("click asyncHandleClick ok. adId:{} channelId:{}", adId, channelId);
                     return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(Response.success());
                 case REDIRECT:
                     //302
-                    URI uri = clickRecordService.redirectHandleClick(clickId, clickTime, ad);
+                    URI uri = clickRecordService.redirectHandleClick(clickRecord, ad);
                     if (uri != null) {
+                        log.info("click redirectHandleClick ok. adId:{} channelId:{} uri:{}", adId, channelId, uri);
                         return ResponseEntity.status(HttpStatus.FOUND).location(uri).build();
                     } else {
+                        log.warn("click redirectHandleClick fail. uri is null adId:{} channelId:{}", adId, channelId);
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
                     }
                 default:

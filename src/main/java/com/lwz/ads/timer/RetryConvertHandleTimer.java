@@ -21,6 +21,8 @@ public class RetryConvertHandleTimer {
 
     @Scheduled(fixedDelay = 20000)
     public void work(){
+
+        //重试1分钟前-两天内
         LocalDateTime now = LocalDateTime.now().plusMinutes(-1);
         String start = now.plusDays(-2).format(DateUtils.DEFAULT_FORMATTER);
         String end = now.format(DateUtils.DEFAULT_FORMATTER);
@@ -28,8 +30,10 @@ public class RetryConvertHandleTimer {
         //通知渠道
         convertRecordService.lambdaQuery()
                 .between(ConvertRecord::getCreateTime, start, end)
-                .eq(ConvertRecord::getConvertStatus, ConvertStatusEnum.CONVERTED.getStatus()).list()
-                .forEach(convertRecord -> convertRecordService.asyncNotifyConvert(convertRecord.getClickId()));
+                .eq(ConvertRecord::getConvertStatus, ConvertStatusEnum.CONVERTED.getStatus())
+                .lt(ConvertRecord::getRetryTimes, 2)
+                .list()
+                .forEach(convertRecord -> convertRecordService.asyncNotifyConvert(convertRecord));
 
     }
 

@@ -21,12 +21,12 @@ public interface IConvertRecordService extends IService<ConvertRecord> {
      * @param clickRecord
      * @param promoteRecord
      */
-    boolean saveConvert(ClickRecord clickRecord, PromoteRecord promoteRecord);
+    ConvertRecord saveConvert(ClickRecord clickRecord, PromoteRecord promoteRecord);
 
     /**
      * 异步通知渠道转化
      *
-     * @param clickId
+     * @param convertRecord
      */
-    void asyncNotifyConvert(String clickId);
+    void asyncNotifyConvert(ConvertRecord convertRecord);
 }

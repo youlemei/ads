@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.lwz.ads.entity.ConvertRecord;
 import com.lwz.ads.mapper.bean.CountSum;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,4 +23,6 @@ public interface ConvertRecordMapper extends BaseMapper<ConvertRecord> {
 
     List<CountSum> countConvertSum(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
+    @Update("update convert_record set retry_times = retry_times + 1 where click_id = #{clickId}")
+    int incrRetryTimes(String clickId);
 }

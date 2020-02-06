@@ -19,20 +19,22 @@ import java.util.List;
  */
 public interface ClickRecordMapper extends BaseMapper<ClickRecord> {
 
-    void insertWithDate(@Param("me") ClickRecord clickRecord, @Param("date") String date);
+    int insertWithDate(@Param("me") ClickRecord clickRecord, @Param("date") String date);
 
     ClickRecord selectByIdWithDate(@Param("clickId") String clickId, @Param("date") String date);
 
-    void updateByIdWithDate(@Param("to") ClickRecord to, @Param("date") String date);
+    int updateByIdWithDate(@Param("to") ClickRecord to, @Param("date") String date);
 
-    void updateWithDate(@Param("me") ClickRecord me, @Param("to") ClickRecord to, @Param("date") String date);
+    int updateWithDate(@Param("me") ClickRecord me, @Param("to") ClickRecord to, @Param("date") String date);
 
     @Update("create table if not exists click_record_${date} like click_record")
-    void createTable(String date);
+    int createTable(String date);
 
     List<CountSum> countClickSum(String date);
 
     List<CountSum> countDeduplicateClickSum(String date);
 
     List<ClickRecord> selectReceiveClick(@Param("end") LocalDateTime end, @Param("date") String date);
+
+    int incrRetryTimes(@Param("clickId") String clickId, @Param("date") String date);
 }

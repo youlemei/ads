@@ -48,9 +48,9 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
 
     @Transactional
     @Override
-    public boolean saveConvert(ClickRecord clickRecord, PromoteRecord promoteRecord) {
-        if (getById(clickRecord.getId()) != null) {
-            return false;
+    public ConvertRecord saveConvert(ClickRecord clickRecord, PromoteRecord promoteRecord) {
+        if (lambdaQuery().eq(ConvertRecord::getClickId, clickRecord.getId()).count() > 0) {
+            return null;
         }
 
         JSONObject paramJson = JSON.parseObject(clickRecord.getParamJson());
@@ -77,26 +77,30 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
                 to.setEditTime(LocalDateTime.now());
                 to.setClickStatus(ClickStatusEnum.DEDUCTED.getStatus());
                 clickRecordService.getBaseMapper().updateByIdWithDate(to, clickRecord.getCreateTime().format(DateUtils.yyyyMMdd));
-                return false;
+                return null;
             }
         }
         //转化
         convertRecord.setConvertStatus(ConvertStatusEnum.CONVERTED.getStatus());
         save(convertRecord);
-        return true;
+        return convertRecord;
     }
 
     @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void asyncNotifyConvert(String clickId) {
-        ConvertRecord convertRecord = getById(clickId);
+    public void asyncNotifyConvert(ConvertRecord convertRecord) {
+
         if (convertRecord.getConvertStatus().intValue() != ConvertStatusEnum.CONVERTED.getStatus()) {
             return;
         }
 
         String callback = convertRecord.getCallback();
         if (StringUtils.hasText(callback)) {
-            callbackConvert(callback);
+            ResponseEntity<String> resp = callbackConvert(callback);
+            if (resp == null || !resp.getStatusCode().is2xxSuccessful()) {
+                getBaseMapper().incrRetryTimes(convertRecord.getClickId());
+                return;
+            }
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -104,31 +108,28 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
         to.setEditor("system");
         to.setEditTime(now);
         to.setConvertStatus(ConvertStatusEnum.NOTIFIED.getStatus());
-        if (update().eq("click_id", clickId).eq("convert_status", ConvertStatusEnum.CONVERTED.getStatus()).update(to)) {
-            ClickRecord clickTo = new ClickRecord();
-            clickTo.setId(clickId);
-            clickTo.setEditor("system");
-            clickTo.setEditTime(now);
-            clickTo.setClickStatus(ClickStatusEnum.CONVERTED.getStatus());
-            clickRecordService.getBaseMapper().updateByIdWithDate(clickTo, convertRecord.getClickTime().format(DateUtils.yyyyMMdd));
-        }
+        update().eq("click_id", convertRecord.getClickId()).eq("convert_status", ConvertStatusEnum.CONVERTED.getStatus()).update(to);
+
+        ClickRecord clickTo = new ClickRecord();
+        clickTo.setId(convertRecord.getClickId());
+        clickTo.setEditor("system");
+        clickTo.setEditTime(now);
+        clickTo.setClickStatus(ClickStatusEnum.CONVERTED.getStatus());
+        clickRecordService.getBaseMapper().updateByIdWithDate(clickTo, convertRecord.getClickTime().format(DateUtils.yyyyMMdd));
+
+        log.info("asyncNotifyConvert success. clickId:{}", convertRecord.getClickId());
     }
 
-    private void callbackConvert(String callback) {
-        doCallbackConvert(callback, 1);
-    }
-
-    private void doCallbackConvert(String callback, int times) {
+    private ResponseEntity<String> callbackConvert(String callback) {
         try {
-            if (times > 2) {
-                return;
-            }
             log.info("doCallbackConvert callback:{}", callback);
             ResponseEntity<String> resp = restTemplate.getForEntity(StringUtils.trimWhitespace(callback), String.class);
             log.info("doCallbackConvert callback:{} resp:{}", callback, resp);
+            return resp;
         } catch (RestClientException e) {
-            log.error("doCallbackConvert fail. callback:{} times:{} err:{}", callback, times++, e.getMessage(), e);
-            doCallbackConvert(callback, times);
+            log.error("doCallbackConvert fail. callback:{} times:{} err:{}", callback, e.getMessage(), e);
+            return null;
         }
     }
+
 }

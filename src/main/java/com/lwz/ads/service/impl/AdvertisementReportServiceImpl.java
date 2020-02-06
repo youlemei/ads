@@ -12,6 +12,7 @@ import com.lwz.ads.service.IClickRecordService;
 import com.lwz.ads.service.IConvertRecordService;
 import com.lwz.ads.service.IPromoteRecordService;
 import com.lwz.ads.util.DateUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,7 @@ import java.util.Optional;
  * @author lwz
  * @since 2020-01-30
  */
+@Slf4j
 @Service
 public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementReportMapper, AdvertisementReport> implements IAdvertisementReportService {
 
@@ -63,7 +65,10 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
         updateSrcConvertSum(today, updateMap);
         updateConvertSum(today, updateMap);
 
-        updateBatchById(updateMap.values());
+        if (updateMap.size() > 0) {
+            updateBatchById(updateMap.values());
+            log.info("countAdReport updateSize:{}", updateMap.size());
+        }
     }
 
     private void updateClickSum(LocalDate adDate, Map<Long, AdvertisementReport> updateMap) {
@@ -109,7 +114,6 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
     }
 
     private Long getReportId(LocalDate adDate, CountSum countSum) {
-        //TODO: 测试 在事务中创建的能否查询到
         AdvertisementReport report = lambdaQuery()
                 .eq(AdvertisementReport::getAdDate, adDate)
                 .eq(AdvertisementReport::getAdId, countSum.getAdId())

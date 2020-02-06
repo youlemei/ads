@@ -17,7 +17,7 @@ public class CreateClickUrlTimer {
     @Autowired
     private PromoteRecordServiceImpl promoteRecordService;
 
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 3000)
     public void work(){
         //暂时单机版
         List<PromoteRecord> promoteRecordList = promoteRecordService.lambdaQuery()
@@ -26,7 +26,7 @@ public class CreateClickUrlTimer {
             try {
                 promoteRecordService.doCreateClickUrl(promoteRecord);
             } catch (Exception e) {
-                log.error("work error. msg:{}", e.getMessage(), e);
+                log.error("doCreateClickUrl error. id:{} msg:{}", promoteRecord.getId(), e.getMessage(), e);
             }
         });
     }

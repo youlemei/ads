@@ -5,6 +5,7 @@ import com.lwz.ads.constant.PromoteStatusEnum;
 import com.lwz.ads.entity.Advertisement;
 import com.lwz.ads.entity.Channel;
 import com.lwz.ads.entity.ClickRecord;
+import com.lwz.ads.entity.ConvertRecord;
 import com.lwz.ads.entity.PromoteRecord;
 import com.lwz.ads.mapper.ClickRecordMapper;
 import com.lwz.ads.service.IAdvertisementService;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Slf4j
@@ -48,12 +50,14 @@ public class CallbackController {
             log.info("date:{} clickId:{}", date, clickId);
             //检查
             LocalDateTime now = LocalDateTime.now();
-            LocalDateTime localDate = LocalDateTime.parse(date, DateUtils.yyyyMMdd);
-            if (date.length() != 8 || clickId.length() != 32 || localDate.isAfter(now)) {
+            LocalDate localDate = LocalDate.parse(date, DateUtils.yyyyMMdd);
+            if (date.length() != 8 || clickId.length() != 32 || localDate.atStartOfDay().isAfter(now)) {
+                log.warn("callback invalid param. date:{} clickId:{}", date, clickId);
                 return Response.with(HttpStatus.BAD_REQUEST);
             }
             ClickRecord clickRecord = ((ClickRecordMapper) clickRecordService.getBaseMapper()).selectByIdWithDate(clickId, date);
             if (clickRecord == null) {
+                log.warn("callback fail. 点击记录不存在 date:{} clickId:{}", date, clickId);
                 return Response.with(HttpStatus.BAD_REQUEST);
             }
             Advertisement ad = advertisementService.getById(clickRecord.getAdId());
@@ -67,11 +71,13 @@ public class CallbackController {
             }
 
             //保存转化记录, 核减
-            if (convertRecordService.saveConvert(clickRecord, promoteRecord)) {
+            ConvertRecord convertRecord = convertRecordService.saveConvert(clickRecord, promoteRecord);
+            if (convertRecord != null) {
                 //异步回调渠道
-                convertRecordService.asyncNotifyConvert(clickRecord.getId());
+                convertRecordService.asyncNotifyConvert(convertRecord);
             }
 
+            log.info("callback success. date:{} clickId:{}", date, clickId);
             return Response.success();
         } catch (DuplicateKeyException e) {
             log.info("callback duplicate date:{} clickId:{}", date, clickId);
