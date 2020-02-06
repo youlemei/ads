@@ -82,6 +82,11 @@ public class PromoteRecord implements Serializable {
     private String traceType;
 
     /**
+     * 创建者
+     */
+    private String creator;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createTime;

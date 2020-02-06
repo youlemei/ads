@@ -60,14 +60,16 @@ public class ClickController {
                 return ResponseEntity.badRequest().build();
             }
             //TODO: 缓存
-            PromoteRecord promoteRecord = promoteRecordService.getOne(promoteRecordService.lambdaQuery()
-                    .eq(PromoteRecord::getAdId, adId).eq(PromoteRecord::getChannelId, channelId));
+            PromoteRecord promoteRecord = promoteRecordService.lambdaQuery()
+                    .eq(PromoteRecord::getAdId, adId).eq(PromoteRecord::getChannelId, channelId).one();
             if (promoteRecord == null) {
+                log.warn("click fail. 广告投放记录不存在. adId:{} channel:{}", adId, channelId);
                 return ResponseEntity.badRequest().build();
             }
             Advertisement ad = advertisementService.getById(adId);
             TraceTypeEnum adTraceType = TraceTypeEnum.valueOfType(ad.getTraceType());
             if (adTraceType == TraceTypeEnum.REDIRECT && traceType == TraceTypeEnum.ASYNC) {
+                log.warn("click fail. 暂不支持302转异步. adId:{} channel:{}", adId, channelId);
                 return ResponseEntity.badRequest().build();
             }
             Channel channel = channelService.getById(channelId);
@@ -80,6 +82,8 @@ public class ClickController {
 
             //保存点击记录
             String clickId = clickRecordService.saveClick(clickTime, request, type, promoteRecord, ad, channel);
+
+            log.info("click ok. adId:{} channelId:{}", adId, channelId);
 
             //TODO: 处理器
             switch (traceType) {

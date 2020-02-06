@@ -1,7 +1,8 @@
 package com.lwz.ads.timer;
 
+import com.lwz.ads.constant.PromoteStatusEnum;
 import com.lwz.ads.entity.PromoteRecord;
-import com.lwz.ads.service.IPromoteRecordService;
+import com.lwz.ads.service.impl.PromoteRecordServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -14,12 +15,13 @@ import java.util.List;
 public class CreateClickUrlTimer {
 
     @Autowired
-    private IPromoteRecordService promoteRecordService;
+    private PromoteRecordServiceImpl promoteRecordService;
 
     @Scheduled(fixedDelay = 5000)
     public void work(){
         //暂时单机版
-        List<PromoteRecord> promoteRecordList = promoteRecordService.list(promoteRecordService.lambdaQuery().eq(PromoteRecord::getPromoteStatus, 0));
+        List<PromoteRecord> promoteRecordList = promoteRecordService.lambdaQuery()
+                .eq(PromoteRecord::getPromoteStatus, PromoteStatusEnum.CREATING.getStatus()).list();
         promoteRecordList.parallelStream().forEach(promoteRecord -> {
             try {
                 promoteRecordService.doCreateClickUrl(promoteRecord);
@@ -27,7 +29,6 @@ public class CreateClickUrlTimer {
                 log.error("work error. msg:{}", e.getMessage(), e);
             }
         });
-        log.info("CreateClickUrlTimer done {}.", promoteRecordList.size());
     }
 
 }

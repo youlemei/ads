@@ -110,16 +110,16 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
 
     private Long getReportId(LocalDate adDate, CountSum countSum) {
         //TODO: 测试 在事务中创建的能否查询到
-        AdvertisementReport report = getOne(lambdaQuery()
+        AdvertisementReport report = lambdaQuery()
                 .eq(AdvertisementReport::getAdDate, adDate)
                 .eq(AdvertisementReport::getAdId, countSum.getAdId())
-                .eq(AdvertisementReport::getChannelId, countSum.getChannelId()));
+                .eq(AdvertisementReport::getChannelId, countSum.getChannelId()).one();
         if (report != null) {
             return report.getId();
         }
-        PromoteRecord promoteRecord = promoteRecordService.getOne(promoteRecordService.lambdaQuery()
+        PromoteRecord promoteRecord = promoteRecordService.lambdaQuery()
                 .eq(PromoteRecord::getAdId, countSum.getAdId())
-                .eq(PromoteRecord::getChannelId, countSum.getChannelId()));
+                .eq(PromoteRecord::getChannelId, countSum.getChannelId()).one();
         AdvertisementReport save = new AdvertisementReport()
                 .setAdDate(adDate)
                 .setAdId(countSum.getAdId())

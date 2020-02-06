@@ -9,6 +9,7 @@ import com.lwz.ads.entity.PromoteRecord;
 import com.lwz.ads.mapper.PromoteRecordMapper;
 import com.lwz.ads.service.IAdvertisementService;
 import com.lwz.ads.service.IPromoteRecordService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,7 @@ import java.util.regex.Pattern;
  * @author lwz
  * @since 2020-01-30
  */
+@Slf4j
 @Service
 public class PromoteRecordServiceImpl extends ServiceImpl<PromoteRecordMapper, PromoteRecord> implements IPromoteRecordService {
 
@@ -86,8 +88,9 @@ public class PromoteRecordServiceImpl extends ServiceImpl<PromoteRecordMapper, P
         to.setEditor("system");
         to.setEditTime(LocalDateTime.now());
 
-        update(to, update().eq("id", promoteRecord.getId()).eq("promote_status", PromoteStatusEnum.CREATING.getStatus()));
+        update().eq("id", promoteRecord.getId()).eq("promote_status", PromoteStatusEnum.CREATING.getStatus()).update(to);
 
+        log.info("doCreateClickUrl done. adId:{} channelId:{} clickUri:{}", promoteRecord.getAdId(), promoteRecord.getChannelId(), clickUri);
     }
 
 }

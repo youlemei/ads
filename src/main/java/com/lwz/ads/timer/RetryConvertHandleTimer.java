@@ -26,9 +26,9 @@ public class RetryConvertHandleTimer {
         String end = now.format(DateUtils.DEFAULT_FORMATTER);
 
         //通知渠道
-        convertRecordService.list(convertRecordService.lambdaQuery()
+        convertRecordService.lambdaQuery()
                 .between(ConvertRecord::getCreateTime, start, end)
-                .eq(ConvertRecord::getConvertStatus, ConvertStatusEnum.CONVERTED.getStatus()))
+                .eq(ConvertRecord::getConvertStatus, ConvertStatusEnum.CONVERTED.getStatus()).list()
                 .forEach(convertRecord -> convertRecordService.asyncNotifyConvert(convertRecord.getClickId()));
 
     }

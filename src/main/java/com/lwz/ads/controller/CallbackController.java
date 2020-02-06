@@ -58,8 +58,8 @@ public class CallbackController {
             }
             Advertisement ad = advertisementService.getById(clickRecord.getAdId());
             Channel channel = channelService.getById(clickRecord.getChannelId());
-            PromoteRecord promoteRecord = promoteRecordService.getOne(promoteRecordService.lambdaQuery()
-                    .eq(PromoteRecord::getAdId, clickRecord.getAdId()).eq(PromoteRecord::getChannelId, clickRecord.getChannelId()));
+            PromoteRecord promoteRecord = promoteRecordService.lambdaQuery()
+                    .eq(PromoteRecord::getAdId, clickRecord.getAdId()).eq(PromoteRecord::getChannelId, clickRecord.getChannelId()).one();
             PromoteStatusEnum promoteStatus = PromoteStatusEnum.valueOfStatus(promoteRecord.getPromoteStatus());
             if (!ad.getTraceStatus() || now.isAfter(ad.getEndTime()) || promoteStatus != PromoteStatusEnum.RUNNING) {
                 log.info("callback date:{} clickId:{} 已停止推广", date, clickId);

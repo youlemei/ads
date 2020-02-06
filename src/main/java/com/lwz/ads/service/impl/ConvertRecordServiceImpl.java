@@ -104,7 +104,7 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
         to.setEditor("system");
         to.setEditTime(now);
         to.setConvertStatus(ConvertStatusEnum.NOTIFIED.getStatus());
-        if (update(to, update().eq("click_id", clickId).eq("convert_status", ConvertStatusEnum.CONVERTED.getStatus()))) {
+        if (update().eq("click_id", clickId).eq("convert_status", ConvertStatusEnum.CONVERTED.getStatus()).update(to)) {
             ClickRecord clickTo = new ClickRecord();
             clickTo.setId(clickId);
             clickTo.setEditor("system");
