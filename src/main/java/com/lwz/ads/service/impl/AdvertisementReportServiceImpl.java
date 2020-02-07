@@ -4,13 +4,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lwz.ads.entity.AdvertisementReport;
 import com.lwz.ads.entity.PromoteRecord;
 import com.lwz.ads.mapper.AdvertisementReportMapper;
-import com.lwz.ads.mapper.ClickRecordMapper;
-import com.lwz.ads.mapper.ConvertRecordMapper;
 import com.lwz.ads.mapper.bean.CountSum;
 import com.lwz.ads.service.IAdvertisementReportService;
-import com.lwz.ads.service.IClickRecordService;
-import com.lwz.ads.service.IConvertRecordService;
-import com.lwz.ads.service.IPromoteRecordService;
 import com.lwz.ads.util.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,13 +32,13 @@ import java.util.Optional;
 public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementReportMapper, AdvertisementReport> implements IAdvertisementReportService {
 
     @Autowired
-    private IClickRecordService clickRecordService;
+    private ClickRecordServiceImpl clickRecordService;
 
     @Autowired
-    private IConvertRecordService convertRecordService;
+    private ConvertRecordServiceImpl convertRecordService;
 
     @Autowired
-    private IPromoteRecordService promoteRecordService;
+    private PromoteRecordServiceImpl promoteRecordService;
 
     @Transactional
     @Override
@@ -72,7 +67,7 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
     }
 
     private void updateClickSum(LocalDate adDate, Map<Long, AdvertisementReport> updateMap) {
-        List<CountSum> countSumList = ((ClickRecordMapper) clickRecordService.getBaseMapper()).countClickSum(adDate.format(DateUtils.yyyyMMdd));
+        List<CountSum> countSumList = clickRecordService.getBaseMapper().countClickSum(adDate.format(DateUtils.yyyyMMdd));
         countSumList.forEach(countSum -> {
             Long reportId = getReportId(adDate, countSum);
             updateMap.compute(reportId, (id, report) -> Optional.ofNullable(report)
@@ -82,7 +77,7 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
     }
 
     private void updateDeduplicateClickSum(LocalDate adDate, Map<Long, AdvertisementReport> updateMap) {
-        List<CountSum> countSumList = ((ClickRecordMapper) clickRecordService.getBaseMapper()).countDeduplicateClickSum(adDate.format(DateUtils.yyyyMMdd));
+        List<CountSum> countSumList = clickRecordService.getBaseMapper().countDeduplicateClickSum(adDate.format(DateUtils.yyyyMMdd));
         countSumList.forEach(countSum -> {
             Long reportId = getReportId(adDate, countSum);
             updateMap.compute(reportId, (id, report) -> Optional.ofNullable(report)
@@ -92,8 +87,7 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
     }
 
     private void updateSrcConvertSum(LocalDate adDate, Map<Long, AdvertisementReport> updateMap) {
-        List<CountSum> countSumList = ((ConvertRecordMapper) convertRecordService.getBaseMapper())
-                .countSrcConvertSum(adDate.atStartOfDay(), adDate.atStartOfDay().plusDays(1));
+        List<CountSum> countSumList = convertRecordService.getBaseMapper().countSrcConvertSum(adDate.atStartOfDay(), adDate.atStartOfDay().plusDays(1));
         countSumList.forEach(countSum -> {
             Long reportId = getReportId(adDate, countSum);
             updateMap.compute(reportId, (id, report) -> Optional.ofNullable(report)
@@ -103,8 +97,7 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
     }
 
     private void updateConvertSum(LocalDate adDate, Map<Long, AdvertisementReport> updateMap) {
-        List<CountSum> countSumList = ((ConvertRecordMapper) convertRecordService.getBaseMapper())
-                .countConvertSum(adDate.atStartOfDay(), adDate.atStartOfDay().plusDays(1));
+        List<CountSum> countSumList = convertRecordService.getBaseMapper().countConvertSum(adDate.atStartOfDay(), adDate.atStartOfDay().plusDays(1));
         countSumList.forEach(countSum -> {
             Long reportId = getReportId(adDate, countSum);
             updateMap.compute(reportId, (id, report) -> Optional.ofNullable(report)

@@ -7,6 +7,19 @@ spring:
     driver-class-name: com.mysql.jdbc.Driver
     username: root
     password: 123456
+    druid:
+      filter:
+        stat:
+          enabled: true
+          log-slow-sql: true
+      web-stat-filter:
+        enabled: true
+        profile-enable: true
+      stat-view-servlet:
+        enabled: true
+        login-username: druid
+        login-password: cAe3d8dF13
+
 
 #mybatis-plus:
 #  configuration:

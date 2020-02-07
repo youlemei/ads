@@ -6,7 +6,20 @@ spring:
     url: jdbc:mysql://rm-wz9l1pya91wv7bdfm.mysql.rds.aliyuncs.com:3306/ads?useUnicode=true&characterEncoding=UTF8&useSSL=false
     driver-class-name: com.mysql.jdbc.Driver
     username: ads_server
-    password: Aa6631990
+    password: 2Ad9c4A70
+    druid:
+      filter:
+        stat:
+          enabled: true
+          log-slow-sql: true
+      web-stat-filter:
+        enabled: true
+        profile-enable: true
+      stat-view-servlet:
+        enabled: true
+        allow: 129.227.133.59
+        login-username: druid
+        login-password: cAe3d8dF13
   task:
     scheduling:
       pool:

@@ -1,8 +1,8 @@
-import org.springframework.util.StringUtils;
+import org.junit.Test;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,6 +24,11 @@ public class MainTest {
                 System.out.println(key + " " + value + " " + param_pattern.matcher(value).matches());
             }
         });
+    }
+
+    @Test
+    public void testMd5() throws Exception{
+        System.out.println(DigestUtils.md5DigestAsHex("Aa123".getBytes()));
     }
 
 }
