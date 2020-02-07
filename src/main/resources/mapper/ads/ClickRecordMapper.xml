@@ -292,7 +292,7 @@
                 create_time &lt; #{end}
             </if>
             and click_status = 0
-            and retry_times &lt; 10
+            and retry_times &lt; 3
         </where>
     </select>
 

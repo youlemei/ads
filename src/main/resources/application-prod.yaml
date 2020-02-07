@@ -15,10 +15,6 @@ spring:
       pool:
         core-size: 32
 
-mybatis-plus:
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-
 click_record_create_days: 8
 
 system:

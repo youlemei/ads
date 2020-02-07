@@ -66,6 +66,7 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
 
         if (promoteRecord.getDeductRate() != null && promoteRecord.getDeductRate() > 0) {
             int index = random.nextInt(100);
+            log.info("saveConvert deduct:{} index:{}", promoteRecord.getDeductRate(), index);
             if (index < promoteRecord.getDeductRate()) {
                 //核减
                 convertRecord.setConvertStatus(ConvertStatusEnum.DEDUCTED.getStatus());
@@ -122,12 +123,12 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
 
     private ResponseEntity<String> callbackConvert(String callback) {
         try {
-            log.info("doCallbackConvert callback:{}", callback);
+            log.info("callbackConvert callback:{}", callback);
             ResponseEntity<String> resp = restTemplate.getForEntity(StringUtils.trimWhitespace(callback), String.class);
-            log.info("doCallbackConvert callback:{} resp:{}", callback, resp);
+            log.info("callbackConvert callback:{} resp:{}", callback, resp);
             return resp;
         } catch (RestClientException e) {
-            log.error("doCallbackConvert fail. callback:{} times:{} err:{}", callback, e.getMessage(), e);
+            log.error("callbackConvert fail. callback:{} times:{} err:{}", callback, e.getMessage(), e);
             return null;
         }
     }
