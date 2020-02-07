@@ -61,7 +61,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     @Value("${system.web.domain:localhost:9999}")
     private String domain;
 
-    @Value("${click_record_create_days:1}")
+    @Value("${click_record_create_days:2}")
     private Integer createDays;
 
     @Transactional
@@ -203,7 +203,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                                 .build();
                         adUriBuilder.replaceQueryParam(key, Arrays.asList(callbackUri.toUriString()));
                     } else {
-                        adUriBuilder.replaceQueryParam(key, Arrays.asList(paramJson.getString(key)));
+                        adUriBuilder.replaceQueryParam(key, Arrays.asList(Optional.ofNullable(paramJson.getString(key)).orElse("")));
                     }
                 }
             }
