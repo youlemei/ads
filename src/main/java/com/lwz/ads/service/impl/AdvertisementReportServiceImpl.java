@@ -108,9 +108,9 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
 
     private Long getReportId(LocalDate adDate, CountSum countSum) {
         AdvertisementReport report = lambdaQuery()
-                .eq(AdvertisementReport::getAdDate, adDate)
                 .eq(AdvertisementReport::getAdId, countSum.getAdId())
-                .eq(AdvertisementReport::getChannelId, countSum.getChannelId()).one();
+                .eq(AdvertisementReport::getChannelId, countSum.getChannelId())
+                .eq(AdvertisementReport::getAdDate, adDate).one();
         if (report != null) {
             return report.getId();
         }
@@ -123,10 +123,6 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
                 .setChannelId(countSum.getChannelId())
                 .setAdCreator(promoteRecord.getAdCreator())
                 .setChannelCreator(promoteRecord.getChannelCreator())
-                .setClickSum(0)
-                .setDeduplicateClickSum(0)
-                .setSrcConvertSum(0)
-                .setConvertSum(0)
                 .setInPrice(promoteRecord.getInPrice())
                 .setOutPrice(promoteRecord.getOutPrice())
                 .setUpdateTime(LocalDateTime.now());
