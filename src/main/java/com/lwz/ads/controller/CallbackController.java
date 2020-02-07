@@ -47,7 +47,7 @@ public class CallbackController {
     @GetMapping("/callback")
     public Response callback(@RequestParam String date, @RequestParam String clickId){
         try {
-            log.info("date:{} clickId:{}", date, clickId);
+            log.info("callback date:{} clickId:{}", date, clickId);
             //检查
             LocalDateTime now = LocalDateTime.now();
             LocalDate localDate = LocalDate.parse(date, DateUtils.yyyyMMdd);

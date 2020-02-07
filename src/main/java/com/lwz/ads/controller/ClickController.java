@@ -53,7 +53,7 @@ public class ClickController {
     public ResponseEntity<Response> click(@RequestParam Long adId, @RequestParam Long channelId,
                                           @RequestParam String type, @RequestParam Map<String, Object> request){
         try {
-            log.info("adId:{} channelId:{} request:{}", adId, channelId, request);
+            log.info("click adId:{} channelId:{} request:{}", adId, channelId, request);
 
             //检查
             TraceTypeEnum traceType = TraceTypeEnum.valueOfType(type);

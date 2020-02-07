@@ -27,7 +27,7 @@ public class ConvertRecord implements Serializable {
     /**
      * 点击id
      */
-    @TableId(value = "click_id", type = IdType.AUTO)
+    @TableId(value = "click_id", type = IdType.INPUT)
     private String clickId;
 
     /**
