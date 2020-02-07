@@ -54,6 +54,9 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
         }
 
         JSONObject paramJson = JSON.parseObject(clickRecord.getParamJson());
+        JSONObject jsonData = new JSONObject();
+        jsonData.put(Const.IP, clickRecord.getIp());
+        jsonData.put(Const.MAC, clickRecord.getMac());
         ConvertRecord convertRecord = new ConvertRecord()
                 .setClickId(clickRecord.getId())
                 .setClickTime(clickRecord.getCreateTime())
@@ -62,7 +65,8 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
                 .setAdCreator(promoteRecord.getAdCreator())
                 .setChannelId(promoteRecord.getChannelId())
                 .setChannelCreator(promoteRecord.getChannelCreator())
-                .setCallback(paramJson.getString(Const.CALLBACK));
+                .setCallback(paramJson.getString(Const.CALLBACK))
+                .setJsonData(jsonData.toJSONString());
 
         if (promoteRecord.getDeductRate() != null && promoteRecord.getDeductRate() > 0) {
             int index = random.nextInt(100);
