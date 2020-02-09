@@ -14,12 +14,4 @@ public enum PromoteStatusEnum {
         return status;
     }
 
-    public static PromoteStatusEnum valueOfStatus(int status){
-        for (PromoteStatusEnum value : values()) {
-            if (value.status == status) {
-                return value;
-            }
-        }
-        return null;
-    }
 }

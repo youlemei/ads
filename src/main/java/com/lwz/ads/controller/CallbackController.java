@@ -1,19 +1,18 @@
 package com.lwz.ads.controller;
 
 import com.lwz.ads.bean.Response;
+import com.lwz.ads.constant.Const;
 import com.lwz.ads.constant.PromoteStatusEnum;
 import com.lwz.ads.entity.Advertisement;
-import com.lwz.ads.entity.Channel;
 import com.lwz.ads.entity.ClickRecord;
 import com.lwz.ads.entity.ConvertRecord;
 import com.lwz.ads.entity.PromoteRecord;
-import com.lwz.ads.mapper.ClickRecordMapper;
-import com.lwz.ads.service.IAdvertisementService;
-import com.lwz.ads.service.IChannelService;
-import com.lwz.ads.service.IClickRecordService;
-import com.lwz.ads.service.IConvertRecordService;
-import com.lwz.ads.service.IPromoteRecordService;
+import com.lwz.ads.service.impl.AdvertisementServiceImpl;
+import com.lwz.ads.service.impl.ClickRecordServiceImpl;
+import com.lwz.ads.service.impl.ConvertRecordServiceImpl;
+import com.lwz.ads.service.impl.PromoteRecordServiceImpl;
 import com.lwz.ads.util.DateUtils;
+import com.lwz.ads.util.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
@@ -30,19 +29,19 @@ import java.time.LocalDateTime;
 public class CallbackController {
 
     @Autowired
-    private IConvertRecordService convertRecordService;
+    private ConvertRecordServiceImpl convertRecordService;
 
     @Autowired
-    private IClickRecordService clickRecordService;
+    private ClickRecordServiceImpl clickRecordService;
 
     @Autowired
-    private IPromoteRecordService promoteRecordService;
+    private PromoteRecordServiceImpl promoteRecordService;
 
     @Autowired
-    private IAdvertisementService advertisementService;
+    private AdvertisementServiceImpl advertisementService;
 
     @Autowired
-    private IChannelService channelService;
+    private RedisUtils redisUtils;
 
     @GetMapping("/callback")
     public Response callback(@RequestParam String date, @RequestParam String clickId){
@@ -55,23 +54,29 @@ public class CallbackController {
                 log.warn("callback invalid param. date:{} clickId:{}", date, clickId);
                 return Response.with(HttpStatus.BAD_REQUEST);
             }
-            ClickRecord clickRecord = ((ClickRecordMapper) clickRecordService.getBaseMapper()).selectByIdWithDate(clickId, date);
+            ClickRecord clickRecord = clickRecordService.getBaseMapper().selectByIdWithDate(clickId, date);
             if (clickRecord == null) {
                 log.warn("callback fail. 点击记录不存在 date:{} clickId:{}", date, clickId);
                 return Response.with(HttpStatus.BAD_REQUEST);
             }
             Advertisement ad = advertisementService.getById(clickRecord.getAdId());
-            Channel channel = channelService.getById(clickRecord.getChannelId());
             PromoteRecord promoteRecord = promoteRecordService.lambdaQuery()
                     .eq(PromoteRecord::getAdId, clickRecord.getAdId()).eq(PromoteRecord::getChannelId, clickRecord.getChannelId()).one();
-            PromoteStatusEnum promoteStatus = PromoteStatusEnum.valueOfStatus(promoteRecord.getPromoteStatus());
-            if (!ad.getTraceStatus() || now.isAfter(ad.getEndTime()) || promoteStatus != PromoteStatusEnum.RUNNING) {
-                log.info("callback date:{} clickId:{} 已停止推广", date, clickId);
-                return Response.fail(400, "已停止推广");
+            if (!ad.getTraceStatus() || now.isAfter(ad.getEndTime())
+                    || promoteRecord.getPromoteStatus().intValue() != PromoteStatusEnum.RUNNING.getStatus()) {
+                log.info("callback fail. date:{} clickId:{} 已停止推广", date, clickId);
+                return Response.fail("已停止推广");
+            }
+            if (promoteRecord.getConvertDayLimit() != null && promoteRecord.getConvertDayLimit() > 0) {
+                Integer dayClick = redisUtils.get(String.format(Const.CONVERT_DAY_LIMIT_KEY, date, promoteRecord.getId()), Integer.class);
+                if (dayClick != null && dayClick >= promoteRecord.getConvertDayLimit()) {
+                    log.info("callback fail. date:{} clickId:{} 转化已超过每日上限", date, clickId);
+                    return Response.fail("转化已超过每日上限");
+                }
             }
 
             //保存转化记录, 核减
-            ConvertRecord convertRecord = convertRecordService.saveConvert(clickRecord, promoteRecord);
+            ConvertRecord convertRecord = convertRecordService.saveConvert(clickRecord, promoteRecord, date);
             if (convertRecord != null) {
                 //异步回调渠道
                 convertRecordService.asyncNotifyConvert(convertRecord);

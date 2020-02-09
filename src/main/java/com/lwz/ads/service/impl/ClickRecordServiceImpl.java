@@ -7,13 +7,12 @@ import com.lwz.ads.constant.ClickStatusEnum;
 import com.lwz.ads.constant.Const;
 import com.lwz.ads.constant.TraceTypeEnum;
 import com.lwz.ads.entity.Advertisement;
-import com.lwz.ads.entity.Channel;
 import com.lwz.ads.entity.ClickRecord;
 import com.lwz.ads.entity.PromoteRecord;
 import com.lwz.ads.mapper.ClickRecordMapper;
-import com.lwz.ads.service.IAdvertisementService;
 import com.lwz.ads.service.IClickRecordService;
 import com.lwz.ads.util.DateUtils;
+import com.lwz.ads.util.RedisUtils;
 import com.lwz.ads.util.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +34,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
@@ -50,10 +50,13 @@ import java.util.stream.IntStream;
 public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, ClickRecord> implements IClickRecordService {
 
     @Autowired
-    private IAdvertisementService advertisementService;
+    private AdvertisementServiceImpl advertisementService;
 
     @Autowired
     private RestTemplate restTemplate;
+
+    @Autowired
+    private RedisUtils redisUtils;
 
     @Value("${system.web.scheme:http}")
     private String scheme;
@@ -66,15 +69,15 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
     @Transactional
     @Override
-    public ClickRecord saveClick(LocalDateTime clickTime, Map<String, Object> request, String type, PromoteRecord promoteRecord, Advertisement ad, Channel channel) {
+    public ClickRecord saveClick(LocalDateTime clickTime, Map<String, Object> request, String type, PromoteRecord promoteRecord, Advertisement ad) {
 
         String clickId = UUID.randomUUID().toString().replaceAll("-", "");
         ClickRecord clickRecord = new ClickRecord()
                 .setId(clickId)
                 .setAdId(ad.getId())
                 .setAdCreator(ad.getCreator())
-                .setChannelId(channel.getId())
-                .setChannelCreator(channel.getCreator())
+                .setChannelId(promoteRecord.getChannelId())
+                .setChannelCreator(promoteRecord.getChannelCreator())
                 .setCreateTime(clickTime)
                 .setTraceType(type)
                 .setParamJson(JSON.toJSONString(request))
@@ -88,7 +91,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         adUri.getQueryParams().forEach((key, list) -> {
             if (!CollectionUtils.isEmpty(list)) {
                 String value = list.get(0);
-                if (StringUtils.hasLength(value) && PromoteRecordServiceImpl.PARAM_PATTERN.matcher(value).matches()) {
+                if (StringUtils.hasLength(value) && Const.PARAM_PATTERN.matcher(value).matches()) {
                     String lowerCaseKey = key.toLowerCase();
                     if (lowerCaseKey.contains(ip) && request.containsKey(key)) {
                         Optional.ofNullable(request.get(key)).ifPresent(o -> clickRecord.setIp(o.toString()));
@@ -102,6 +105,14 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
         String date = clickTime.format(DateUtils.yyyyMMdd);
         getBaseMapper().insertWithDate(clickRecord, date);
+        if (promoteRecord.getClickDayLimit() != null && promoteRecord.getClickDayLimit() > 0) {
+            redisUtils.execute(redis -> {
+                String key = String.format(Const.CLICK_DAY_LIMIT_KEY, date, promoteRecord.getId());
+                redis.opsForValue().increment(key, 1);
+                redis.expire(key, 7, TimeUnit.DAYS);
+                return null;
+            });
+        }
         return clickRecord;
     }
 
@@ -192,7 +203,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         traceUri.getQueryParams().forEach((key, list) -> {
             if (!CollectionUtils.isEmpty(list)) {
                 String value = list.get(0);
-                if (StringUtils.hasLength(value) && PromoteRecordServiceImpl.PARAM_PATTERN.matcher(value).matches()) {
+                if (StringUtils.hasLength(value) && Const.PARAM_PATTERN.matcher(value).matches()) {
                     if (key.toLowerCase().contains(callback)) {
                         UriComponents callbackUri = UriComponentsBuilder.newInstance()
                                 .scheme(scheme)

@@ -1,16 +1,16 @@
 package com.lwz.ads.controller;
 
-import com.lwz.ads.bean.Response;
+import com.lwz.ads.constant.Const;
 import com.lwz.ads.constant.PromoteStatusEnum;
 import com.lwz.ads.constant.TraceTypeEnum;
 import com.lwz.ads.entity.Advertisement;
-import com.lwz.ads.entity.Channel;
 import com.lwz.ads.entity.ClickRecord;
 import com.lwz.ads.entity.PromoteRecord;
-import com.lwz.ads.service.IAdvertisementService;
-import com.lwz.ads.service.IChannelService;
-import com.lwz.ads.service.IClickRecordService;
-import com.lwz.ads.service.IPromoteRecordService;
+import com.lwz.ads.service.impl.AdvertisementServiceImpl;
+import com.lwz.ads.service.impl.ClickRecordServiceImpl;
+import com.lwz.ads.service.impl.PromoteRecordServiceImpl;
+import com.lwz.ads.util.DateUtils;
+import com.lwz.ads.util.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -29,16 +29,16 @@ import java.util.Map;
 public class ClickController {
 
     @Autowired
-    private IClickRecordService clickRecordService;
+    private ClickRecordServiceImpl clickRecordService;
 
     @Autowired
-    private IPromoteRecordService promoteRecordService;
+    private PromoteRecordServiceImpl promoteRecordService;
 
     @Autowired
-    private IAdvertisementService advertisementService;
+    private AdvertisementServiceImpl advertisementService;
 
     @Autowired
-    private IChannelService channelService;
+    private RedisUtils redisUtils;
 
     /**
      * 广告点击入口, 核心接口.
@@ -50,7 +50,7 @@ public class ClickController {
      * @return
      */
     @GetMapping("/click")
-    public ResponseEntity<Response> click(@RequestParam Long adId, @RequestParam Long channelId,
+    public ResponseEntity<String> click(@RequestParam Long adId, @RequestParam Long channelId,
                                           @RequestParam String type, @RequestParam Map<String, Object> request){
         try {
             log.info("click adId:{} channelId:{} request:{}", adId, channelId, request);
@@ -71,26 +71,33 @@ public class ClickController {
             Advertisement ad = advertisementService.getById(adId);
             TraceTypeEnum adTraceType = TraceTypeEnum.valueOfType(ad.getTraceType());
             if (adTraceType == TraceTypeEnum.REDIRECT && traceType == TraceTypeEnum.ASYNC) {
-                log.warn("click fail. 暂不支持302转异步. adId:{} channel:{}", adId, channelId);
-                return ResponseEntity.badRequest().build();
+                log.info("click fail. 暂不支持302转异步. adId:{} channel:{}", adId, channelId);
+                return ResponseEntity.badRequest().body("暂不支持302转异步");
             }
-            Channel channel = channelService.getById(channelId);
             LocalDateTime clickTime = LocalDateTime.now();
-            PromoteStatusEnum promoteStatus = PromoteStatusEnum.valueOfStatus(promoteRecord.getPromoteStatus());
-            if (!ad.getTraceStatus() || clickTime.isAfter(ad.getEndTime()) || promoteStatus != PromoteStatusEnum.RUNNING) {
-                log.info("click adId:{} channelId:{} type:{} 已停止推广", adId, channelId, type);
-                return ResponseEntity.badRequest().build();
+            if (!ad.getTraceStatus() || clickTime.isAfter(ad.getEndTime())
+                    || promoteRecord.getPromoteStatus().intValue() != PromoteStatusEnum.RUNNING.getStatus()) {
+                log.info("click fail. adId:{} channelId:{} 已停止推广", adId, channelId);
+                return ResponseEntity.badRequest().body("已停止推广");
+            }
+            if (promoteRecord.getClickDayLimit() != null && promoteRecord.getClickDayLimit() > 0) {
+                String date = clickTime.format(DateUtils.yyyyMMdd);
+                Integer dayClick = redisUtils.get(String.format(Const.CLICK_DAY_LIMIT_KEY, date, promoteRecord.getId()), Integer.class);
+                if (dayClick != null && dayClick >= promoteRecord.getClickDayLimit()) {
+                    log.info("click fail. adId:{} channelId:{} 点击已超过每日上限", adId, channelId);
+                    return ResponseEntity.badRequest().body("点击已超过每日上限");
+                }
             }
 
             //保存点击记录
-            ClickRecord clickRecord = clickRecordService.saveClick(clickTime, request, type, promoteRecord, ad, channel);
+            ClickRecord clickRecord = clickRecordService.saveClick(clickTime, request, type, promoteRecord, ad);
 
             //TODO: 处理器
             switch (traceType) {
                 case ASYNC:
                     clickRecordService.asyncHandleClick(clickRecord, ad);
                     log.info("click asyncHandleClick ok. adId:{} channelId:{}", adId, channelId);
-                    return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(Response.success());
+                    return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body("OK");
                 case REDIRECT:
                     //302
                     URI uri = clickRecordService.redirectHandleClick(clickRecord, ad);

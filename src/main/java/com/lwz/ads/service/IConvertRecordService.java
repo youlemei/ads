@@ -20,8 +20,10 @@ public interface IConvertRecordService extends IService<ConvertRecord> {
      *
      * @param clickRecord
      * @param promoteRecord
+     * @param date
+     * @return
      */
-    ConvertRecord saveConvert(ClickRecord clickRecord, PromoteRecord promoteRecord);
+    ConvertRecord saveConvert(ClickRecord clickRecord, PromoteRecord promoteRecord, String date);
 
     /**
      * 异步通知渠道转化

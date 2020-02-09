@@ -20,7 +20,6 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDateTime;
-import java.util.regex.Pattern;
 
 /**
  * <p>
@@ -33,8 +32,6 @@ import java.util.regex.Pattern;
 @Slf4j
 @Service
 public class PromoteRecordServiceImpl extends ServiceImpl<PromoteRecordMapper, PromoteRecord> implements IPromoteRecordService {
-
-    public static final Pattern PARAM_PATTERN = Pattern.compile("^\\{[a-zA-Z0-9]+}$");
 
     @Autowired
     private IAdvertisementService advertisementService;
@@ -74,7 +71,7 @@ public class PromoteRecordServiceImpl extends ServiceImpl<PromoteRecordMapper, P
         adUri.getQueryParams().forEach((key, list) -> {
             if (!CollectionUtils.isEmpty(list)) {
                 String value = list.get(0);
-                if (StringUtils.hasLength(value) && PARAM_PATTERN.matcher(value).matches() && !value.toLowerCase().contains(callback)) {
+                if (StringUtils.hasLength(value) && Const.PARAM_PATTERN.matcher(value).matches() && !value.toLowerCase().contains(callback)) {
                     clickUriBuilder.queryParam(key, value);
                 }
             }

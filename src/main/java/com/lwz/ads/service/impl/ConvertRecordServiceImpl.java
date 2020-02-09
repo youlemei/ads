@@ -12,6 +12,7 @@ import com.lwz.ads.entity.PromoteRecord;
 import com.lwz.ads.mapper.ConvertRecordMapper;
 import com.lwz.ads.service.IConvertRecordService;
 import com.lwz.ads.util.DateUtils;
+import com.lwz.ads.util.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 /**
  * <p>
@@ -46,9 +48,12 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
     @Autowired
     private RestTemplate restTemplate;
 
+    @Autowired
+    private RedisUtils redisUtils;
+
     @Transactional
     @Override
-    public ConvertRecord saveConvert(ClickRecord clickRecord, PromoteRecord promoteRecord) {
+    public ConvertRecord saveConvert(ClickRecord clickRecord, PromoteRecord promoteRecord, String date) {
         if (lambdaQuery().eq(ConvertRecord::getClickId, clickRecord.getId()).count() > 0) {
             return null;
         }
@@ -81,13 +86,21 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
                 to.setEditor("system");
                 to.setEditTime(LocalDateTime.now());
                 to.setClickStatus(ClickStatusEnum.DEDUCTED.getStatus());
-                clickRecordService.getBaseMapper().updateByIdWithDate(to, clickRecord.getCreateTime().format(DateUtils.yyyyMMdd));
+                clickRecordService.getBaseMapper().updateByIdWithDate(to, date);
                 return null;
             }
         }
         //转化
         convertRecord.setConvertStatus(ConvertStatusEnum.CONVERTED.getStatus());
         save(convertRecord);
+        if (promoteRecord.getConvertDayLimit() != null && promoteRecord.getConvertDayLimit() > 0) {
+            redisUtils.execute(redis -> {
+                String key = String.format(Const.CONVERT_DAY_LIMIT_KEY, date, promoteRecord.getId());
+                redis.opsForValue().increment(key, 1);
+                redis.expire(key, 7, TimeUnit.DAYS);
+                return null;
+            });
+        }
         return convertRecord;
     }
 

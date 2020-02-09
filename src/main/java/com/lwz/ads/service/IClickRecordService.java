@@ -2,7 +2,6 @@ package com.lwz.ads.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.lwz.ads.entity.Advertisement;
-import com.lwz.ads.entity.Channel;
 import com.lwz.ads.entity.ClickRecord;
 import com.lwz.ads.entity.PromoteRecord;
 
@@ -28,10 +27,9 @@ public interface IClickRecordService extends IService<ClickRecord> {
      * @param type
      * @param promoteRecord
      * @param ad
-     * @param channel
      * @return 点击id
      */
-    ClickRecord saveClick(LocalDateTime clickTime, Map<String, Object> request, String type, PromoteRecord promoteRecord, Advertisement ad, Channel channel);
+    ClickRecord saveClick(LocalDateTime clickTime, Map<String, Object> request, String type, PromoteRecord promoteRecord, Advertisement ad);
 
     /**
      * 异步通知广告点击

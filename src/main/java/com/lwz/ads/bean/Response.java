@@ -29,18 +29,14 @@ public class Response<T> {
         return response;
     }
 
+    public static <T> Response<T> fail(String msg){
+        return fail(400, msg);
+    }
+
     public static <T> Response<T> fail(int code, String msg){
         Response<T> response = new Response<>();
         response.code = code;
         response.msg = msg;
-        return response;
-    }
-
-    public static <T> Response<T> fail(int code, String msg, T data){
-        Response<T> response = new Response<>();
-        response.code = code;
-        response.msg = msg;
-        response.data = data;
         return response;
     }
 
