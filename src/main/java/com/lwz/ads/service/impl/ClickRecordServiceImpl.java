@@ -29,6 +29,7 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Map;
@@ -184,6 +185,10 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
     private ResponseEntity<String> requestTraceUri(String func, UriComponents adUri) {
         try {
+            //识别uri不是指向本机
+            if ("localhost".equals(adUri.getHost()) || "2020funfantasy.cn".equals(adUri.getHost()) || "47.107.70.137".equals(adUri.getHost())) {
+                throw new UnknownHostException();
+            }
             String uri = adUri.toUriString();
             log.info("{} uri:{}", func ,uri);
             ResponseEntity<String> resp = restTemplate.getForEntity(uri, String.class);

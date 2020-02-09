@@ -21,9 +21,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -140,11 +142,17 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
 
     private ResponseEntity<String> callbackConvert(String callback) {
         try {
+            //识别callback不是指向本机
+            UriComponents uri = UriComponentsBuilder.fromHttpUrl(StringUtils.trimWhitespace(callback)).build();
+            if ("localhost".equals(uri.getHost()) || "2020funfantasy.cn".equals(uri.getHost()) || "47.107.70.137".equals(uri.getHost())) {
+                throw new UnknownHostException();
+            }
+            String uriString = uri.toUriString();
             log.info("callbackConvert callback:{}", callback);
-            ResponseEntity<String> resp = restTemplate.getForEntity(StringUtils.trimWhitespace(callback), String.class);
-            log.info("callbackConvert callback:{} resp:{}", callback, resp);
+            ResponseEntity<String> resp = restTemplate.getForEntity(uriString, String.class);
+            log.info("callbackConvert callback:{} resp:{}", uriString, resp);
             return resp;
-        } catch (RestClientException e) {
+        } catch (Exception e) {
             log.error("callbackConvert fail. callback:{} times:{} err:{}", callback, e.getMessage(), e);
             return null;
         }
