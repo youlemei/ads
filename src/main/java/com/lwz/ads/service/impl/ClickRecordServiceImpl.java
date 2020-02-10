@@ -189,9 +189,9 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
             if ("localhost".equals(adUri.getHost()) || "2020funfantasy.cn".equals(adUri.getHost()) || "47.107.70.137".equals(adUri.getHost())) {
                 throw new UnknownHostException();
             }
-            String uri = adUri.encode().toUriString();
+            String uri = adUri.toUriString();
             log.info("{} uri:{}", func ,uri);
-            ResponseEntity<String> resp = restTemplate.getForEntity(uri, String.class);
+            ResponseEntity<String> resp = restTemplate.getForEntity(adUri.encode().toUri(), String.class);
             log.info("{} uri:{} resp:{}", func, uri, resp);
             return resp;
         } catch (Exception e) {
