@@ -28,7 +28,9 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -217,7 +219,13 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                                 .queryParam("date", date)
                                 .queryParam("clickId", clickId)
                                 .build();
-                        adUriBuilder.replaceQueryParam(key, Arrays.asList(callbackUri.toUriString()));
+                        String callbackUriEncode = null;
+                        try {
+                            callbackUriEncode = URLEncoder.encode(callbackUri.toUriString(), "UTF-8");
+                        } catch (UnsupportedEncodingException e) {
+                            log.error("buildAdTraceUri clickId:{} date:{} fail. err:{}", clickId, date, e.getMessage(), e);
+                        }
+                        adUriBuilder.replaceQueryParam(key, Arrays.asList(callbackUriEncode));
                     } else {
                         adUriBuilder.replaceQueryParam(key, Arrays.asList(Optional.ofNullable(paramJson.getString(key)).orElse("")));
                     }

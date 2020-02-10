@@ -80,6 +80,7 @@ public class PromoteRecordServiceImpl extends ServiceImpl<PromoteRecordMapper, P
         clickUriBuilder.queryParam(Const.CALLBACK, "{callback}");
         String clickUri = clickUriBuilder.build().toUriString();
         PromoteRecord to = new PromoteRecord();
+        to.setInPrice(ad.getInPrice());
         to.setTraceUrl(clickUri);
         to.setPromoteStatus(PromoteStatusEnum.RUNNING.getStatus());
         to.setEditor("system");
