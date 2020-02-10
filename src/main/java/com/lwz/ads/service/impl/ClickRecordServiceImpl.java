@@ -28,9 +28,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -191,7 +189,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
             if ("localhost".equals(adUri.getHost()) || "2020funfantasy.cn".equals(adUri.getHost()) || "47.107.70.137".equals(adUri.getHost())) {
                 throw new UnknownHostException();
             }
-            String uri = adUri.toUriString();
+            String uri = adUri.encode().toUriString();
             log.info("{} uri:{}", func ,uri);
             ResponseEntity<String> resp = restTemplate.getForEntity(uri, String.class);
             log.info("{} uri:{} resp:{}", func, uri, resp);
@@ -219,13 +217,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                                 .queryParam("date", date)
                                 .queryParam("clickId", clickId)
                                 .build();
-                        String callbackUriEncode = null;
-                        try {
-                            callbackUriEncode = URLEncoder.encode(callbackUri.toUriString(), "UTF-8");
-                        } catch (UnsupportedEncodingException e) {
-                            log.error("buildAdTraceUri clickId:{} date:{} fail. err:{}", clickId, date, e.getMessage(), e);
-                        }
-                        adUriBuilder.replaceQueryParam(key, Arrays.asList(callbackUriEncode));
+                        adUriBuilder.replaceQueryParam(key, Arrays.asList(callbackUri.toUriString()));
                     } else {
                         adUriBuilder.replaceQueryParam(key, Arrays.asList(Optional.ofNullable(paramJson.getString(key)).orElse("")));
                     }
