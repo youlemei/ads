@@ -149,11 +149,11 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
             }
             String uriString = uri.toUriString();
             log.info("callbackConvert callback:{}", callback);
-            ResponseEntity<String> resp = restTemplate.getForEntity(uriString, String.class);
+            ResponseEntity<String> resp = restTemplate.getForEntity(uri.encode().toUri(), String.class);
             log.info("callbackConvert callback:{} resp:{}", uriString, resp);
             return resp;
         } catch (Exception e) {
-            log.error("callbackConvert fail. callback:{} times:{} err:{}", callback, e.getMessage(), e);
+            log.error("callbackConvert fail. callback:{} err:{}", callback, e.getMessage(), e);
             return null;
         }
     }
