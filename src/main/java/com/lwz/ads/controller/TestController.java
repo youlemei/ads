@@ -18,7 +18,7 @@ public class TestController {
 
     @GetMapping("test")
     public String testUrlParam(@RequestParam Map<String, Object> param) {
-        log.info("testUrlParam param:{}", param);
+        log.error("testUrlParam param:{}", param);
         return "success";
     }
 

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <appender name="FILE_APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>/data/log/ads/all.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>/data/log/ads/all_%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>[%date{ISO8601}] %level [%logger]:%line [%thread] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="CONSOLE_APPENDER" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>[%date{ISO8601}] %highlight(%level) [%logger]:%line [%thread] - %cyan(%msg%n)</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="WE_CHAT_APPENDER" class="com.lwz.ads.util.WeChatAppender"/>
+
+    <appender name="ERROR_APPENDER" class="ch.qos.logback.classic.AsyncAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <appender-ref ref="WE_CHAT_APPENDER"/>
+    </appender>
+
+    <springProfile name="dev">
+        <root level="INFO">
+            <appender-ref ref="FILE_APPENDER"/>
+            <appender-ref ref="CONSOLE_APPENDER" />
+        </root>
+    </springProfile>
+
+    <springProfile name="prod">
+        <root level="INFO">
+            <appender-ref ref="FILE_APPENDER"/>
+            <appender-ref ref="ERROR_APPENDER" />
+        </root>
+    </springProfile>
+
+</configuration>

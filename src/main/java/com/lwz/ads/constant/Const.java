@@ -32,4 +32,6 @@ public class Const {
      */
     public static final String CONVERT_DAY_LIMIT_KEY = "convert_day_limit_%s:%s";
 
+    public static final String ERROR_WEB_HOOK = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=db98068e-b60b-493c-826b-8936d814a7d1";
+
 }
