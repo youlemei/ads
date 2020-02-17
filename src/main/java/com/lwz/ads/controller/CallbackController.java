@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -43,10 +44,19 @@ public class CallbackController {
     @Autowired
     private RedisUtils redisUtils;
 
+    /**
+     * 广告转化回调
+     *
+     * @param date
+     * @param clickId
+     * @return
+     */
     @GetMapping("/callback")
-    public Response callback(@RequestParam String date, @RequestParam String clickId){
+    public Response callback(HttpServletRequest httpServletRequest,
+                             @RequestParam String date, @RequestParam String clickId){
         try {
-            log.info("callback date:{} clickId:{}", date, clickId);
+            log.info("callback date:{} clickId:{} ip:{}", date, clickId, httpServletRequest.getRemoteAddr());
+
             //检查
             LocalDateTime now = LocalDateTime.now();
             LocalDate localDate = LocalDate.parse(date, DateUtils.yyyyMMdd);

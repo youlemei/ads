@@ -20,6 +20,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -46,14 +47,16 @@ public class ClickController {
      *
      * @param adId
      * @param channelId
+     * @param type
      * @param request
      * @return
      */
     @GetMapping("/click")
-    public ResponseEntity<String> click(@RequestParam Long adId, @RequestParam Long channelId,
-                                          @RequestParam String type, @RequestParam Map<String, Object> request){
+    public ResponseEntity<String> click(HttpServletRequest httpServletRequest,
+                                        @RequestParam Long adId, @RequestParam Long channelId,
+                                        @RequestParam String type, @RequestParam Map<String, Object> request){
         try {
-            log.info("click adId:{} channelId:{} request:{}", adId, channelId, request);
+            log.info("click adId:{} channelId:{} request:{} ip:{}", adId, channelId, request, httpServletRequest.getRemoteAddr());
 
             //检查
             TraceTypeEnum traceType = TraceTypeEnum.valueOfType(type);

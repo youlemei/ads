@@ -12,6 +12,7 @@ import com.lwz.ads.entity.PromoteRecord;
 import com.lwz.ads.mapper.ConvertRecordMapper;
 import com.lwz.ads.service.IConvertRecordService;
 import com.lwz.ads.util.DateUtils;
+import com.lwz.ads.util.IPUtils;
 import com.lwz.ads.util.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -144,7 +145,7 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
         try {
             //识别callback不是指向本机
             UriComponents uri = UriComponentsBuilder.fromHttpUrl(StringUtils.trimWhitespace(callback)).build();
-            if ("localhost".equals(uri.getHost()) || "2020funfantasy.cn".equals(uri.getHost()) || "47.107.70.137".equals(uri.getHost())) {
+            if (IPUtils.isLocalhost(uri.getHost())) {
                 throw new UnknownHostException();
             }
             String uriString = uri.toUriString();

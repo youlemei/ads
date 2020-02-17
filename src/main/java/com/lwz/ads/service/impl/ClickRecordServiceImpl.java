@@ -12,6 +12,7 @@ import com.lwz.ads.entity.PromoteRecord;
 import com.lwz.ads.mapper.ClickRecordMapper;
 import com.lwz.ads.service.IClickRecordService;
 import com.lwz.ads.util.DateUtils;
+import com.lwz.ads.util.IPUtils;
 import com.lwz.ads.util.RedisUtils;
 import com.lwz.ads.util.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
@@ -186,7 +187,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     private ResponseEntity<String> requestTraceUri(String func, UriComponents adUri) {
         try {
             //识别uri不是指向本机
-            if ("localhost".equals(adUri.getHost()) || "2020funfantasy.cn".equals(adUri.getHost()) || "47.107.70.137".equals(adUri.getHost())) {
+            if (IPUtils.isLocalhost(adUri.getHost())) {
                 throw new UnknownHostException();
             }
             String uri = adUri.toUriString();
