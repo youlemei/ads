@@ -231,7 +231,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     @Transactional
     @Override
     public void createTable() {
-        IntStream.range(0, createDays).forEach(day -> {
+        IntStream.range(-1, createDays).forEach(day -> {
             String date = LocalDateTime.now().plusDays(day).format(DateUtils.yyyyMMdd);
             getBaseMapper().createTable(date);
         });

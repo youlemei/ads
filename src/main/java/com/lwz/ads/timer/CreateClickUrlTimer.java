@@ -8,8 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
 @Slf4j
 @Component
 public class CreateClickUrlTimer {
@@ -18,17 +16,17 @@ public class CreateClickUrlTimer {
     private PromoteRecordServiceImpl promoteRecordService;
 
     @Scheduled(fixedDelay = 3000)
-    public void work(){
+    public void work() {
         //暂时单机版
-        List<PromoteRecord> promoteRecordList = promoteRecordService.lambdaQuery()
-                .eq(PromoteRecord::getPromoteStatus, PromoteStatusEnum.CREATING.getStatus()).list();
-        promoteRecordList.parallelStream().forEach(promoteRecord -> {
-            try {
-                promoteRecordService.doCreateClickUrl(promoteRecord);
-            } catch (Exception e) {
-                log.error("doCreateClickUrl error. id:{} msg:{}", promoteRecord.getId(), e.getMessage(), e);
-            }
-        });
+        promoteRecordService.lambdaQuery().eq(PromoteRecord::getPromoteStatus, PromoteStatusEnum.CREATING.getStatus()).list()
+                .parallelStream()
+                .forEach(promoteRecord -> {
+                    try {
+                        promoteRecordService.doCreateClickUrl(promoteRecord);
+                    } catch (Exception e) {
+                        log.error("doCreateClickUrl error. id:{} msg:{}", promoteRecord.getId(), e.getMessage(), e);
+                    }
+                });
     }
 
 }

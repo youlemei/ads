@@ -12,6 +12,7 @@ import com.lwz.ads.service.impl.ClickRecordServiceImpl;
 import com.lwz.ads.service.impl.ConvertRecordServiceImpl;
 import com.lwz.ads.service.impl.PromoteRecordServiceImpl;
 import com.lwz.ads.util.DateUtils;
+import com.lwz.ads.util.IPUtils;
 import com.lwz.ads.util.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +56,7 @@ public class CallbackController {
     public Response callback(HttpServletRequest httpServletRequest,
                              @RequestParam String date, @RequestParam String clickId){
         try {
-            log.info("callback date:{} clickId:{} ip:{}", date, clickId, httpServletRequest.getRemoteAddr());
+            log.info("callback date:{} clickId:{} ip:{}", date, clickId, IPUtils.getRealIp(httpServletRequest));
 
             //检查
             LocalDateTime now = LocalDateTime.now();

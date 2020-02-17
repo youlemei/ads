@@ -48,12 +48,12 @@ public class RedisUtils {
         try {
             return redisTemplate.opsForValue().setIfAbsent(key, requestId, expireSecond, TimeUnit.SECONDS);
         } catch (Exception e) {
-            log.error("lock fail. err:{}", e.getMessage(), e);
+            log.error("lock fail. key:{} err:{}", key, e.getMessage(), e);
             return false;
         }
     }
 
-    private final String UNLOCK_LUA = "if redis.call('get',KEYS[1])==ARGV[1] then return redis.call('del',KEYS[1]) else return 0 end";
+    private final String UNLOCK_LUA = "if redis.call('GET',KEYS[1])==ARGV[1] then return redis.call('DEL',KEYS[1]) else return 0 end";
 
     /**
      * 释放分布式锁
@@ -70,7 +70,7 @@ public class RedisUtils {
             Long result = redisTemplate.execute(redisScript, Arrays.asList(key), requestId);
             return result.intValue() == 1;
         } catch (Exception e) {
-            log.error("unlock fail. err:{}", e.getMessage(), e);
+            log.error("unlock fail. key:{} err:{}", key, e.getMessage(), e);
             return false;
         }
     }

@@ -10,6 +10,7 @@ import com.lwz.ads.service.impl.AdvertisementServiceImpl;
 import com.lwz.ads.service.impl.ClickRecordServiceImpl;
 import com.lwz.ads.service.impl.PromoteRecordServiceImpl;
 import com.lwz.ads.util.DateUtils;
+import com.lwz.ads.util.IPUtils;
 import com.lwz.ads.util.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +57,7 @@ public class ClickController {
                                         @RequestParam Long adId, @RequestParam Long channelId,
                                         @RequestParam String type, @RequestParam Map<String, Object> request){
         try {
-            log.info("click adId:{} channelId:{} request:{} ip:{}", adId, channelId, request, httpServletRequest.getRemoteAddr());
+            log.info("click adId:{} channelId:{} request:{} ip:{}", adId, channelId, request, IPUtils.getRealIp(httpServletRequest));
 
             //检查
             TraceTypeEnum traceType = TraceTypeEnum.valueOfType(type);
