@@ -1,4 +1,4 @@
-package com.lwz.ads.entity;
+package com.lwz.ads.mapper.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -7,12 +7,11 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
  * <p>
- * 广告
+ * 广告主
  * </p>
  *
  * @author lwz
@@ -21,7 +20,7 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-public class Advertisement implements Serializable {
+public class Company implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -32,69 +31,54 @@ public class Advertisement implements Serializable {
     private Long id;
 
     /**
-     * 广告主id
+     * 广告主名
      */
-    private Long companyId;
+    private String companyName;
 
     /**
-     * 类型 1.直链广告
+     * 邮箱
      */
-    private Integer adType;
+    private String companyMailbox;
 
     /**
-     * 广告
+     * 类型
      */
-    private String adName;
+    private Integer companyType;
 
     /**
-     * 类别
+     * 官网
      */
-    private Integer adCategory;
+    private String companyWeb;
 
     /**
-     * 系统 1.IOS 2.Android
+     * 联系人姓名
      */
-    private Integer systemType;
+    private String contactName;
 
     /**
-     * 截止时间
+     * 联系人邮箱
      */
-    private LocalDateTime endTime;
+    private String contactMailbox;
 
     /**
-     * 推广开关
+     * 手机号码
      */
-    private Boolean traceStatus;
+    private String contactPhoneNumber;
 
     /**
-     * 结算类型 1.CPA
+     * QQ
      */
-    private Integer settleType;
+    private String contactQq;
 
     /**
-     * 接入单价
+     * 微信
      */
-    private BigDecimal inPrice;
+    private String contactWechat;
 
     /**
-     * 追踪方式 ASYNC:异步 REDIRECT:302跳转
+     * 职位
      */
-    private String traceType;
-
-    /**
-     * 预览链接
-     */
-    private String previewUrl;
-
-    /**
-     * 广告追踪链接
-     */
-    private String traceUrl;
-
-    /**
-     * 去重策略
-     */
-    private Integer deduplicateType;
+    private String contactPosition;
 
     /**
      * 创建者

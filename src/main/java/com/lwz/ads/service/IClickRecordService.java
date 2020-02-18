@@ -1,9 +1,9 @@
 package com.lwz.ads.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.lwz.ads.entity.Advertisement;
-import com.lwz.ads.entity.ClickRecord;
-import com.lwz.ads.entity.PromoteRecord;
+import com.lwz.ads.mapper.entity.Advertisement;
+import com.lwz.ads.mapper.entity.ClickRecord;
+import com.lwz.ads.mapper.entity.PromoteRecord;
 
 import java.net.URI;
 import java.time.LocalDateTime;

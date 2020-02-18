@@ -1,6 +1,6 @@
 package com.lwz.ads.mapper;
 
-import com.lwz.ads.entity.AdvertisementReport;
+import com.lwz.ads.mapper.entity.AdvertisementReport;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**

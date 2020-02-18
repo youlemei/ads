@@ -1,4 +1,4 @@
-package com.lwz.ads.entity;
+package com.lwz.ads.mapper.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -7,11 +7,12 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
  * <p>
- * 渠道
+ * 广告
  * </p>
  *
  * @author lwz
@@ -20,7 +21,7 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-public class Channel implements Serializable {
+public class Advertisement implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -31,54 +32,69 @@ public class Channel implements Serializable {
     private Long id;
 
     /**
-     * 渠道名
+     * 广告主id
      */
-    private String channelName;
+    private Long companyId;
 
     /**
-     * 邮箱
+     * 类型 1.直链广告
      */
-    private String channelMailbox;
+    private Integer adType;
 
     /**
-     * 类型
+     * 广告
      */
-    private Integer channelType;
+    private String adName;
 
     /**
-     * 官网
+     * 类别
      */
-    private String channelWeb;
+    private Integer adCategory;
 
     /**
-     * 联系人姓名
+     * 系统 1.IOS 2.Android
      */
-    private String contactName;
+    private Integer systemType;
 
     /**
-     * 联系人邮箱
+     * 截止时间
      */
-    private String contactMailbox;
+    private LocalDateTime endTime;
 
     /**
-     * 手机号码
+     * 推广开关
      */
-    private String contactPhoneNumber;
+    private Boolean traceStatus;
 
     /**
-     * QQ
+     * 结算类型 1.CPA
      */
-    private String contactQq;
+    private Integer settleType;
 
     /**
-     * 微信
+     * 接入单价
      */
-    private String contactWechat;
+    private BigDecimal inPrice;
 
     /**
-     * 职位
+     * 追踪方式 ASYNC:异步 REDIRECT:302跳转
      */
-    private String contactPosition;
+    private String traceType;
+
+    /**
+     * 预览链接
+     */
+    private String previewUrl;
+
+    /**
+     * 广告追踪链接
+     */
+    private String traceUrl;
+
+    /**
+     * 去重策略
+     */
+    private Integer deduplicateType;
 
     /**
      * 创建者

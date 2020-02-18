@@ -1,7 +1,7 @@
 package com.lwz.ads.timer;
 
 import com.lwz.ads.constant.PromoteStatusEnum;
-import com.lwz.ads.entity.PromoteRecord;
+import com.lwz.ads.mapper.entity.PromoteRecord;
 import com.lwz.ads.service.impl.PromoteRecordServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

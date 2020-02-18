@@ -1,8 +1,8 @@
 package com.lwz.ads.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.lwz.ads.entity.ClickRecord;
-import com.lwz.ads.mapper.bean.CountSum;
+import com.lwz.ads.mapper.entity.ClickRecord;
+import com.lwz.ads.bean.CountSum;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 

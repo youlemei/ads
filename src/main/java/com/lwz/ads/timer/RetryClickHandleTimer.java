@@ -2,8 +2,8 @@ package com.lwz.ads.timer;
 
 import com.lwz.ads.constant.ClickStatusEnum;
 import com.lwz.ads.constant.TraceTypeEnum;
-import com.lwz.ads.entity.Advertisement;
-import com.lwz.ads.entity.ClickRecord;
+import com.lwz.ads.mapper.entity.Advertisement;
+import com.lwz.ads.mapper.entity.ClickRecord;
 import com.lwz.ads.service.impl.AdvertisementServiceImpl;
 import com.lwz.ads.service.impl.ClickRecordServiceImpl;
 import com.lwz.ads.util.DateUtils;

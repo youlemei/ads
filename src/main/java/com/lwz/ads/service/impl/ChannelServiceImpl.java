@@ -1,6 +1,6 @@
 package com.lwz.ads.service.impl;
 
-import com.lwz.ads.entity.Channel;
+import com.lwz.ads.mapper.entity.Channel;
 import com.lwz.ads.mapper.ChannelMapper;
 import com.lwz.ads.service.IChannelService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;

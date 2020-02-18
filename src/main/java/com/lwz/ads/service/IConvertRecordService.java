@@ -1,9 +1,9 @@
 package com.lwz.ads.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.lwz.ads.entity.ClickRecord;
-import com.lwz.ads.entity.ConvertRecord;
-import com.lwz.ads.entity.PromoteRecord;
+import com.lwz.ads.mapper.entity.ClickRecord;
+import com.lwz.ads.mapper.entity.ConvertRecord;
+import com.lwz.ads.mapper.entity.PromoteRecord;
 
 /**
  * <p>

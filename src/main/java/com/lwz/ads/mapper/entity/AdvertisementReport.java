@@ -1,4 +1,4 @@
-package com.lwz.ads.entity;
+package com.lwz.ads.mapper.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -8,11 +8,12 @@ import lombok.experimental.Accessors;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
  * <p>
- * 广告投放
+ * 广告报表, 按日汇总
  * </p>
  *
  * @author lwz
@@ -21,7 +22,7 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-public class PromoteRecord implements Serializable {
+public class AdvertisementReport implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -32,9 +33,9 @@ public class PromoteRecord implements Serializable {
     private Long id;
 
     /**
-     * 广告id
+     * 日期
      */
-    private Long adId;
+    private LocalDate adDate;
 
     /**
      * 渠道id
@@ -42,9 +43,9 @@ public class PromoteRecord implements Serializable {
     private Long channelId;
 
     /**
-     * 广告创建者
+     * 广告id
      */
-    private String adCreator;
+    private Long adId;
 
     /**
      * 渠道创建者
@@ -52,12 +53,32 @@ public class PromoteRecord implements Serializable {
     private String channelCreator;
 
     /**
-     * 推广状态 0.生成中 1.运行 2.暂停
+     * 广告创建者
      */
-    private Integer promoteStatus;
+    private String adCreator;
 
     /**
-     * 投放单价
+     * 点击
+     */
+    private Integer clickSum;
+
+    /**
+     * 去重点击
+     */
+    private Integer deduplicateClickSum;
+
+    /**
+     * 原始转化
+     */
+    private Integer srcConvertSum;
+
+    /**
+     * 转化
+     */
+    private Integer convertSum;
+
+    /**
+     * 接入单价
      */
     private BigDecimal inPrice;
 
@@ -67,49 +88,9 @@ public class PromoteRecord implements Serializable {
     private BigDecimal outPrice;
 
     /**
-     * 扣量比例
+     * 更新时间
      */
-    private Integer deductRate;
-
-    /**
-     * 追踪链接
-     */
-    private String traceUrl;
-
-    /**
-     * 追踪类型 ASYNC:异步 REDIRECT:302跳转
-     */
-    private String traceType;
-
-    /**
-     * 每日点击上限
-     */
-    private Integer clickDayLimit;
-
-    /**
-     * 每日转化上限
-     */
-    private Integer convertDayLimit;
-
-    /**
-     * 创建者
-     */
-    private String creator;
-
-    /**
-     * 创建时间
-     */
-    private LocalDateTime createTime;
-
-    /**
-     * 编辑者
-     */
-    private String editor;
-
-    /**
-     * 编辑时间
-     */
-    private LocalDateTime editTime;
+    private LocalDateTime updateTime;
 
     /**
      * 状态

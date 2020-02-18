@@ -1,4 +1,4 @@
-package com.lwz.ads.mapper.bean;
+package com.lwz.ads.bean;
 
 import lombok.Data;
 

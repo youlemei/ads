@@ -1,4 +1,4 @@
-package com.lwz.ads.entity;
+package com.lwz.ads.mapper.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;

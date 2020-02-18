@@ -1,6 +1,6 @@
 package com.lwz.ads.service;
 
-import com.lwz.ads.entity.AdvertisementReport;
+import com.lwz.ads.mapper.entity.AdvertisementReport;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**

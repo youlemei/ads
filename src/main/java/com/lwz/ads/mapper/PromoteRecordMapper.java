@@ -1,6 +1,6 @@
 package com.lwz.ads.mapper;
 
-import com.lwz.ads.entity.PromoteRecord;
+import com.lwz.ads.mapper.entity.PromoteRecord;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**

@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.lwz.ads.mapper.ClickRecordMapper">
 
-    <resultMap id="BaseResultMap" type="com.lwz.ads.entity.ClickRecord">
+    <resultMap id="BaseResultMap" type="com.lwz.ads.mapper.entity.ClickRecord">
         <id column="id" jdbcType="VARCHAR" property="id" />
         <result column="channel_id" jdbcType="BIGINT" property="channelId" />
         <result column="ad_id" jdbcType="BIGINT" property="adId" />
@@ -273,11 +273,11 @@
         </where>
     </update>
 
-    <select id="countClickSum" resultType="com.lwz.ads.mapper.bean.CountSum">
+    <select id="countClickSum" resultType="com.lwz.ads.bean.CountSum">
         select ad_id adId, channel_id channelId, count(*) `count` from click_record_${date} group by ad_id, channel_id
     </select>
 
-    <select id="countDeduplicateClickSum" resultType="com.lwz.ads.mapper.bean.CountSum">
+    <select id="countDeduplicateClickSum" resultType="com.lwz.ads.bean.CountSum">
         select ad_id adId, channel_id channelId, count(*) `count` from
             (select ad_id, channel_id, ip, mac from click_record_${date} group by ad_id, channel_id, ip, mac) tmp
         group by ad_id, channel_id

@@ -1,6 +1,6 @@
 package com.lwz.ads.mapper;
 
-import com.lwz.ads.mapper.bean.CountSum;
+import com.lwz.ads.bean.CountSum;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.junit.BeforeClass;

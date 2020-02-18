@@ -3,7 +3,7 @@ package com.lwz.ads.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.lwz.ads.entity.Advertisement;
+import com.lwz.ads.mapper.entity.Advertisement;
 import com.lwz.ads.mapper.AdvertisementMapper;
 import com.lwz.ads.service.IAdvertisementService;
 import org.springframework.stereotype.Service;

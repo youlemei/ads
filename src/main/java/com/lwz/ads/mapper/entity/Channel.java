@@ -1,4 +1,4 @@
-package com.lwz.ads.entity;
+package com.lwz.ads.mapper.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -7,13 +7,11 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
  * <p>
- * 广告报表, 按日汇总
+ * 渠道
  * </p>
  *
  * @author lwz
@@ -22,7 +20,7 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-public class AdvertisementReport implements Serializable {
+public class Channel implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -33,64 +31,74 @@ public class AdvertisementReport implements Serializable {
     private Long id;
 
     /**
-     * 日期
+     * 渠道名
      */
-    private LocalDate adDate;
+    private String channelName;
 
     /**
-     * 渠道id
+     * 邮箱
      */
-    private Long channelId;
+    private String channelMailbox;
 
     /**
-     * 广告id
+     * 类型
      */
-    private Long adId;
+    private Integer channelType;
 
     /**
-     * 渠道创建者
+     * 官网
      */
-    private String channelCreator;
+    private String channelWeb;
 
     /**
-     * 广告创建者
+     * 联系人姓名
      */
-    private String adCreator;
+    private String contactName;
 
     /**
-     * 点击
+     * 联系人邮箱
      */
-    private Integer clickSum;
+    private String contactMailbox;
 
     /**
-     * 去重点击
+     * 手机号码
      */
-    private Integer deduplicateClickSum;
+    private String contactPhoneNumber;
 
     /**
-     * 原始转化
+     * QQ
      */
-    private Integer srcConvertSum;
+    private String contactQq;
 
     /**
-     * 转化
+     * 微信
      */
-    private Integer convertSum;
+    private String contactWechat;
 
     /**
-     * 接入单价
+     * 职位
      */
-    private BigDecimal inPrice;
+    private String contactPosition;
 
     /**
-     * 投放单价
+     * 创建者
      */
-    private BigDecimal outPrice;
+    private String creator;
 
     /**
-     * 更新时间
+     * 创建时间
      */
-    private LocalDateTime updateTime;
+    private LocalDateTime createTime;
+
+    /**
+     * 编辑者
+     */
+    private String editor;
+
+    /**
+     * 编辑时间
+     */
+    private LocalDateTime editTime;
 
     /**
      * 状态

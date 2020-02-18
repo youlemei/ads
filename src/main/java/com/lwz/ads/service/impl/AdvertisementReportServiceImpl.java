@@ -1,10 +1,10 @@
 package com.lwz.ads.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.lwz.ads.entity.AdvertisementReport;
-import com.lwz.ads.entity.PromoteRecord;
+import com.lwz.ads.mapper.entity.AdvertisementReport;
+import com.lwz.ads.mapper.entity.PromoteRecord;
 import com.lwz.ads.mapper.AdvertisementReportMapper;
-import com.lwz.ads.mapper.bean.CountSum;
+import com.lwz.ads.bean.CountSum;
 import com.lwz.ads.service.IAdvertisementReportService;
 import com.lwz.ads.util.DateUtils;
 import lombok.extern.slf4j.Slf4j;

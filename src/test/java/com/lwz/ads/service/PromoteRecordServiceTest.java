@@ -3,7 +3,7 @@ package com.lwz.ads.service;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.lwz.Main;
 import com.lwz.ads.constant.PromoteStatusEnum;
-import com.lwz.ads.entity.PromoteRecord;
+import com.lwz.ads.mapper.entity.PromoteRecord;
 import com.lwz.ads.service.impl.PromoteRecordServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;

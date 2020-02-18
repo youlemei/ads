@@ -1,6 +1,6 @@
 package com.lwz.ads.service.impl;
 
-import com.lwz.ads.entity.Company;
+import com.lwz.ads.mapper.entity.Company;
 import com.lwz.ads.mapper.CompanyMapper;
 import com.lwz.ads.service.ICompanyService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;

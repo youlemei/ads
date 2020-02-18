@@ -1,4 +1,4 @@
-package com.lwz.ads.entity;
+package com.lwz.ads.mapper.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -7,11 +7,12 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
  * <p>
- * 广告主
+ * 广告投放
  * </p>
  *
  * @author lwz
@@ -20,7 +21,7 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-public class Company implements Serializable {
+public class PromoteRecord implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -31,54 +32,64 @@ public class Company implements Serializable {
     private Long id;
 
     /**
-     * 广告主名
+     * 广告id
      */
-    private String companyName;
+    private Long adId;
 
     /**
-     * 邮箱
+     * 渠道id
      */
-    private String companyMailbox;
+    private Long channelId;
 
     /**
-     * 类型
+     * 广告创建者
      */
-    private Integer companyType;
+    private String adCreator;
 
     /**
-     * 官网
+     * 渠道创建者
      */
-    private String companyWeb;
+    private String channelCreator;
 
     /**
-     * 联系人姓名
+     * 推广状态 0.生成中 1.运行 2.暂停
      */
-    private String contactName;
+    private Integer promoteStatus;
 
     /**
-     * 联系人邮箱
+     * 投放单价
      */
-    private String contactMailbox;
+    private BigDecimal inPrice;
 
     /**
-     * 手机号码
+     * 投放单价
      */
-    private String contactPhoneNumber;
+    private BigDecimal outPrice;
 
     /**
-     * QQ
+     * 扣量比例
      */
-    private String contactQq;
+    private Integer deductRate;
 
     /**
-     * 微信
+     * 追踪链接
      */
-    private String contactWechat;
+    private String traceUrl;
 
     /**
-     * 职位
+     * 追踪类型 ASYNC:异步 REDIRECT:302跳转
      */
-    private String contactPosition;
+    private String traceType;
+
+    /**
+     * 每日点击上限
+     */
+    private Integer clickDayLimit;
+
+    /**
+     * 每日转化上限
+     */
+    private Integer convertDayLimit;
 
     /**
      * 创建者

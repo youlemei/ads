@@ -1,7 +1,7 @@
 package com.lwz.ads.timer;
 
 import com.lwz.ads.constant.ConvertStatusEnum;
-import com.lwz.ads.entity.ConvertRecord;
+import com.lwz.ads.mapper.entity.ConvertRecord;
 import com.lwz.ads.service.impl.ConvertRecordServiceImpl;
 import com.lwz.ads.util.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;

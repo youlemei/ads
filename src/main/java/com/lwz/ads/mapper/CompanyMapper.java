@@ -1,7 +1,7 @@
 package com.lwz.ads.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.lwz.ads.entity.Company;
+import com.lwz.ads.mapper.entity.Company;
 
 /**
  * <p>

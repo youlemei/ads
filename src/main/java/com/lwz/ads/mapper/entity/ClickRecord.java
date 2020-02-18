@@ -1,4 +1,4 @@
-package com.lwz.ads.entity;
+package com.lwz.ads.mapper.entity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;

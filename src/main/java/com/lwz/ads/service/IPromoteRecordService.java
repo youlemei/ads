@@ -1,6 +1,6 @@
 package com.lwz.ads.service;
 
-import com.lwz.ads.entity.PromoteRecord;
+import com.lwz.ads.mapper.entity.PromoteRecord;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**

@@ -1,6 +1,6 @@
 package com.lwz.ads.mapper;
 
-import com.lwz.ads.entity.Channel;
+import com.lwz.ads.mapper.entity.Channel;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**
