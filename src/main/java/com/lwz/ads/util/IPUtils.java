@@ -94,6 +94,7 @@ public class IPUtils {
                 }
             }
         }
+        /*
         String proxyClientIp = httpServletRequest.getHeader("Proxy-Client-IP");
         if (notUnknownText(proxyClientIp)) {
             return proxyClientIp;
@@ -102,11 +103,12 @@ public class IPUtils {
         if (notUnknownText(WLProxyClientIp)) {
             return WLProxyClientIp;
         }
+        */
         return httpServletRequest.getRemoteAddr();
     }
 
     private static boolean notUnknownText(String text){
-        return StringUtils.hasText(text) && !"unknown".equalsIgnoreCase(text);
+        return StringUtils.hasText(text) && !"unknown".equalsIgnoreCase(text) && text.indexOf(":") == -1;
     }
 
 
