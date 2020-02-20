@@ -18,6 +18,10 @@ import java.util.List;
 @Slf4j
 public class IPUtils {
 
+    static {
+        getIp();
+    }
+
     public static boolean isLocalhost(String host){
         return "localhost".equalsIgnoreCase(host) || "2020funfantasy.cn".equalsIgnoreCase(host) || "47.107.70.137".equals(host);
     }

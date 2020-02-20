@@ -36,9 +36,9 @@ public class WeChatAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
     protected void append(ILoggingEvent event) {
 
         String time = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getTimeStamp()), ZoneId.systemDefault()).format(DateUtils.DEFAULT_FORMATTER);
-        //TODO: 获取服务器Ip，告知哪台服务器抛异常
         StringBuilder sb = new StringBuilder()
-                .append("[").append(time).append("] ")
+                .append("[").append(time).append("] ERROR ")
+                .append("[").append(System.getProperty("SERVER_PORT", "9999")).append("] ")
                 .append("[").append(event.getLoggerName()).append("]:")
                 .append(event.getCallerData()[0].getLineNumber()).append(" - ")
                 .append(event.getFormattedMessage());
