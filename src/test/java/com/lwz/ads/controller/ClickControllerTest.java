@@ -36,6 +36,8 @@ public class ClickControllerTest  {
     public void click() throws Exception{
         MockMvc mockMvc = MockMvcBuilders.standaloneSetup(clickController).build();
 
+        //TODO: 写一个主流程单测, 回归测试
+
         //可模仿数据库行为
         Mockito.when(promoteRecordMapper.selectOne(Mockito.any()))
                 .thenReturn(new PromoteRecord().setAdId(1L).setChannelId(1L).setPromoteStatus(PromoteStatusEnum.RUNNING.getStatus()));
