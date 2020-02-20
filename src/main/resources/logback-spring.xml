@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <property name="server.port" value="9999"/>
+    <property name="SERVER_PORT" value="9999"/>
 
     <appender name="FILE_APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>/data/log/ads_${server.port}/all.log</file>
+        <file>/data/log/ads_${SERVER_PORT}/all.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>/data/log/ads_${server.port}/all_%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>/data/log/ads_${SERVER_PORT}/all_%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder>
