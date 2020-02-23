@@ -15,6 +15,7 @@ public class AdReportTimer {
     public void work(){
         //每分钟统计每日点击
         //每分钟统计每日转化
+        //TODO: 优化, 全表扫描始终不好 改成触发式更新(触发式更新到redis/定时同步到报表) + 次日计算报表
         advertisementReportService.countAdReport();
     }
 
