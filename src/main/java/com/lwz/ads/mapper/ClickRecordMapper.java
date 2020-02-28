@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.lwz.ads.mapper.entity.ClickRecord;
 import com.lwz.ads.bean.CountSum;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import java.time.LocalDateTime;
@@ -36,5 +37,9 @@ public interface ClickRecordMapper extends BaseMapper<ClickRecord> {
 
     List<ClickRecord> selectReceiveClick(@Param("end") LocalDateTime end, @Param("date") String date);
 
+    @Update("update click_record_${date} set retry_times = retry_times + 1 where id = #{clickId}")
     int incrRetryTimes(@Param("clickId") String clickId, @Param("date") String date);
+
+    @Select("select count(*) from click_record_${date} where retry_times >= 3")
+    long countRetryMax(String date);
 }
