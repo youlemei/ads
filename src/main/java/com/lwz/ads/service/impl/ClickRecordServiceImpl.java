@@ -6,10 +6,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lwz.ads.constant.ClickStatusEnum;
 import com.lwz.ads.constant.Const;
 import com.lwz.ads.constant.TraceTypeEnum;
+import com.lwz.ads.mapper.ClickRecordMapper;
 import com.lwz.ads.mapper.entity.Advertisement;
 import com.lwz.ads.mapper.entity.ClickRecord;
 import com.lwz.ads.mapper.entity.PromoteRecord;
-import com.lwz.ads.mapper.ClickRecordMapper;
 import com.lwz.ads.service.IClickRecordService;
 import com.lwz.ads.util.DateUtils;
 import com.lwz.ads.util.IPUtils;
@@ -18,6 +18,7 @@ import com.lwz.ads.util.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.NestedExceptionUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -29,8 +30,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.SocketTimeoutException;
 import java.net.URI;
-import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Map;
@@ -185,17 +186,31 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     }
 
     private ResponseEntity<String> requestTraceUri(String func, UriComponents adUri) {
-        try {
             //识别uri不是指向本机
-            if (IPUtils.isLocalhost(adUri.getHost())) {
-                throw new UnknownHostException();
+        if (IPUtils.isLocalhost(adUri.getHost())) {
+            log.error("requestTraceUri uri指向本机. adUri:{}", adUri);
+            return null;
+        }
+        return doRequestTraceUri(func, adUri, 1);
+    }
+
+    private ResponseEntity<String> doRequestTraceUri(String func, UriComponents adUri, int times) {
+        try {
+            int maxRetryTimes = 2;
+            if (times > maxRetryTimes) {
+                log.warn("requestTraceUri retry times > {}", maxRetryTimes);
+                return null;
             }
-            String uri = adUri.toUriString();
-            log.info("{} uri:{}", func ,uri);
+            //log.info("{} uri:{}", func ,adUri);
             ResponseEntity<String> resp = restTemplate.getForEntity(adUri.encode().toUri(), String.class);
-            log.info("{} uri:{} resp:{}", func, uri, resp);
+            log.info("{} uri:{} resp:{}", func, adUri, resp);
             return resp;
         } catch (Exception e) {
+            Throwable rootCause = NestedExceptionUtils.getRootCause(e);
+            if (rootCause instanceof SocketTimeoutException) {
+                log.warn("requestTraceUri fail. socket timeout. func:{} adUri:{} err:{}", func, adUri, e.getMessage(), e);
+                return doRequestTraceUri(func, adUri, times + 1);
+            }
             log.error("requestTraceUri fail. func:{} adUri:{} err:{}", func, adUri, e.getMessage(), e);
             return null;
         }
