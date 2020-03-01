@@ -26,7 +26,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -216,10 +215,10 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                 log.warn("requestTraceUri fail. socket timeout. func:{} adUri:{} err:{}", func, adUri, rootCause.getMessage());
                 return null;
             }
-            if (rootCause instanceof HttpServerErrorException) {
-                log.warn("requestTraceUri fail. server error. func:{} adUri:{} err:{}", func, adUri, rootCause.getMessage());
-                return null;
-            }
+            //if (rootCause instanceof HttpServerErrorException) {
+            //    log.warn("requestTraceUri fail. server error. func:{} adUri:{} err:{}", func, adUri, rootCause.getMessage());
+            //    return null;
+            //}
 
             log.error("requestTraceUri fail. func:{} adUri:{} err:{}", func, adUri, e.getMessage(), e);
             return null;

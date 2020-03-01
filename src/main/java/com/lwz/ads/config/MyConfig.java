@@ -1,16 +1,24 @@
 package com.lwz.ads.config;
 
 import com.alibaba.fastjson.support.spring.GenericFastJsonRedisSerializer;
+import io.lettuce.core.AbstractRedisClient;
+import io.netty.channel.EventLoopGroup;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.redis.RedisHealthIndicator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
+import java.lang.reflect.Field;
+import java.util.Map;
 
 /**
  * @author liweizhou 2020/2/2
@@ -52,6 +60,28 @@ public class MyConfig {
         requestFactory.setReadTimeout(5000);
         restTemplate.setRequestFactory(requestFactory);
         return restTemplate;
+    }
+
+    @Bean
+    public RedisHealthIndicator redisHealthIndicator(RedisConnectionFactory redisConnectionFactory){
+        return new RedisHealthIndicator(redisConnectionFactory) {
+            @Override
+            protected void doHealthCheck(Health.Builder builder) throws Exception {
+                super.doHealthCheck(builder);
+                try {
+                    Field clientField = ReflectionUtils.findField(LettuceConnectionFactory.class, "client", AbstractRedisClient.class);
+                    clientField.setAccessible(true);
+                    Object client = ReflectionUtils.getField(clientField, redisConnectionFactory);
+                    Field eventLoopGroupsField = ReflectionUtils.findField(AbstractRedisClient.class, "eventLoopGroups", Map.class);
+                    eventLoopGroupsField.setAccessible(true);
+                    Map<Class<? extends EventLoopGroup>, EventLoopGroup> eventLoopGroups =
+                            (Map<Class<? extends EventLoopGroup>, EventLoopGroup>) ReflectionUtils.getField(eventLoopGroupsField, client);
+                    eventLoopGroups.keySet().forEach(clz -> log.info("Redis EventLoopGroup:{}", clz.getCanonicalName()));
+                } catch (Exception e) {
+                    log.warn("doHealthCheck fail. err:{}", e.getMessage(), e);
+                }
+            }
+        };
     }
 
 }
