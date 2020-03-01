@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -196,21 +197,30 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
     private ResponseEntity<String> doRequestTraceUri(String func, UriComponents adUri, int times) {
         try {
+
             int maxRetryTimes = 2;
             if (times > maxRetryTimes) {
                 log.warn("requestTraceUri retry times > {}", maxRetryTimes);
                 return null;
             }
+
             //log.info("{} uri:{}", func ,adUri);
             ResponseEntity<String> resp = restTemplate.getForEntity(adUri.encode().toUri(), String.class);
             log.info("{} uri:{} resp:{}", func, adUri, resp);
             return resp;
+
         } catch (Exception e) {
+
             Throwable rootCause = NestedExceptionUtils.getRootCause(e);
             if (rootCause instanceof SocketTimeoutException) {
-                log.warn("requestTraceUri fail. socket timeout. func:{} adUri:{} err:{}", func, adUri, e.getMessage(), e);
-                return doRequestTraceUri(func, adUri, times + 1);
+                log.warn("requestTraceUri fail. socket timeout. func:{} adUri:{} err:{}", func, adUri, rootCause.getMessage());
+                return null;
             }
+            if (rootCause instanceof HttpServerErrorException) {
+                log.warn("requestTraceUri fail. server error. func:{} adUri:{} err:{}", func, adUri, rootCause.getMessage());
+                return null;
+            }
+
             log.error("requestTraceUri fail. func:{} adUri:{} err:{}", func, adUri, e.getMessage(), e);
             return null;
         }
