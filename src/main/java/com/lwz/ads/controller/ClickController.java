@@ -92,6 +92,14 @@ public class ClickController {
                     return ResponseEntity.badRequest().body("点击已超过每日上限");
                 }
             }
+            if (promoteRecord.getConvertDayLimit() != null && promoteRecord.getConvertDayLimit() > 0) {
+                String date = clickTime.format(DateUtils.yyyyMMdd);
+                Integer dayClick = redisUtils.get(String.format(Const.CONVERT_DAY_LIMIT_KEY, date, promoteRecord.getId()), Integer.class);
+                if (dayClick != null && dayClick >= promoteRecord.getConvertDayLimit()) {
+                    log.info("click fail. adId:{} channelId:{} 转化已超过每日上限", adId, channelId);
+                    return ResponseEntity.badRequest().body("转化已超过每日上限");
+                }
+            }
 
             //保存点击记录
             ClickRecord clickRecord = clickRecordService.saveClick(clickTime, request, type, promoteRecord, ad);
