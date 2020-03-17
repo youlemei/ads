@@ -1,6 +1,7 @@
 package com.lwz.ads.mapper;
 
 import com.lwz.Main;
+import com.lwz.ads.mapper.entity.ClickRecord;
 import com.lwz.ads.mapper.entity.Company;
 import com.lwz.ads.mapper.entity.PromoteRecord;
 import org.junit.Test;
@@ -9,6 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Main.class)
@@ -20,6 +24,9 @@ public class MapperTest {
 
     @Autowired
     private PromoteRecordMapper promoteRecordMapper;
+
+    @Autowired
+    private ClickRecordMapper clickRecordMapper;
 
     @Test
     public void testSelect() throws Exception {
@@ -35,6 +42,11 @@ public class MapperTest {
     public void testSaveConvert() throws Exception{
         PromoteRecord entity = new PromoteRecord().setAdId(1L).setChannelId(33L).setTraceType("302");
         promoteRecordMapper.insert(entity);
+    }
+
+    @Test
+    public void testClick() throws Exception{
+        List<ClickRecord> clickRecordList = clickRecordMapper.selectReceiveClick(LocalDateTime.now(), "20200317");
     }
 
 }

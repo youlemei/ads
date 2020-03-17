@@ -30,6 +30,7 @@
 
     <select id="countConvertSum" resultType="com.lwz.ads.bean.CountSum">
         select ad_id adId, channel_id channelId, count(*) `count` from convert_record
-        where create_time >= #{start} and create_time &lt; #{end} and convert_status = 2 group by ad_id, channel_id
+        where create_time >= #{start} and create_time &lt; #{end} and convert_status = ${@com.lwz.ads.constant.ConvertStatusEnum@NOTIFIED.getStatus()}
+        group by ad_id, channel_id
     </select>
 </mapper>

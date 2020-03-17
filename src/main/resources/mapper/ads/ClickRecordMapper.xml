@@ -291,7 +291,7 @@
             <if test="end != null">
                 create_time &lt; #{end}
             </if>
-            and click_status = 0
+            and click_status = ${@com.lwz.ads.constant.ClickStatusEnum@RECEIVED.getStatus()}
             and retry_times &lt; 3
         </where>
     </select>
