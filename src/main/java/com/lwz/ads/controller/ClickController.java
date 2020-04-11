@@ -94,8 +94,8 @@ public class ClickController {
             }
             if (promoteRecord.getConvertDayLimit() != null && promoteRecord.getConvertDayLimit() > 0) {
                 String date = clickTime.format(DateUtils.yyyyMMdd);
-                Integer dayClick = redisUtils.get(String.format(Const.CONVERT_DAY_LIMIT_KEY, date, promoteRecord.getId()), Integer.class);
-                if (dayClick != null && dayClick >= promoteRecord.getConvertDayLimit()) {
+                Integer dayConvert = redisUtils.get(String.format(Const.CONVERT_DAY_LIMIT_KEY, date, promoteRecord.getId()), Integer.class);
+                if (dayConvert != null && dayConvert >= promoteRecord.getConvertDayLimit()) {
                     log.info("click fail. adId:{} channelId:{} 转化已超过每日上限", adId, channelId);
                     return ResponseEntity.badRequest().body("转化已超过每日上限");
                 }

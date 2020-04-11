@@ -6,10 +6,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lwz.ads.constant.ClickStatusEnum;
 import com.lwz.ads.constant.Const;
 import com.lwz.ads.constant.ConvertStatusEnum;
+import com.lwz.ads.mapper.ConvertRecordMapper;
 import com.lwz.ads.mapper.entity.ClickRecord;
 import com.lwz.ads.mapper.entity.ConvertRecord;
 import com.lwz.ads.mapper.entity.PromoteRecord;
-import com.lwz.ads.mapper.ConvertRecordMapper;
 import com.lwz.ads.service.IConvertRecordService;
 import com.lwz.ads.util.DateUtils;
 import com.lwz.ads.util.IPUtils;
@@ -65,10 +65,12 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
         JSONObject jsonData = new JSONObject();
         jsonData.put(Const.IP, clickRecord.getIp());
         jsonData.put(Const.MAC, clickRecord.getMac());
+        LocalDateTime now = LocalDateTime.now();
+        String today = now.format(DateUtils.yyyyMMdd);
         ConvertRecord convertRecord = new ConvertRecord()
                 .setClickId(clickRecord.getId())
                 .setClickTime(clickRecord.getCreateTime())
-                .setCreateTime(LocalDateTime.now())
+                .setCreateTime(now)
                 .setAdId(promoteRecord.getAdId())
                 .setAdCreator(promoteRecord.getAdCreator())
                 .setChannelId(promoteRecord.getChannelId())
@@ -76,35 +78,49 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
                 .setCallback(paramJson.getString(Const.CALLBACK))
                 .setJsonData(jsonData.toJSONString());
 
-        if (promoteRecord.getDeductRate() != null && promoteRecord.getDeductRate() > 0) {
-            int index = random.nextInt(100);
-            log.info("saveConvert deduct:{} index:{}", promoteRecord.getDeductRate(), index);
-            if (index < promoteRecord.getDeductRate()) {
-                //核减
-                convertRecord.setConvertStatus(ConvertStatusEnum.DEDUCTED.getStatus());
-                save(convertRecord);
 
-                ClickRecord to = new ClickRecord();
-                to.setId(clickRecord.getId());
-                to.setEditor("system");
-                to.setEditTime(LocalDateTime.now());
-                to.setClickStatus(ClickStatusEnum.DEDUCTED.getStatus());
-                clickRecordService.getBaseMapper().updateByIdWithDate(to, date);
-                return null;
-            }
+        //核减
+        boolean deduct = isDeduct(promoteRecord, today);
+        if (deduct) {
+            convertRecord.setConvertStatus(ConvertStatusEnum.DEDUCTED.getStatus());
+            save(convertRecord);
+            ClickRecord to = new ClickRecord();
+            to.setId(clickRecord.getId());
+            to.setEditor("system");
+            to.setEditTime(now);
+            to.setClickStatus(ClickStatusEnum.DEDUCTED.getStatus());
+            clickRecordService.getBaseMapper().updateByIdWithDate(to, date);
+            return null;
         }
+
         //转化
         convertRecord.setConvertStatus(ConvertStatusEnum.CONVERTED.getStatus());
         save(convertRecord);
         if (promoteRecord.getConvertDayLimit() != null && promoteRecord.getConvertDayLimit() > 0) {
             redisUtils.execute(redis -> {
-                String key = String.format(Const.CONVERT_DAY_LIMIT_KEY, date, promoteRecord.getId());
+                String key = String.format(Const.CONVERT_DAY_LIMIT_KEY, today, promoteRecord.getId());
                 redis.opsForValue().increment(key, 1);
                 redis.expire(key, 7, TimeUnit.DAYS);
                 return null;
             });
         }
         return convertRecord;
+    }
+
+    private boolean isDeduct(PromoteRecord promoteRecord, String today) {
+        if (promoteRecord.getConvertDayLimit() != null && promoteRecord.getConvertDayLimit() > 0) {
+            Integer dayConvert = redisUtils.get(String.format(Const.CONVERT_DAY_LIMIT_KEY, today, promoteRecord.getId()), Integer.class);
+            if (dayConvert != null && dayConvert >= promoteRecord.getConvertDayLimit()) {
+                log.info("deduct. day:{} id:{} 转化已超过每日上限", today, promoteRecord.getId());
+                return true;
+            }
+        }
+        if (promoteRecord.getDeductRate() != null && promoteRecord.getDeductRate() > 0) {
+            int index = random.nextInt(100);
+            log.info("saveConvert deduct:{} index:{}", promoteRecord.getDeductRate(), index);
+            return index < promoteRecord.getDeductRate();
+        }
+        return false;
     }
 
     @Async

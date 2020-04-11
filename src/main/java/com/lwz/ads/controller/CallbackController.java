@@ -1,7 +1,6 @@
 package com.lwz.ads.controller;
 
 import com.lwz.ads.bean.Response;
-import com.lwz.ads.constant.Const;
 import com.lwz.ads.constant.PromoteStatusEnum;
 import com.lwz.ads.mapper.entity.Advertisement;
 import com.lwz.ads.mapper.entity.ClickRecord;
@@ -77,13 +76,6 @@ public class CallbackController {
                     || promoteRecord.getPromoteStatus().intValue() != PromoteStatusEnum.RUNNING.getStatus()) {
                 log.info("callback fail. date:{} clickId:{} 已停止推广", date, clickId);
                 return Response.fail("已停止推广");
-            }
-            if (promoteRecord.getConvertDayLimit() != null && promoteRecord.getConvertDayLimit() > 0) {
-                Integer dayClick = redisUtils.get(String.format(Const.CONVERT_DAY_LIMIT_KEY, date, promoteRecord.getId()), Integer.class);
-                if (dayClick != null && dayClick >= promoteRecord.getConvertDayLimit()) {
-                    log.info("callback fail. date:{} clickId:{} 转化已超过每日上限", date, clickId);
-                    return Response.fail("转化已超过每日上限");
-                }
             }
 
             //保存转化记录, 核减

@@ -264,6 +264,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         });
     }
 
+    @Transactional
     @Override
     public void deleteClickTable() {
         LocalDateTime deleteDay = LocalDateTime.now().plusDays(-deleteDaysAgo);
