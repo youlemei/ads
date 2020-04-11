@@ -67,7 +67,7 @@ public class PromoteRecordServiceImpl extends ServiceImpl<PromoteRecordMapper, P
         }
 
         UriComponents adUri = UriComponentsBuilder.fromHttpUrl(ad.getTraceUrl()).build();
-        String callback = advertisementService.getJsonField(ad, Const.CALLBACK);
+        String callback = Const.CALLBACK;
         adUri.getQueryParams().forEach((key, list) -> {
             if (!CollectionUtils.isEmpty(list)) {
                 String value = list.get(0);

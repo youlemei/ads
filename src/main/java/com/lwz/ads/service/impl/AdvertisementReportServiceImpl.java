@@ -1,12 +1,15 @@
 package com.lwz.ads.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.lwz.ads.bean.CountSum;
+import com.lwz.ads.constant.Const;
+import com.lwz.ads.mapper.AdvertisementReportMapper;
 import com.lwz.ads.mapper.entity.AdvertisementReport;
 import com.lwz.ads.mapper.entity.PromoteRecord;
-import com.lwz.ads.mapper.AdvertisementReportMapper;
-import com.lwz.ads.bean.CountSum;
 import com.lwz.ads.service.IAdvertisementReportService;
+import com.lwz.ads.util.Convert;
 import com.lwz.ads.util.DateUtils;
+import com.lwz.ads.util.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,87 +43,136 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
     @Autowired
     private PromoteRecordServiceImpl promoteRecordService;
 
+    @Autowired
+    private RedisUtils redisUtils;
+
     @Transactional
     @Override
-    public void countAdReport() {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDate today = now.toLocalDate();
+    public void updateTodayReport() {
         Map<Long, AdvertisementReport> updateMap = new HashMap<>();
-        if (now.getHour() == 0 && now.getMinute() < 30) {
-            LocalDate yesterday = today.plusDays(-1);
-            updateClickSum(yesterday, updateMap);
-            updateDeduplicateClickSum(yesterday, updateMap);
 
-            updateSrcConvertSum(yesterday, updateMap);
-            updateConvertSum(yesterday, updateMap);
-        }
-        updateClickSum(today, updateMap);
-        updateDeduplicateClickSum(today, updateMap);
-
-        updateSrcConvertSum(today, updateMap);
-        updateConvertSum(today, updateMap);
+        calculateTodayReport(updateMap);
 
         if (updateMap.size() > 0) {
             updateBatchById(updateMap.values());
-            log.info("countAdReport updateSize:{}", updateMap.size());
+            log.info("updateTodayReport updateSize:{}", updateMap.size());
         }
     }
 
-    private void updateClickSum(LocalDate adDate, Map<Long, AdvertisementReport> updateMap) {
-        List<CountSum> countSumList = clickRecordService.getBaseMapper().countClickSum(adDate.format(DateUtils.yyyyMMdd));
-        countSumList.forEach(countSum -> {
-            Long reportId = getReportId(adDate, countSum);
+    private void calculateTodayReport(Map<Long, AdvertisementReport> updateMap) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate nowDate = now.toLocalDate();
+        String today = now.format(DateUtils.yyyyMMdd);
+
+        redisUtils.execute(redis -> {
+            redis.opsForHash().entries(String.format(Const.CLICK_DAY_AMOUNT, today)).forEach((pid, clickSum) -> {
+                String[] arr = pid.toString().split("_");
+                long adId = Convert.toLong(arr[0]);
+                long channelId = Convert.toLong(arr[1]);
+                Long reportId = getReportId(nowDate, adId, channelId);
+                updateMap.compute(reportId, (id, report) -> Optional.ofNullable(report)
+                        .orElseGet(() -> new AdvertisementReport().setId(reportId).setUpdateTime(now))
+                        .setClickSum(Convert.toInt(clickSum)));
+            });
+
+            redis.opsForHash().entries(String.format(Const.CONVERT_DAY_AMOUNT, today)).forEach((pid, convertSum) -> {
+                String[] arr = pid.toString().split("_");
+                long adId = Convert.toLong(arr[0]);
+                long channelId = Convert.toLong(arr[1]);
+                Long reportId = getReportId(nowDate, adId, channelId);
+                updateMap.compute(reportId, (id, report) -> Optional.ofNullable(report)
+                        .orElseGet(() -> new AdvertisementReport().setId(reportId).setUpdateTime(now))
+                        .setSrcConvertSum(Convert.toInt(convertSum)));
+            });
+
+            redis.opsForHash().entries(String.format(Const.CONVERT_DAY_ACTUAL_AMOUNT, today)).forEach((pid, actualConvertSum) -> {
+                String[] arr = pid.toString().split("_");
+                long adId = Convert.toLong(arr[0]);
+                long channelId = Convert.toLong(arr[1]);
+                Long reportId = getReportId(nowDate, adId, channelId);
+                updateMap.compute(reportId, (id, report) -> Optional.ofNullable(report)
+                        .orElseGet(() -> new AdvertisementReport().setId(reportId).setUpdateTime(now))
+                        .setConvertSum(Convert.toInt(actualConvertSum)));
+            });
+
+            redis.keys(String.format(Const.CLICK_DAY_ACTUAL_AMOUNT, today, "*")).forEach(key -> {
+                long pid = Convert.toLong(key.substring(key.lastIndexOf(":") + 1));
+                PromoteRecord promoteRecord = promoteRecordService.getById(pid);
+                Long reportId = getReportId(nowDate, promoteRecord.getAdId(), promoteRecord.getChannelId());
+                updateMap.compute(reportId, (id, report) -> Optional.ofNullable(report)
+                        .orElseGet(() -> new AdvertisementReport().setId(reportId).setUpdateTime(now))
+                        .setDeduplicateClickSum(Convert.toInt(redis.opsForSet().size(key))));
+            });
+        });
+    }
+
+    @Transactional
+    @Override
+    public void updateYesterdayReport() {
+
+        Map<Long, AdvertisementReport> updateMap = new HashMap<>();
+
+        calculateYesterdayReport(updateMap);
+
+        if (updateMap.size() > 0) {
+            updateBatchById(updateMap.values());
+            log.info("updateYesterdayReport updateSize:{}", updateMap.size());
+        }
+    }
+
+    private void calculateYesterdayReport(Map<Long, AdvertisementReport> updateMap) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate yesterday = now.toLocalDate().plusDays(-1);
+
+        List<CountSum> clickSumList = clickRecordService.getBaseMapper().countClickSum(yesterday.format(DateUtils.yyyyMMdd));
+        clickSumList.forEach(countSum -> {
+            Long reportId = getReportId(yesterday, countSum.getAdId(), countSum.getChannelId());
             updateMap.compute(reportId, (id, report) -> Optional.ofNullable(report)
-                    .orElseGet(() -> new AdvertisementReport().setId(reportId).setUpdateTime(LocalDateTime.now()))
+                    .orElseGet(() -> new AdvertisementReport().setId(reportId).setUpdateTime(now))
                     .setClickSum(countSum.getCount()));
         });
-    }
 
-    private void updateDeduplicateClickSum(LocalDate adDate, Map<Long, AdvertisementReport> updateMap) {
-        List<CountSum> countSumList = clickRecordService.getBaseMapper().countDeduplicateClickSum(adDate.format(DateUtils.yyyyMMdd));
-        countSumList.forEach(countSum -> {
-            Long reportId = getReportId(adDate, countSum);
+        List<CountSum> deClickSumList = clickRecordService.getBaseMapper().countDeduplicateClickSum(yesterday.format(DateUtils.yyyyMMdd));
+        deClickSumList.forEach(countSum -> {
+            Long reportId = getReportId(yesterday, countSum.getAdId(), countSum.getChannelId());
             updateMap.compute(reportId, (id, report) -> Optional.ofNullable(report)
-                    .orElseGet(() -> new AdvertisementReport().setId(reportId).setUpdateTime(LocalDateTime.now()))
+                    .orElseGet(() -> new AdvertisementReport().setId(reportId).setUpdateTime(now))
                     .setDeduplicateClickSum(countSum.getCount()));
         });
-    }
 
-    private void updateSrcConvertSum(LocalDate adDate, Map<Long, AdvertisementReport> updateMap) {
-        List<CountSum> countSumList = convertRecordService.getBaseMapper().countSrcConvertSum(adDate.atStartOfDay(), adDate.atStartOfDay().plusDays(1));
-        countSumList.forEach(countSum -> {
-            Long reportId = getReportId(adDate, countSum);
+        List<CountSum> srcConvertSumList = convertRecordService.getBaseMapper().countSrcConvertSum(yesterday.atStartOfDay(), yesterday.atStartOfDay().plusDays(1));
+        srcConvertSumList.forEach(countSum -> {
+            Long reportId = getReportId(yesterday, countSum.getAdId(), countSum.getChannelId());
             updateMap.compute(reportId, (id, report) -> Optional.ofNullable(report)
-                    .orElseGet(() -> new AdvertisementReport().setId(reportId).setUpdateTime(LocalDateTime.now()))
+                    .orElseGet(() -> new AdvertisementReport().setId(reportId).setUpdateTime(now))
                     .setSrcConvertSum(countSum.getCount()));
         });
-    }
 
-    private void updateConvertSum(LocalDate adDate, Map<Long, AdvertisementReport> updateMap) {
-        List<CountSum> countSumList = convertRecordService.getBaseMapper().countConvertSum(adDate.atStartOfDay(), adDate.atStartOfDay().plusDays(1));
-        countSumList.forEach(countSum -> {
-            Long reportId = getReportId(adDate, countSum);
+        List<CountSum> convertSumList = convertRecordService.getBaseMapper().countConvertSum(yesterday.atStartOfDay(), yesterday.atStartOfDay().plusDays(1));
+        convertSumList.forEach(countSum -> {
+            Long reportId = getReportId(yesterday, countSum.getAdId(), countSum.getChannelId());
             updateMap.compute(reportId, (id, report) -> Optional.ofNullable(report)
-                    .orElseGet(() -> new AdvertisementReport().setId(reportId).setUpdateTime(LocalDateTime.now()))
+                    .orElseGet(() -> new AdvertisementReport().setId(reportId).setUpdateTime(now))
                     .setConvertSum(countSum.getCount()));
         });
     }
 
-    private Long getReportId(LocalDate adDate, CountSum countSum) {
+
+    private Long getReportId(LocalDate adDate, Long adId, Long channelId) {
         AdvertisementReport report = lambdaQuery()
-                .eq(AdvertisementReport::getAdId, countSum.getAdId())
-                .eq(AdvertisementReport::getChannelId, countSum.getChannelId())
+                .eq(AdvertisementReport::getAdId, adId)
+                .eq(AdvertisementReport::getChannelId, channelId)
                 .eq(AdvertisementReport::getAdDate, adDate).one();
         if (report != null) {
             return report.getId();
         }
         PromoteRecord promoteRecord = promoteRecordService.lambdaQuery()
-                .eq(PromoteRecord::getAdId, countSum.getAdId())
-                .eq(PromoteRecord::getChannelId, countSum.getChannelId()).one();
+                .eq(PromoteRecord::getAdId, adId)
+                .eq(PromoteRecord::getChannelId, channelId).one();
         AdvertisementReport save = new AdvertisementReport()
                 .setAdDate(adDate)
-                .setAdId(countSum.getAdId())
-                .setChannelId(countSum.getChannelId())
+                .setAdId(adId)
+                .setChannelId(channelId)
                 .setAdCreator(promoteRecord.getAdCreator())
                 .setChannelCreator(promoteRecord.getChannelCreator())
                 .setInPrice(promoteRecord.getInPrice())

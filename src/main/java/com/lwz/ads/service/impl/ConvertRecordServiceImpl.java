@@ -77,7 +77,11 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
                 .setChannelCreator(promoteRecord.getChannelCreator())
                 .setCallback(paramJson.getString(Const.CALLBACK))
                 .setJsonData(jsonData.toJSONString());
-
+        redisUtils.execute(redis -> {
+            String key = String.format(Const.CONVERT_DAY_AMOUNT, today);
+            redis.opsForHash().increment(key, promoteRecord.getAdId() + "_" + promoteRecord.getChannelId(), 1);
+            redis.expire(key, 7, TimeUnit.DAYS);
+        });
 
         //核减
         boolean deduct = isDeduct(promoteRecord, today);
@@ -98,10 +102,13 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
         save(convertRecord);
         if (promoteRecord.getConvertDayLimit() != null && promoteRecord.getConvertDayLimit() > 0) {
             redisUtils.execute(redis -> {
-                String key = String.format(Const.CONVERT_DAY_LIMIT_KEY, today, promoteRecord.getId());
-                redis.opsForValue().increment(key, 1);
-                redis.expire(key, 7, TimeUnit.DAYS);
-                return null;
+                String limitKey = String.format(Const.CONVERT_DAY_LIMIT_KEY, today, promoteRecord.getId());
+                redis.opsForValue().increment(limitKey, 1);
+                redis.expire(limitKey, 7, TimeUnit.DAYS);
+
+                String amountKey = String.format(Const.CONVERT_DAY_ACTUAL_AMOUNT, today);
+                redis.opsForHash().increment(amountKey, promoteRecord.getAdId() + "_" + promoteRecord.getChannelId(), 1);
+                redis.expire(amountKey, 7, TimeUnit.DAYS);
             });
         }
         return convertRecord;

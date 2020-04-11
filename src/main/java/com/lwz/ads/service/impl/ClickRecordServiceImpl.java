@@ -90,19 +90,19 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                 .setClickStatus(ClickStatusEnum.RECEIVED.getStatus());
 
         //存表, 分表
-        String ip = advertisementService.getJsonField(ad, Const.IP);
-        String idfa = advertisementService.getJsonField(ad, Const.IDFA);
-        String imei = advertisementService.getJsonField(ad, Const.IMEI);
+        String ip = Const.IP;
+        String idfa = Const.IDFA;
+        String imei = Const.IMEI;
         UriComponents adUri = UriComponentsBuilder.fromHttpUrl(ad.getTraceUrl()).build();
         adUri.getQueryParams().forEach((key, list) -> {
             if (!CollectionUtils.isEmpty(list)) {
                 String value = list.get(0);
                 if (StringUtils.hasLength(value) && Const.PARAM_PATTERN.matcher(value).matches()) {
-                    String lowerCaseKey = key.toLowerCase();
-                    if (lowerCaseKey.contains(ip) && request.containsKey(key)) {
+                    String placeHolder = value.toLowerCase();
+                    if (placeHolder.contains(ip) && request.containsKey(key)) {
                         Optional.ofNullable(request.get(key)).ifPresent(o -> clickRecord.setIp(o.toString()));
                     }
-                    if ((lowerCaseKey.contains(idfa) || lowerCaseKey.contains(imei)) && request.containsKey(key)) {
+                    if ((placeHolder.contains(idfa) || placeHolder.contains(imei)) && request.containsKey(key)) {
                         Optional.ofNullable(request.get(key)).ifPresent(o -> clickRecord.setMac(o.toString()));
                     }
                 }
@@ -113,10 +113,18 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         getBaseMapper().insertWithDate(clickRecord, date);
         if (promoteRecord.getClickDayLimit() != null && promoteRecord.getClickDayLimit() > 0) {
             redisUtils.execute(redis -> {
-                String key = String.format(Const.CLICK_DAY_LIMIT_KEY, date, promoteRecord.getId());
-                redis.opsForValue().increment(key, 1);
-                redis.expire(key, 7, TimeUnit.DAYS);
-                return null;
+                String limitKey = String.format(Const.CLICK_DAY_LIMIT_KEY, date, promoteRecord.getId());
+                redis.opsForValue().increment(limitKey, 1);
+                redis.expire(limitKey, 7, TimeUnit.DAYS);
+
+                String amountKey = String.format(Const.CLICK_DAY_AMOUNT, date);
+                String pid = promoteRecord.getAdId() + "_" + promoteRecord.getChannelId();
+                redis.opsForHash().increment(amountKey, pid, 1);
+                redis.expire(amountKey, 7, TimeUnit.DAYS);
+                String actualKey = String.format(Const.CLICK_DAY_ACTUAL_AMOUNT, date, pid);
+                int hashCode = (clickRecord.getIp() + clickRecord.getMac()).hashCode();
+                redis.opsForSet().add(actualKey, hashCode);
+                redis.expire(actualKey, 7, TimeUnit.DAYS);
             });
         }
         return clickRecord;
@@ -230,14 +238,14 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
     private UriComponents buildAdTraceUri(String clickId, Advertisement ad, String date, ClickRecord clickRecord) {
         JSONObject paramJson = JSON.parseObject(clickRecord.getParamJson());
-        String callback = advertisementService.getJsonField(ad, Const.CALLBACK);
+        String callback = Const.CALLBACK;
         UriComponentsBuilder adUriBuilder = UriComponentsBuilder.fromHttpUrl(ad.getTraceUrl());
         UriComponents traceUri = adUriBuilder.build();
         traceUri.getQueryParams().forEach((key, list) -> {
             if (!CollectionUtils.isEmpty(list)) {
                 String value = list.get(0);
                 if (StringUtils.hasLength(value) && Const.PARAM_PATTERN.matcher(value).matches()) {
-                    if (key.toLowerCase().contains(callback)) {
+                    if (value.toLowerCase().contains(callback)) {
                         UriComponents callbackUri = UriComponentsBuilder.newInstance()
                                 .scheme(scheme)
                                 .host(domain)

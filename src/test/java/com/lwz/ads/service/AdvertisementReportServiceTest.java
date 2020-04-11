@@ -28,7 +28,7 @@ public class AdvertisementReportServiceTest {
 
     @Test
     public void test() throws Exception{
-        advertisementReportService.countAdReport();
+        advertisementReportService.updateYesterdayReport();
     }
 
     @Test

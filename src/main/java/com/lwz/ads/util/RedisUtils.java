@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -34,6 +35,10 @@ public class RedisUtils {
 
     public <T> T execute(Function<RedisTemplate<String, Object>, T> function) {
         return function.apply(redisTemplate);
+    }
+
+    public void execute(Consumer<RedisTemplate<String, Object>> consumer) {
+        consumer.accept(redisTemplate);
     }
 
     /**
