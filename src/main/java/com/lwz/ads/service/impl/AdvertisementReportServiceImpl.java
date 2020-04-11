@@ -96,9 +96,11 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
             });
 
             redis.keys(String.format(Const.CLICK_DAY_ACTUAL_AMOUNT, today, "*")).forEach(key -> {
-                long pid = Convert.toLong(key.substring(key.lastIndexOf(":") + 1));
-                PromoteRecord promoteRecord = promoteRecordService.getById(pid);
-                Long reportId = getReportId(nowDate, promoteRecord.getAdId(), promoteRecord.getChannelId());
+                String pid = key.substring(key.lastIndexOf(":") + 1);
+                String[] arr = pid.toString().split("_");
+                long adId = Convert.toLong(arr[0]);
+                long channelId = Convert.toLong(arr[1]);
+                Long reportId = getReportId(nowDate, adId, channelId);
                 updateMap.compute(reportId, (id, report) -> Optional.ofNullable(report)
                         .orElseGet(() -> new AdvertisementReport().setId(reportId).setUpdateTime(now))
                         .setDeduplicateClickSum(Convert.toInt(redis.opsForSet().size(key))));
