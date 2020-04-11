@@ -4,10 +4,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lwz.ads.constant.Const;
 import com.lwz.ads.constant.PromoteStatusEnum;
 import com.lwz.ads.constant.TraceTypeEnum;
+import com.lwz.ads.mapper.PromoteRecordMapper;
 import com.lwz.ads.mapper.entity.Advertisement;
 import com.lwz.ads.mapper.entity.PromoteRecord;
-import com.lwz.ads.mapper.PromoteRecordMapper;
-import com.lwz.ads.service.IAdvertisementService;
 import com.lwz.ads.service.IPromoteRecordService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +33,7 @@ import java.time.LocalDateTime;
 public class PromoteRecordServiceImpl extends ServiceImpl<PromoteRecordMapper, PromoteRecord> implements IPromoteRecordService {
 
     @Autowired
-    private IAdvertisementService advertisementService;
+    private AdvertisementServiceImpl advertisementService;
 
     @Value("${system.web.scheme:http}")
     private String scheme;

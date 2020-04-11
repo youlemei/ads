@@ -12,7 +12,6 @@ import com.lwz.ads.service.impl.ConvertRecordServiceImpl;
 import com.lwz.ads.service.impl.PromoteRecordServiceImpl;
 import com.lwz.ads.util.DateUtils;
 import com.lwz.ads.util.IPUtils;
-import com.lwz.ads.util.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
@@ -40,9 +39,6 @@ public class CallbackController {
 
     @Autowired
     private AdvertisementServiceImpl advertisementService;
-
-    @Autowired
-    private RedisUtils redisUtils;
 
     /**
      * 广告转化回调

@@ -53,9 +53,6 @@ import java.util.stream.IntStream;
 public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, ClickRecord> implements IClickRecordService {
 
     @Autowired
-    private AdvertisementServiceImpl advertisementService;
-
-    @Autowired
     private RestTemplate restTemplate;
 
     @Autowired
