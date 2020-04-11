@@ -52,4 +52,9 @@ public interface IClickRecordService extends IService<ClickRecord> {
      * 建未来30天的分表
      */
     void createTable();
+
+    /**
+     * 删2个月前的点击记录
+     */
+    void deleteClickTable();
 }

@@ -19,6 +19,7 @@ public class CreateClickTableTimer implements ApplicationRunner {
     @Scheduled(cron = "0 0 4 * * ?")
     public void work(){
         clickRecordService.createTable();
+        clickRecordService.deleteClickTable();
     }
 
     @Override

@@ -42,4 +42,7 @@ public interface ClickRecordMapper extends BaseMapper<ClickRecord> {
 
     @Select("select count(*) from click_record_${date} where retry_times >= 3")
     long countRetryMax(String date);
+
+    @Update("drop table if exists click_record_${date}")
+    int deleteTable(String date);
 }

@@ -68,7 +68,10 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     private String domain;
 
     @Value("${click_record_create_days:2}")
-    private Integer createDays;
+    private int createDays;
+
+    @Value("${click_record_delete_days_ago:60}")
+    private int deleteDaysAgo;
 
     @Transactional
     @Override
@@ -259,5 +262,14 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
             String date = LocalDateTime.now().plusDays(day).format(DateUtils.yyyyMMdd);
             getBaseMapper().createTable(date);
         });
+    }
+
+    @Override
+    public void deleteClickTable() {
+        LocalDateTime deleteDay = LocalDateTime.now().plusDays(-deleteDaysAgo);
+        for (int i = 0; i < 30; i++) {
+            String date = deleteDay.plusDays(-i).format(DateUtils.yyyyMMdd);
+            getBaseMapper().deleteTable(date);
+        }
     }
 }
