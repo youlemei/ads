@@ -118,13 +118,13 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
         if (promoteRecord.getConvertDayLimit() != null && promoteRecord.getConvertDayLimit() > 0) {
             Integer dayConvert = redisUtils.get(String.format(Const.CONVERT_DAY_LIMIT_KEY, today, promoteRecord.getId()), Integer.class);
             if (dayConvert != null && dayConvert >= promoteRecord.getConvertDayLimit()) {
-                log.info("deduct. day:{} id:{} 转化已超过每日上限", today, promoteRecord.getId());
+                log.info("deduct. pid:{} dayConvert:{} 转化已超过每日上限", promoteRecord.getId(), dayConvert);
                 return true;
             }
         }
         if (promoteRecord.getDeductRate() != null && promoteRecord.getDeductRate() > 0) {
             int index = random.nextInt(100);
-            log.info("saveConvert deduct:{} index:{}", promoteRecord.getDeductRate(), index);
+            log.info("saveConvert pid:{} deduct:{} index:{}", promoteRecord.getId(), promoteRecord.getDeductRate(), index);
             return index < promoteRecord.getDeductRate();
         }
         return false;
