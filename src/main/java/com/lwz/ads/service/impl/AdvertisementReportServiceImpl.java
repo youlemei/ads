@@ -51,7 +51,12 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
     public void updateTodayReport() {
         Map<Long, AdvertisementReport> updateMap = new HashMap<>();
 
-        calculateTodayReport(updateMap);
+
+        if (LocalDate.now().equals(LocalDate.of(2020, 04, 12))) {
+            calculateMySQLReport(updateMap, 0);
+        } else {
+            calculateRedisReport(updateMap);
+        }
 
         if (updateMap.size() > 0) {
             updateBatchById(updateMap.values());
@@ -59,7 +64,7 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
         }
     }
 
-    private void calculateTodayReport(Map<Long, AdvertisementReport> updateMap) {
+    private void calculateRedisReport(Map<Long, AdvertisementReport> updateMap) {
         LocalDateTime now = LocalDateTime.now();
         LocalDate nowDate = now.toLocalDate();
         String today = now.format(DateUtils.yyyyMMdd);
@@ -114,7 +119,7 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
 
         Map<Long, AdvertisementReport> updateMap = new HashMap<>();
 
-        calculateYesterdayReport(updateMap);
+        calculateMySQLReport(updateMap, -1);
 
         if (updateMap.size() > 0) {
             updateBatchById(updateMap.values());
@@ -122,9 +127,9 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
         }
     }
 
-    private void calculateYesterdayReport(Map<Long, AdvertisementReport> updateMap) {
+    private void calculateMySQLReport(Map<Long, AdvertisementReport> updateMap, int offset) {
         LocalDateTime now = LocalDateTime.now();
-        LocalDate yesterday = now.toLocalDate().plusDays(-1);
+        LocalDate yesterday = now.toLocalDate().plusDays(offset);
 
         List<CountSum> clickSumList = clickRecordService.getBaseMapper().countClickSum(yesterday.format(DateUtils.yyyyMMdd));
         clickSumList.forEach(countSum -> {

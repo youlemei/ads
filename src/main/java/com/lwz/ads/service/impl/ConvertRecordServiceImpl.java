@@ -105,12 +105,13 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
                 String limitKey = String.format(Const.CONVERT_DAY_LIMIT_KEY, today, promoteRecord.getId());
                 redis.opsForValue().increment(limitKey, 1);
                 redis.expire(limitKey, 7, TimeUnit.DAYS);
-
-                String amountKey = String.format(Const.CONVERT_DAY_ACTUAL_AMOUNT, today);
-                redis.opsForHash().increment(amountKey, promoteRecord.getAdId() + "_" + promoteRecord.getChannelId(), 1);
-                redis.expire(amountKey, 7, TimeUnit.DAYS);
             });
         }
+        redisUtils.execute(redis -> {
+            String amountKey = String.format(Const.CONVERT_DAY_ACTUAL_AMOUNT, today);
+            redis.opsForHash().increment(amountKey, promoteRecord.getAdId() + "_" + promoteRecord.getChannelId(), 1);
+            redis.expire(amountKey, 7, TimeUnit.DAYS);
+        });
         return convertRecord;
     }
 

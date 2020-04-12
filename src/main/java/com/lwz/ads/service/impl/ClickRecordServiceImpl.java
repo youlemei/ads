@@ -113,17 +113,18 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                 String limitKey = String.format(Const.CLICK_DAY_LIMIT_KEY, date, promoteRecord.getId());
                 redis.opsForValue().increment(limitKey, 1);
                 redis.expire(limitKey, 7, TimeUnit.DAYS);
-
-                String amountKey = String.format(Const.CLICK_DAY_AMOUNT, date);
-                String pid = promoteRecord.getAdId() + "_" + promoteRecord.getChannelId();
-                redis.opsForHash().increment(amountKey, pid, 1);
-                redis.expire(amountKey, 7, TimeUnit.DAYS);
-                String actualKey = String.format(Const.CLICK_DAY_ACTUAL_AMOUNT, date, pid);
-                int hashCode = (clickRecord.getIp() + clickRecord.getMac()).hashCode();
-                redis.opsForSet().add(actualKey, hashCode);
-                redis.expire(actualKey, 7, TimeUnit.DAYS);
             });
         }
+        redisUtils.execute(redis -> {
+            String amountKey = String.format(Const.CLICK_DAY_AMOUNT, date);
+            String pid = promoteRecord.getAdId() + "_" + promoteRecord.getChannelId();
+            redis.opsForHash().increment(amountKey, pid, 1);
+            redis.expire(amountKey, 7, TimeUnit.DAYS);
+            String actualKey = String.format(Const.CLICK_DAY_ACTUAL_AMOUNT, date, pid);
+            int hashCode = (clickRecord.getIp() + clickRecord.getMac()).hashCode();
+            redis.opsForSet().add(actualKey, hashCode);
+            redis.expire(actualKey, 7, TimeUnit.DAYS);
+        });
         return clickRecord;
     }
 
