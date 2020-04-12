@@ -2,8 +2,6 @@ package com.lwz.ads.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.lwz.ads.mapper.entity.PromoteRecord;
-import org.apache.ibatis.annotations.CacheNamespace;
-import org.apache.ibatis.cache.decorators.ScheduledCache;
 
 /**
  * <p>
@@ -13,7 +11,7 @@ import org.apache.ibatis.cache.decorators.ScheduledCache;
  * @author lwz
  * @since 2020-01-30
  */
-@CacheNamespace(implementation = ScheduledCache.class, flushInterval = 30000)
+//@CacheNamespace(implementation = ScheduledCache.class, flushInterval = 30000)
 public interface PromoteRecordMapper extends BaseMapper<PromoteRecord> {
 
 }
