@@ -4,17 +4,18 @@
     <appender name="FILE_APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>/data/log/ads_${SERVER_PORT:-9999}/all.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>/data/log/ads_${SERVER_PORT:-9999}/all_%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>/data/log/ads_${SERVER_PORT:-9999}/all_%d{yyyy-MM-dd}.log.zip</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>[%date{ISO8601}] %level [%logger]:%line [%thread] - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} -%5p ${PID} [%17.17t] %-40.40logger{40} : %m%n</pattern>
         </encoder>
     </appender>
 
     <appender name="CONSOLE_APPENDER" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>[%date{ISO8601}] %highlight(%level) [%logger]:%line [%thread] - %cyan(%msg%n)</pattern>
+            <!--<pattern>%date{ISO8601} %highlight(%level) [%thread] %logger{60}:%line - %cyan(%msg%n)</pattern>-->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} -%highlight(%5p) ${PID} [%17.17t] %-40.40logger{40} : %cyan(%m%n)</pattern>
         </encoder>
     </appender>
 
