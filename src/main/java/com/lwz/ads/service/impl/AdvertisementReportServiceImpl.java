@@ -51,12 +51,7 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
     public void updateTodayReport() {
         Map<Long, AdvertisementReport> updateMap = new HashMap<>();
 
-
-        if (LocalDate.now().equals(LocalDate.of(2020, 04, 12))) {
-            calculateMySQLReport(updateMap, 0);
-        } else {
-            calculateRedisReport(updateMap);
-        }
+        calculateRedisReport(updateMap);
 
         if (updateMap.size() > 0) {
             updateBatchById(updateMap.values());

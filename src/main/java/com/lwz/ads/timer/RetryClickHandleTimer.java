@@ -25,7 +25,7 @@ public class RetryClickHandleTimer {
     @Autowired
     private AdvertisementServiceImpl advertisementService;
 
-    @Scheduled(fixedDelay = 20000)
+    @Scheduled(fixedDelay = 60000)
     public void work(){
 
         //重试1分钟前-两天内

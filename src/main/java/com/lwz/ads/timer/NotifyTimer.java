@@ -12,6 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * @author liweizhou 2020/2/28
@@ -31,13 +32,12 @@ public class NotifyTimer {
     @Scheduled(cron = "0 0 10 * * ?")
     public void work(){
         LocalDate nowDate = LocalDate.now();
-        String yesterday = nowDate.plusDays(-1).format(DateUtils.yyyyMMdd);
 
-        //TODO: 重试次数做成可配置
+        String yesterday = nowDate.plusDays(-1).format(DateUtils.yyyyMMdd);
         long clickCount = clickRecordService.getBaseMapper().countRetryMax(yesterday);
 
-        String start = nowDate.plusDays(-1).atStartOfDay().format(DateUtils.DEFAULT_FORMATTER);
-        String end = nowDate.atStartOfDay().format(DateUtils.DEFAULT_FORMATTER);
+        LocalDateTime start = nowDate.plusDays(-1).atStartOfDay();
+        LocalDateTime end = nowDate.atStartOfDay();
         Integer convertCount = convertRecordService.lambdaQuery()
                 .between(ConvertRecord::getCreateTime, start, end)
                 .ge(ConvertRecord::getRetryTimes, 2)

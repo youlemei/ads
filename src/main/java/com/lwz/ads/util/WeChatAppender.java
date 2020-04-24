@@ -35,7 +35,8 @@ public class WeChatAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
     @Override
     protected void append(ILoggingEvent event) {
 
-        String time = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getTimeStamp()), ZoneId.systemDefault()).format(DateUtils.DEFAULT_FORMATTER);
+        String time = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getTimeStamp()), ZoneId.systemDefault())
+                .format(DateUtils.DEFAULT_FORMATTER);
         StringBuilder sb = new StringBuilder()
                 .append("[").append(time).append("] ERROR ")
                 .append("[").append(System.getProperty("SERVER_PORT", "9999")).append("] ")
@@ -50,8 +51,8 @@ public class WeChatAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
             sb.append("\n").append(throwable.getClass().getCanonicalName()).append(":").append(throwable.getMessage());
 
             StackTraceElementProxy[] stackTraceElementProxy = throwableProxy.getStackTraceElementProxyArray();
-            //只打印10行的堆栈
-            for (int i = 0; i < 10 && i < stackTraceElementProxy.length; i++) {
+            //打印n行的堆栈
+            for (int i = 0; i < 3 && i < stackTraceElementProxy.length; i++) {
                 StackTraceElementProxy proxy = stackTraceElementProxy[i];
                 sb.append("\n\t").append(proxy.getSTEAsString());
             }

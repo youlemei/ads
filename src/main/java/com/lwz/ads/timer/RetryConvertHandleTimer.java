@@ -3,7 +3,6 @@ package com.lwz.ads.timer;
 import com.lwz.ads.constant.ConvertStatusEnum;
 import com.lwz.ads.mapper.entity.ConvertRecord;
 import com.lwz.ads.service.impl.ConvertRecordServiceImpl;
-import com.lwz.ads.util.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -19,13 +18,13 @@ public class RetryConvertHandleTimer {
     @Autowired
     private ConvertRecordServiceImpl convertRecordService;
 
-    @Scheduled(fixedDelay = 20000)
+    @Scheduled(fixedDelay = 60000)
     public void work(){
 
         //重试1分钟前-两天内
         LocalDateTime now = LocalDateTime.now().plusMinutes(-1);
-        String start = now.plusDays(-2).format(DateUtils.DEFAULT_FORMATTER);
-        String end = now.format(DateUtils.DEFAULT_FORMATTER);
+        LocalDateTime start = now.plusDays(-2);
+        LocalDateTime end = now;
 
         //通知渠道
         convertRecordService.lambdaQuery()

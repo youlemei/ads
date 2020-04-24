@@ -133,6 +133,7 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
 
     @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Override
     public void asyncNotifyConvert(ConvertRecord convertRecord) {
 
         if (convertRecord.getConvertStatus().intValue() != ConvertStatusEnum.CONVERTED.getStatus()) {
