@@ -18,7 +18,6 @@ import com.lwz.ads.util.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.NestedExceptionUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -230,9 +229,9 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
         } catch (Exception e) {
 
-            Throwable rootCause = NestedExceptionUtils.getRootCause(e);
-            log.warn("requestTraceUri fail. func:{} adUri:{} err:{}", func, adUri, rootCause.getMessage(), rootCause);
+            log.warn("requestTraceUri fail. func:{} adUri:{} err:{}", func, adUri, e.getMessage(), e);
 
+            //Throwable rootCause = NestedExceptionUtils.getRootCause(e);
             //if (rootCause instanceof SocketTimeoutException) {
             //    log.warn("requestTraceUri fail. socket timeout. func:{} adUri:{} err:{}", func, adUri, rootCause.getMessage());
             //    return null;

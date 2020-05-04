@@ -17,7 +17,6 @@ import com.lwz.ads.util.IPUtils;
 import com.lwz.ads.util.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.NestedExceptionUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -202,8 +201,7 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
             log.info("callbackConvert callback:{} resp:{}", uriString, resp);
             return resp;
         } catch (Exception e) {
-            Throwable rootCause = NestedExceptionUtils.getRootCause(e);
-            log.error("callbackConvert fail. callback:{} err:{}", callback, rootCause.getMessage(), rootCause);
+            log.error("callbackConvert fail. callback:{} err:{}", callback, e.getMessage(), e);
             return null;
         }
     }
