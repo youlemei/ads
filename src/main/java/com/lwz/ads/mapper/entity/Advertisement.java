@@ -97,6 +97,16 @@ public class Advertisement implements Serializable {
     private Integer deduplicateType;
 
     /**
+     * 每日点击上限
+     */
+    private Integer clickDayLimit;
+
+    /**
+     * 每日转化上限
+     */
+    private Integer convertDayLimit;
+
+    /**
      * 创建者
      */
     private String creator;

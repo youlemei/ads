@@ -37,7 +37,7 @@ public interface ClickRecordMapper extends BaseMapper<ClickRecord> {
 
     List<ClickRecord> selectReceiveClick(@Param("end") LocalDateTime end, @Param("date") String date);
 
-    @Update("update click_record_${date} set retry_times = retry_times + 1 where id = #{clickId}")
+    @Update("update click_record_${date} set retry_times = retry_times + 1, edit_time = now() where id = #{clickId}")
     int incrRetryTimes(@Param("clickId") String clickId, @Param("date") String date);
 
     @Select("select count(*) from click_record_${date} where retry_times >= 3")

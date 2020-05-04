@@ -59,46 +59,22 @@ public class ClickController {
         try {
             log.info("click adId:{} channelId:{} request:{} ip:{}", adId, channelId, request, IPUtils.getRealIp(httpServletRequest));
 
-            //检查
+            //参数检查
             TraceTypeEnum traceType = TraceTypeEnum.valueOfType(type);
             if (adId <= 0 || channelId <= 0 || traceType == null) {
                 log.warn("click invalid param. adId:{} channel:{}", adId, channelId);
                 return ResponseEntity.badRequest().build();
             }
-            //TODO: 缓存
+
+            LocalDateTime clickTime = LocalDateTime.now();
+            Advertisement ad = advertisementService.getById(adId);
             PromoteRecord promoteRecord = promoteRecordService.lambdaQuery()
                     .eq(PromoteRecord::getAdId, adId).eq(PromoteRecord::getChannelId, channelId).one();
-            if (promoteRecord == null) {
-                log.warn("click fail. 广告投放记录不存在. adId:{} channel:{}", adId, channelId);
-                return ResponseEntity.badRequest().build();
-            }
-            Advertisement ad = advertisementService.getById(adId);
-            TraceTypeEnum adTraceType = TraceTypeEnum.valueOfType(ad.getTraceType());
-            if (adTraceType == TraceTypeEnum.REDIRECT && traceType == TraceTypeEnum.ASYNC) {
-                log.info("click fail. 暂不支持302转异步. adId:{} channel:{}", adId, channelId);
-                return ResponseEntity.badRequest().body("暂不支持302转异步");
-            }
-            LocalDateTime clickTime = LocalDateTime.now();
-            if (!ad.getTraceStatus() || clickTime.isAfter(ad.getEndTime())
-                    || promoteRecord.getPromoteStatus().intValue() != PromoteStatusEnum.RUNNING.getStatus()) {
-                log.info("click fail. adId:{} channelId:{} 已停止推广", adId, channelId);
-                return ResponseEntity.badRequest().body("已停止推广");
-            }
-            if (promoteRecord.getClickDayLimit() != null && promoteRecord.getClickDayLimit() > 0) {
-                String date = clickTime.format(DateUtils.yyyyMMdd);
-                Integer dayClick = redisUtils.get(String.format(Const.CLICK_DAY_LIMIT_KEY, date, promoteRecord.getId()), Integer.class);
-                if (dayClick != null && dayClick >= promoteRecord.getClickDayLimit()) {
-                    log.info("click fail. adId:{} channelId:{} 点击已超过每日上限", adId, channelId);
-                    return ResponseEntity.badRequest().body("点击已超过每日上限");
-                }
-            }
-            if (promoteRecord.getConvertDayLimit() != null && promoteRecord.getConvertDayLimit() > 0) {
-                String date = clickTime.format(DateUtils.yyyyMMdd);
-                Integer dayConvert = redisUtils.get(String.format(Const.CONVERT_DAY_LIMIT_KEY, date, promoteRecord.getId()), Integer.class);
-                if (dayConvert != null && dayConvert >= promoteRecord.getConvertDayLimit()) {
-                    log.info("click fail. adId:{} channelId:{} 转化已超过每日上限", adId, channelId);
-                    return ResponseEntity.badRequest().body("转化已超过每日上限");
-                }
+
+            //数据检查
+            ResponseEntity result = check(clickTime, ad, promoteRecord, adId, channelId, traceType);
+            if (result != null) {
+                return result;
             }
 
             //保存点击记录
@@ -128,6 +104,58 @@ public class ClickController {
             log.error("click fail. request:{} err:{}", request, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    private ResponseEntity check(LocalDateTime clickTime, Advertisement ad, PromoteRecord promoteRecord,
+                                 Long adId, Long channelId, TraceTypeEnum traceType) {
+        if (promoteRecord == null || ad == null) {
+            log.warn("click fail. 广告投放记录不存在. adId:{} channel:{}", adId, channelId);
+            return ResponseEntity.badRequest().build();
+        }
+        TraceTypeEnum adTraceType = TraceTypeEnum.valueOfType(ad.getTraceType());
+        if (adTraceType == TraceTypeEnum.REDIRECT && traceType == TraceTypeEnum.ASYNC) {
+            log.info("click fail. 暂不支持302转异步. adId:{} channel:{}", adId, channelId);
+            return ResponseEntity.badRequest().body("暂不支持302转异步");
+        }
+        if (!ad.getTraceStatus() || clickTime.isAfter(ad.getEndTime())
+                || promoteRecord.getPromoteStatus().intValue() != PromoteStatusEnum.RUNNING.getStatus()) {
+            log.info("click fail. adId:{} channelId:{} 已停止推广", adId, channelId);
+            return ResponseEntity.badRequest().body("已停止推广");
+        }
+        String date = clickTime.format(DateUtils.yyyyMMdd);
+        Integer adClickLimit = ad.getClickDayLimit();
+        if (adClickLimit != null && adClickLimit > 0) {
+            Integer dayClick = redisUtils.get(String.format(Const.AD_CLICK_DAY_LIMIT_KEY, date, ad.getId()), Integer.class);
+            if (dayClick != null && dayClick >= adClickLimit) {
+                log.info("click fail. adId:{} channelId:{} 点击已超过每日上限 dayClick:{} adLimit:{}", adId, channelId, dayClick, adClickLimit);
+                return ResponseEntity.badRequest().body("点击已超过每日上限");
+            }
+        }
+        Integer adConvertLimit = ad.getConvertDayLimit();
+        if (adConvertLimit != null && adConvertLimit > 0) {
+            Integer dayConvert = redisUtils.get(String.format(Const.AD_CONVERT_DAY_LIMIT_KEY, date, ad.getId()), Integer.class);
+            if (dayConvert != null && dayConvert >= adConvertLimit) {
+                log.info("click fail. adId:{} channelId:{} 转化已超过每日上限 dayConvert:{} adLimit:{}", adId, channelId, dayConvert, adConvertLimit);
+                return ResponseEntity.badRequest().body("转化已超过每日上限");
+            }
+        }
+        Integer clickDayLimit = promoteRecord.getClickDayLimit();
+        if (clickDayLimit != null && clickDayLimit > 0) {
+            Integer dayClick = redisUtils.get(String.format(Const.CLICK_DAY_LIMIT_KEY, date, promoteRecord.getId()), Integer.class);
+            if (dayClick != null && dayClick >= clickDayLimit) {
+                log.info("click fail. adId:{} channelId:{} 点击已超过每日上限 dayClick:{} limit:{}", adId, channelId, dayClick, clickDayLimit);
+                return ResponseEntity.badRequest().body("点击已超过每日上限");
+            }
+        }
+        Integer convertDayLimit = promoteRecord.getConvertDayLimit();
+        if (convertDayLimit != null && convertDayLimit > 0) {
+            Integer dayConvert = redisUtils.get(String.format(Const.CONVERT_DAY_LIMIT_KEY, date, promoteRecord.getId()), Integer.class);
+            if (dayConvert != null && dayConvert >= convertDayLimit) {
+                log.info("click fail. adId:{} channelId:{} 转化已超过每日上限 dayConvert:{} limit:{}", adId, channelId, dayConvert, convertDayLimit);
+                return ResponseEntity.badRequest().body("转化已超过每日上限");
+            }
+        }
+        return null;
     }
 
 }

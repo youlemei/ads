@@ -75,7 +75,7 @@ public class CallbackController {
             }
 
             //保存转化记录, 核减
-            ConvertRecord convertRecord = convertRecordService.saveConvert(clickRecord, promoteRecord, date);
+            ConvertRecord convertRecord = convertRecordService.saveConvert(clickRecord, promoteRecord, ad, date);
             if (convertRecord != null) {
                 //异步回调渠道
                 convertRecordService.asyncNotifyConvert(convertRecord);

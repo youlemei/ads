@@ -21,7 +21,7 @@
 
     <appender name="WE_CHAT_APPENDER" class="com.lwz.ads.util.WeChatAppender"/>
 
-    <appender name="ERROR_APPENDER" class="ch.qos.logback.classic.AsyncAppender">
+    <appender name="ERR_APPENDER" class="ch.qos.logback.classic.AsyncAppender">
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>ERROR</level>
         </filter>
@@ -38,7 +38,7 @@
     <springProfile name="prod">
         <root level="INFO">
             <appender-ref ref="FILE_APPENDER"/>
-            <appender-ref ref="ERROR_APPENDER" />
+            <appender-ref ref="ERR_APPENDER" />
         </root>
     </springProfile>
 

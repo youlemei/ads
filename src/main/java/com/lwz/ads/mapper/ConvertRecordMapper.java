@@ -23,6 +23,6 @@ public interface ConvertRecordMapper extends BaseMapper<ConvertRecord> {
 
     List<CountSum> countConvertSum(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
-    @Update("update convert_record set retry_times = retry_times + 1 where click_id = #{clickId}")
+    @Update("update convert_record set retry_times = retry_times + 1, edit_time = now() where click_id = #{clickId}")
     int incrRetryTimes(String clickId);
 }

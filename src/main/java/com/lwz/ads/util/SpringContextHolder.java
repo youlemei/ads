@@ -22,11 +22,11 @@ public class SpringContextHolder implements ApplicationContextAware {
     }
 
     public static <T> T getBean(Class<T> clz, String beanName) {
-        return (T) applicationContext.getBean(clz, beanName);
+        return applicationContext.getBean(clz, beanName);
     }
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
+        SpringContextHolder.applicationContext = applicationContext;
     }
 }

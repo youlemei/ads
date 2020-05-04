@@ -73,7 +73,7 @@ public class IPUtils {
         List<String> ipList = new ArrayList<>();
         while (nis.hasMoreElements()) {
             NetworkInterface ni = nis.nextElement();
-            if ("eth0".equalsIgnoreCase(ni.getDisplayName())) {
+            if ("eth0".equalsIgnoreCase(ni.getName())) {
                 Enumeration<NetworkInterface> subNis = ni.getSubInterfaces();
                 while (subNis.hasMoreElements()) {
                     getHostAddress(ipList, subNis.nextElement());
@@ -131,6 +131,11 @@ public class IPUtils {
 
     private static boolean notUnknownText(String text){
         return StringUtils.hasText(text) && !"unknown".equalsIgnoreCase(text) && text.indexOf(":") == -1;
+    }
+
+
+    public static void main(String[] args) throws Exception {
+        System.out.println(getIp());
     }
 
 

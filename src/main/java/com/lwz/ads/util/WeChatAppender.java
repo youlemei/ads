@@ -38,10 +38,10 @@ public class WeChatAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
         String time = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getTimeStamp()), ZoneId.systemDefault())
                 .format(DateUtils.DEFAULT_FORMATTER);
         StringBuilder sb = new StringBuilder()
-                .append("[").append(time).append("] ERROR ")
+                .append(time).append(" ERROR ")
                 .append("[").append(System.getProperty("SERVER_PORT", "9999")).append("] ")
                 .append("[").append(event.getLoggerName()).append("]:")
-                .append(event.getCallerData()[0].getLineNumber()).append(" - ")
+                .append(event.getCallerData()[0].getLineNumber()).append(" -- ")
                 .append(event.getFormattedMessage());
 
         if (event.getThrowableProxy() instanceof ThrowableProxy) {

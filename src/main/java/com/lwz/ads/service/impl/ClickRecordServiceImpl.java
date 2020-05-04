@@ -30,7 +30,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -115,11 +114,21 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                 redis.expire(limitKey, 7, TimeUnit.DAYS);
             });
         }
+
+        if (ad.getClickDayLimit() != null && ad.getClickDayLimit() > 0) {
+            redisUtils.execute(redis -> {
+                String adLimitKey = String.format(Const.AD_CLICK_DAY_LIMIT_KEY, date, ad.getId());
+                redis.opsForValue().increment(adLimitKey, 1);
+                redis.expire(adLimitKey, 7, TimeUnit.DAYS);
+            });
+        }
+
         redisUtils.execute(redis -> {
             String amountKey = String.format(Const.CLICK_DAY_AMOUNT, date);
             String pid = promoteRecord.getAdId() + "_" + promoteRecord.getChannelId();
             redis.opsForHash().increment(amountKey, pid, 1);
             redis.expire(amountKey, 7, TimeUnit.DAYS);
+
             String actualKey = String.format(Const.CLICK_DAY_ACTUAL_AMOUNT, date, pid);
             int hashCode = (clickRecord.getIp() + clickRecord.getMac()).hashCode();
             redis.opsForSet().add(actualKey, hashCode);
@@ -139,6 +148,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
         String date = clickRecord.getCreateTime().format(DateUtils.yyyyMMdd);
         UriComponents adUri = buildAdTraceUri(clickRecord.getId(), ad, date, clickRecord);
+
         ResponseEntity<String> resp = requestTraceUri("asyncHandleClick", adUri);
 
         if (resp == null || !resp.getStatusCode().is2xxSuccessful()) {
@@ -173,6 +183,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
             String date = clickRecord.getCreateTime().format(DateUtils.yyyyMMdd);
             UriComponents adUri = buildAdTraceUri(clickRecord.getId(), ad, date, clickRecord);
+
             ResponseEntity<String> resp = requestTraceUri("redirectHandleClick", adUri);
 
             ClickRecord to = new ClickRecord();
@@ -220,16 +231,17 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         } catch (Exception e) {
 
             Throwable rootCause = NestedExceptionUtils.getRootCause(e);
-            if (rootCause instanceof SocketTimeoutException) {
-                log.warn("requestTraceUri fail. socket timeout. func:{} adUri:{} err:{}", func, adUri, rootCause.getMessage());
-                return null;
-            }
+            log.warn("requestTraceUri fail. func:{} adUri:{} err:{}", func, adUri, rootCause.getMessage(), rootCause);
+
+            //if (rootCause instanceof SocketTimeoutException) {
+            //    log.warn("requestTraceUri fail. socket timeout. func:{} adUri:{} err:{}", func, adUri, rootCause.getMessage());
+            //    return null;
+            //}
             //if (rootCause instanceof HttpServerErrorException) {
             //    log.warn("requestTraceUri fail. server error. func:{} adUri:{} err:{}", func, adUri, rootCause.getMessage());
             //    return null;
             //}
 
-            log.error("requestTraceUri fail. func:{} adUri:{} err:{}", func, adUri, e.getMessage(), e);
             return null;
         }
     }

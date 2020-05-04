@@ -49,17 +49,13 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
     @Transactional
     @Override
     public void updateTodayReport() {
-        Map<Long, AdvertisementReport> updateMap = new HashMap<>();
 
-        calculateRedisReport(updateMap);
+        calculateRedisReport();
 
-        if (updateMap.size() > 0) {
-            updateBatchById(updateMap.values());
-            log.info("updateTodayReport updateSize:{}", updateMap.size());
-        }
     }
 
-    private void calculateRedisReport(Map<Long, AdvertisementReport> updateMap) {
+    private void calculateRedisReport() {
+        Map<Long, AdvertisementReport> updateMap = new HashMap<>();
         LocalDateTime now = LocalDateTime.now();
         LocalDate nowDate = now.toLocalDate();
         String today = now.format(DateUtils.yyyyMMdd);
@@ -106,23 +102,23 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
                         .setDeduplicateClickSum(Convert.toInt(redis.opsForSet().size(key))));
             });
         });
+
+        if (updateMap.size() > 0) {
+            updateBatchById(updateMap.values());
+            log.info("updateTodayReport updateSize:{}", updateMap.size());
+        }
     }
 
     @Transactional
     @Override
     public void updateYesterdayReport() {
 
-        Map<Long, AdvertisementReport> updateMap = new HashMap<>();
+        calculateMySQLReport(-1);
 
-        calculateMySQLReport(updateMap, -1);
-
-        if (updateMap.size() > 0) {
-            updateBatchById(updateMap.values());
-            log.info("updateYesterdayReport updateSize:{}", updateMap.size());
-        }
     }
 
-    private void calculateMySQLReport(Map<Long, AdvertisementReport> updateMap, int offset) {
+    private void calculateMySQLReport(int offset) {
+        Map<Long, AdvertisementReport> updateMap = new HashMap<>();
         LocalDateTime now = LocalDateTime.now();
         LocalDate yesterday = now.toLocalDate().plusDays(offset);
 
@@ -157,6 +153,11 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
                     .orElseGet(() -> new AdvertisementReport().setId(reportId).setUpdateTime(now))
                     .setConvertSum(countSum.getCount()));
         });
+
+        if (updateMap.size() > 0) {
+            updateBatchById(updateMap.values());
+            log.info("updateYesterdayReport updateSize:{}", updateMap.size());
+        }
     }
 
 

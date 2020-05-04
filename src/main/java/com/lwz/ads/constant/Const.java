@@ -33,6 +33,16 @@ public class Const {
     public static final String CONVERT_DAY_LIMIT_KEY = "convert_day_limit_%s:%s";
 
     /**
+     * redis-value click_day_limit_yyyyMMdd:pid
+     */
+    public static final String AD_CLICK_DAY_LIMIT_KEY = "ad_click_day_limit_%s:%s";
+
+    /**
+     * redis-value convert_day_limit_yyyyMMdd:pid
+     */
+    public static final String AD_CONVERT_DAY_LIMIT_KEY = "ad_convert_day_limit_%s:%s";
+
+    /**
      * redis-hash click_day_amount_yyyyMMdd {pid: amount}
      */
     public static final String CLICK_DAY_AMOUNT = "click_day_amount_%s";

@@ -7,6 +7,7 @@ import com.lwz.ads.constant.ClickStatusEnum;
 import com.lwz.ads.constant.Const;
 import com.lwz.ads.constant.ConvertStatusEnum;
 import com.lwz.ads.mapper.ConvertRecordMapper;
+import com.lwz.ads.mapper.entity.Advertisement;
 import com.lwz.ads.mapper.entity.ClickRecord;
 import com.lwz.ads.mapper.entity.ConvertRecord;
 import com.lwz.ads.mapper.entity.PromoteRecord;
@@ -16,6 +17,7 @@ import com.lwz.ads.util.IPUtils;
 import com.lwz.ads.util.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.NestedExceptionUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -56,7 +58,7 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
 
     @Transactional
     @Override
-    public ConvertRecord saveConvert(ClickRecord clickRecord, PromoteRecord promoteRecord, String date) {
+    public ConvertRecord saveConvert(ClickRecord clickRecord, PromoteRecord promoteRecord, Advertisement ad, String date) {
         if (lambdaQuery().eq(ConvertRecord::getClickId, clickRecord.getId()).count() > 0) {
             return null;
         }
@@ -84,7 +86,7 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
         });
 
         //核减
-        boolean deduct = isDeduct(promoteRecord, today);
+        boolean deduct = isDeduct(promoteRecord, ad, today);
         if (deduct) {
             convertRecord.setConvertStatus(ConvertStatusEnum.DEDUCTED.getStatus());
             save(convertRecord);
@@ -107,6 +109,13 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
                 redis.expire(limitKey, 7, TimeUnit.DAYS);
             });
         }
+        if (ad.getConvertDayLimit() != null && ad.getConvertDayLimit() > 0) {
+            redisUtils.execute(redis -> {
+                String adLimitKey = String.format(Const.AD_CONVERT_DAY_LIMIT_KEY, today, ad.getId());
+                redis.opsForValue().increment(adLimitKey, 1);
+                redis.expire(adLimitKey, 7, TimeUnit.DAYS);
+            });
+        }
         redisUtils.execute(redis -> {
             String amountKey = String.format(Const.CONVERT_DAY_ACTUAL_AMOUNT, today);
             redis.opsForHash().increment(amountKey, promoteRecord.getAdId() + "_" + promoteRecord.getChannelId(), 1);
@@ -115,11 +124,20 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
         return convertRecord;
     }
 
-    private boolean isDeduct(PromoteRecord promoteRecord, String today) {
-        if (promoteRecord.getConvertDayLimit() != null && promoteRecord.getConvertDayLimit() > 0) {
+    private boolean isDeduct(PromoteRecord promoteRecord, Advertisement ad, String today) {
+        Integer convertDayLimit = promoteRecord.getConvertDayLimit();
+        if (convertDayLimit != null && convertDayLimit > 0) {
             Integer dayConvert = redisUtils.get(String.format(Const.CONVERT_DAY_LIMIT_KEY, today, promoteRecord.getId()), Integer.class);
-            if (dayConvert != null && dayConvert >= promoteRecord.getConvertDayLimit()) {
-                log.info("deduct. pid:{} dayConvert:{} 转化已超过每日上限", promoteRecord.getId(), dayConvert);
+            if (dayConvert != null && dayConvert >= convertDayLimit) {
+                log.info("deduct. pid:{} dayConvert:{} limit:{} 转化已超过每日上限", promoteRecord.getId(), dayConvert, convertDayLimit);
+                return true;
+            }
+        }
+        Integer adConvertDayLimit = ad.getConvertDayLimit();
+        if (adConvertDayLimit != null && adConvertDayLimit > 0) {
+            Integer adDayConvert = redisUtils.get(String.format(Const.AD_CONVERT_DAY_LIMIT_KEY, today, ad.getId()), Integer.class);
+            if (adDayConvert != null && adDayConvert >= adConvertDayLimit) {
+                log.info("deduct. adId:{} dayConvert:{} adLimit:{} 转化已超过每日上限", ad.getId(), adDayConvert, adConvertDayLimit);
                 return true;
             }
         }
@@ -142,7 +160,10 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
 
         String callback = convertRecord.getCallback();
         if (StringUtils.hasText(callback)) {
+
+            //调用渠道转化链接
             ResponseEntity<String> resp = callbackConvert(callback);
+
             if (resp == null || !resp.getStatusCode().is2xxSuccessful()) {
                 getBaseMapper().incrRetryTimes(convertRecord.getClickId());
                 return;
@@ -154,7 +175,9 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
         to.setEditor("system");
         to.setEditTime(now);
         to.setConvertStatus(ConvertStatusEnum.NOTIFIED.getStatus());
-        update().eq("click_id", convertRecord.getClickId()).eq("convert_status", ConvertStatusEnum.CONVERTED.getStatus()).update(to);
+        update().eq("click_id", convertRecord.getClickId())
+                .eq("convert_status", ConvertStatusEnum.CONVERTED.getStatus())
+                .update(to);
 
         ClickRecord clickTo = new ClickRecord();
         clickTo.setId(convertRecord.getClickId());
@@ -179,7 +202,8 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
             log.info("callbackConvert callback:{} resp:{}", uriString, resp);
             return resp;
         } catch (Exception e) {
-            log.error("callbackConvert fail. callback:{} err:{}", callback, e.getMessage(), e);
+            Throwable rootCause = NestedExceptionUtils.getRootCause(e);
+            log.error("callbackConvert fail. callback:{} err:{}", callback, rootCause.getMessage(), rootCause);
             return null;
         }
     }

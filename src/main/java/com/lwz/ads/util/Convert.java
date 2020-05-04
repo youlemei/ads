@@ -30,7 +30,7 @@ public class Convert {
         if (o instanceof String) {
             return Integer.parseInt(o.toString().trim());
         }
-        throw new IllegalArgumentException("can not convert to long. " + o);
+        throw new IllegalArgumentException("can not convert to int. " + o);
     }
 
 }

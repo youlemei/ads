@@ -1,6 +1,7 @@
 package com.lwz.ads.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.lwz.ads.mapper.entity.Advertisement;
 import com.lwz.ads.mapper.entity.ClickRecord;
 import com.lwz.ads.mapper.entity.ConvertRecord;
 import com.lwz.ads.mapper.entity.PromoteRecord;
@@ -20,10 +21,11 @@ public interface IConvertRecordService extends IService<ConvertRecord> {
      *
      * @param clickRecord
      * @param promoteRecord
+     * @param ad
      * @param date
      * @return
      */
-    ConvertRecord saveConvert(ClickRecord clickRecord, PromoteRecord promoteRecord, String date);
+    ConvertRecord saveConvert(ClickRecord clickRecord, PromoteRecord promoteRecord, Advertisement ad, String date);
 
     /**
      * 异步通知渠道转化
