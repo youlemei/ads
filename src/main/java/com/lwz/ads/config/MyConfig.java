@@ -17,8 +17,13 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
+import java.lang.management.GarbageCollectorMXBean;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryManagerMXBean;
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author liweizhou 2020/2/2
@@ -35,8 +40,11 @@ public class MyConfig {
 
     @PostConstruct
     public void init(){
+        List<GarbageCollectorMXBean> collectors = ManagementFactory.getGarbageCollectorMXBeans();
         log.info("####################################################################################################");
         log.info("==========================>>    server start! port:{} profile:{}    <<==========================", port, profile);
+        log.info("==========================>>    collectors:{}   <<========================",
+                collectors.stream().map(MemoryManagerMXBean::getName).collect(Collectors.toList()));
         log.info("####################################################################################################");
     }
 

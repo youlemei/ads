@@ -4,9 +4,12 @@
     <appender name="FILE_APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>/data/log/ads_${SERVER_PORT:-9999}/all.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>/data/log/ads_${SERVER_PORT:-9999}/all_%d{yyyy-MM-dd}.log.zip</fileNamePattern>
+            <fileNamePattern>/data/log/ads_${SERVER_PORT:-9999}/all_%d{yyyy-MM-dd}_%i.log.zip</fileNamePattern>
             <maxHistory>30</maxHistory>
             <cleanHistoryOnStart>true</cleanHistoryOnStart>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>1024MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
         <encoder>
             <pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} -%5level ${PID} [%thread] %logger{60}:%line -- %msg%n</pattern>
