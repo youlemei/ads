@@ -49,4 +49,9 @@ public class MapperTest {
         List<ClickRecord> clickRecordList = clickRecordMapper.selectReceiveClick(LocalDateTime.now(), "20200317");
     }
 
+    @Test
+    public void testCache() throws Exception{
+        PromoteRecord promoteRecord = promoteRecordMapper.selectById(258L);
+    }
+
 }

@@ -65,7 +65,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     @Value("${click_record_create_days:2}")
     private int createDays;
 
-    @Value("${click_record_delete_days_ago:60}")
+    @Value("${click_record_delete_days_ago:45}")
     private int deleteDaysAgo;
 
     @Transactional

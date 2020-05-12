@@ -11,7 +11,6 @@ import com.lwz.ads.mapper.entity.Company;
  * @author lwz
  * @since 2020-01-30
  */
-//@CacheNamespace(implementation = ScheduledCache.class, flushInterval = 60000) //漂亮的包装设计模式
 public interface CompanyMapper extends BaseMapper<Company> {
 
 }
