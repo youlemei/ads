@@ -32,7 +32,7 @@ public class RetryConvertHandleTimer {
                 .eq(ConvertRecord::getConvertStatus, ConvertStatusEnum.CONVERTED.getStatus())
                 .lt(ConvertRecord::getRetryTimes, 3)
                 .list()
-                .forEach(convertRecord -> convertRecordService.asyncNotifyConvert(convertRecord));
+                .forEach(convertRecord -> convertRecordService.notifyConvert(convertRecord));
 
     }
 

@@ -46,8 +46,8 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
     @Autowired
     private RedisUtils redisUtils;
 
-    @Transactional
     @Override
+    @Transactional
     public void updateTodayReport() {
 
         calculateRedisReport();
@@ -109,8 +109,8 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
         }
     }
 
-    @Transactional
     @Override
+    @Transactional
     public void updateYesterdayReport() {
 
         calculateMySQLReport(-1);

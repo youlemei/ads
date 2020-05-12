@@ -55,8 +55,8 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
     @Autowired
     private RedisUtils redisUtils;
 
-    @Transactional
     @Override
+    @Transactional
     public ConvertRecord saveConvert(ClickRecord clickRecord, PromoteRecord promoteRecord, Advertisement ad, String date) {
         if (lambdaQuery().eq(ConvertRecord::getClickId, clickRecord.getId()).count() > 0) {
             return null;
@@ -149,9 +149,15 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
     }
 
     @Async
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void asyncNotifyConvert(ConvertRecord convertRecord) {
+        notifyConvert(convertRecord);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void notifyConvert(ConvertRecord convertRecord) {
 
         if (convertRecord.getConvertStatus().intValue() != ConvertStatusEnum.CONVERTED.getStatus()) {
             return;
@@ -185,7 +191,7 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
         clickTo.setClickStatus(ClickStatusEnum.CONVERTED.getStatus());
         clickRecordService.getBaseMapper().updateByIdWithDate(clickTo, convertRecord.getClickTime().format(DateUtils.yyyyMMdd));
 
-        log.info("asyncNotifyConvert success. clickId:{}", convertRecord.getClickId());
+        log.info("notifyConvert success. clickId:{}", convertRecord.getClickId());
     }
 
     private ResponseEntity<String> callbackConvert(String callback) {

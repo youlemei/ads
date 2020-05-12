@@ -41,8 +41,8 @@ public class PromoteRecordServiceImpl extends ServiceImpl<PromoteRecordMapper, P
     @Value("${system.web.domain:localhost:9999}")
     private String domain;
 
-    @Transactional
     @Override
+    @Transactional
     public void doCreateClickUrl(PromoteRecord promoteRecord) {
 
         UriComponentsBuilder clickUriBuilder = UriComponentsBuilder.newInstance()

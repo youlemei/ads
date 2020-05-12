@@ -80,7 +80,6 @@ public class ClickController {
             //保存点击记录
             ClickRecord clickRecord = clickRecordService.saveClick(clickTime, request, type, promoteRecord, ad);
 
-            //TODO: 处理器
             switch (traceType) {
                 case ASYNC:
                     clickRecordService.asyncHandleClick(clickRecord, ad);

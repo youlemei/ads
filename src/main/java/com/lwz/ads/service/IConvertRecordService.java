@@ -33,4 +33,5 @@ public interface IConvertRecordService extends IService<ConvertRecord> {
      * @param convertRecord
      */
     void asyncNotifyConvert(ConvertRecord convertRecord);
+    void notifyConvert(ConvertRecord convertRecord);
 }

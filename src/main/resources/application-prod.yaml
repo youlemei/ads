@@ -23,7 +23,7 @@ spring:
   task:
     scheduling:
       pool:
-        size: 8
+        size: 16
     execution:
       pool:
         core-size: 64
