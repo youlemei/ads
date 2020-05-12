@@ -40,12 +40,12 @@ public class NotifyTimer {
         LocalDateTime end = nowDate.atStartOfDay();
         Integer convertCount = convertRecordService.lambdaQuery()
                 .between(ConvertRecord::getCreateTime, start, end)
-                .ge(ConvertRecord::getRetryTimes, 2)
+                .ge(ConvertRecord::getRetryTimes, 3)
                 .count();
 
         if (clickCount > 0 || convertCount > 0) {
             WeChatRobotMsg msg = WeChatRobotMsg.buildText()
-                    .content(String.format("重试告警: 点击重试超过3次的记录数:%s 转化重试超过2次的记录数:%s", clickCount, convertCount))
+                    .content(String.format("重试告警: 点击重试超过3次的记录数:%s 转化重试超过3次的记录数:%s", clickCount, convertCount))
                     .build();
             weChatRobotService.notify(Const.ERROR_WEB_HOOK, msg);
         }

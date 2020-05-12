@@ -30,7 +30,7 @@ public class RetryConvertHandleTimer {
         convertRecordService.lambdaQuery()
                 .between(ConvertRecord::getCreateTime, start, end)
                 .eq(ConvertRecord::getConvertStatus, ConvertStatusEnum.CONVERTED.getStatus())
-                .lt(ConvertRecord::getRetryTimes, 2)
+                .lt(ConvertRecord::getRetryTimes, 3)
                 .list()
                 .forEach(convertRecord -> convertRecordService.asyncNotifyConvert(convertRecord));
 

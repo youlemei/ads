@@ -26,7 +26,7 @@ spring:
         size: 8
     execution:
       pool:
-        core-size: 32
+        core-size: 64
 
 click_record_create_days: 8
 

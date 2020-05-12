@@ -68,8 +68,8 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     @Value("${click_record_delete_days_ago:45}")
     private int deleteDaysAgo;
 
-    @Transactional
     @Override
+    @Transactional
     public ClickRecord saveClick(LocalDateTime clickTime, Map<String, Object> request, String type, PromoteRecord promoteRecord, Advertisement ad) {
 
         String clickId = UUID.randomUUID().toString().replaceAll("-", "");
@@ -137,9 +137,15 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     }
 
     @Async
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void asyncHandleClick(ClickRecord clickRecord, Advertisement ad) {
+        handleClick(clickRecord, ad);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void handleClick(ClickRecord clickRecord, Advertisement ad) {
 
         if (clickRecord.getClickStatus().intValue() != ClickStatusEnum.RECEIVED.getStatus()) {
             return;
@@ -168,8 +174,8 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         log.info("asyncHandleClick success. date:{} clickId:{}", date, clickRecord.getId());
     }
 
-    @Transactional
     @Override
+    @Transactional
     public URI redirectHandleClick(ClickRecord clickRecord, Advertisement ad) {
 
         TraceTypeEnum traceType = TraceTypeEnum.valueOfType(ad.getTraceType());
@@ -272,8 +278,8 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         return adUriBuilder.build();
     }
 
-    @Transactional
     @Override
+    @Transactional
     public void createTable() {
         IntStream.range(-1, createDays).forEach(day -> {
             String date = LocalDateTime.now().plusDays(day).format(DateUtils.yyyyMMdd);
@@ -281,8 +287,8 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         });
     }
 
-    @Transactional
     @Override
+    @Transactional
     public void deleteClickTable() {
         LocalDateTime deleteDay = LocalDateTime.now().plusDays(-deleteDaysAgo);
         for (int i = 0; i < 30; i++) {

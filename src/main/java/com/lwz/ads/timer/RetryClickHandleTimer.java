@@ -51,7 +51,7 @@ public class RetryClickHandleTimer {
             to.setEditTime(LocalDateTime.now());
             clickRecordService.getBaseMapper().updateByIdWithDate(to, date);
         } else {
-            clickRecordService.asyncHandleClick(clickRecord, ad);
+            clickRecordService.handleClick(clickRecord, ad);
         }
     }
 

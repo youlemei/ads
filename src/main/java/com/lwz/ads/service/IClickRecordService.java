@@ -38,6 +38,7 @@ public interface IClickRecordService extends IService<ClickRecord> {
      * @param ad
      */
     void asyncHandleClick(ClickRecord clickRecord, Advertisement ad);
+    void handleClick(ClickRecord clickRecord, Advertisement ad);
 
     /**
      * 通知广告点击, 响应302跳转
