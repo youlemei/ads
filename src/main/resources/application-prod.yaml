@@ -23,10 +23,10 @@ spring:
   task:
     scheduling:
       pool:
-        size: 16
+        size: 30
     execution:
       pool:
-        core-size: 64
+        core-size: 150
 
 click_record_create_days: 8
 
