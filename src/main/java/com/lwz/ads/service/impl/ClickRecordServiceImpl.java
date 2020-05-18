@@ -3,6 +3,7 @@ package com.lwz.ads.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.lwz.ads.bean.WeChatRobotMsg;
 import com.lwz.ads.constant.ClickStatusEnum;
 import com.lwz.ads.constant.Const;
 import com.lwz.ads.constant.TraceTypeEnum;
@@ -11,6 +12,7 @@ import com.lwz.ads.mapper.entity.Advertisement;
 import com.lwz.ads.mapper.entity.ClickRecord;
 import com.lwz.ads.mapper.entity.PromoteRecord;
 import com.lwz.ads.service.IClickRecordService;
+import com.lwz.ads.service.WeChatRobotService;
 import com.lwz.ads.util.DateUtils;
 import com.lwz.ads.util.IPUtils;
 import com.lwz.ads.util.RedisUtils;
@@ -18,6 +20,7 @@ import com.lwz.ads.util.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.NestedExceptionUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -29,6 +32,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -55,6 +59,9 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
     @Autowired
     private RedisUtils redisUtils;
+
+    @Autowired
+    private WeChatRobotService weChatRobotService;
 
     @Value("${system.web.scheme:http}")
     private String scheme;
@@ -154,7 +161,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         String date = clickRecord.getCreateTime().format(DateUtils.yyyyMMdd);
         UriComponents adUri = buildAdTraceUri(clickRecord.getId(), ad, date, clickRecord);
 
-        ResponseEntity<String> resp = requestTraceUri("asyncHandleClick", adUri);
+        ResponseEntity<String> resp = requestTraceUri("asyncHandleClick", adUri, ad);
 
         if (resp == null || !resp.getStatusCode().is2xxSuccessful()) {
             //增加重试次数
@@ -189,7 +196,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
             String date = clickRecord.getCreateTime().format(DateUtils.yyyyMMdd);
             UriComponents adUri = buildAdTraceUri(clickRecord.getId(), ad, date, clickRecord);
 
-            ResponseEntity<String> resp = requestTraceUri("redirectHandleClick", adUri);
+            ResponseEntity<String> resp = requestTraceUri("redirectHandleClick", adUri, ad);
 
             ClickRecord to = new ClickRecord();
             to.setId(clickRecord.getId());
@@ -210,16 +217,16 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         throw new RuntimeException("unknowns error");
     }
 
-    private ResponseEntity<String> requestTraceUri(String func, UriComponents adUri) {
+    private ResponseEntity<String> requestTraceUri(String func, UriComponents adUri, Advertisement ad) {
             //识别uri不是指向本机
         if (IPUtils.isLocalhost(adUri.getHost())) {
             log.error("requestTraceUri uri指向本机. adUri:{}", adUri);
             return null;
         }
-        return doRequestTraceUri(func, adUri, 1);
+        return doRequestTraceUri(func, adUri, 1, ad);
     }
 
-    private ResponseEntity<String> doRequestTraceUri(String func, UriComponents adUri, int times) {
+    private ResponseEntity<String> doRequestTraceUri(String func, UriComponents adUri, int times, Advertisement ad) {
         try {
 
             int maxRetryTimes = 2;
@@ -237,11 +244,23 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
             log.warn("requestTraceUri fail. func:{} adUri:{} err:{}", func, adUri, e.getMessage(), e);
 
-            //Throwable rootCause = NestedExceptionUtils.getRootCause(e);
-            //if (rootCause instanceof SocketTimeoutException) {
-            //    log.warn("requestTraceUri fail. socket timeout. func:{} adUri:{} err:{}", func, adUri, rootCause.getMessage());
-            //    return null;
-            //}
+            Throwable rootCause = NestedExceptionUtils.getRootCause(e);
+            if (rootCause instanceof SocketTimeoutException) {
+                log.warn("requestTraceUri fail. socket timeout. func:{} adId:{} company:{} adUri:{} err:{}",
+                        func, ad.getId(), ad.getCompanyId(), adUri, rootCause.getMessage());
+                redisUtils.execute(redis -> {
+                    String key = String.format(Const.CLICK_SOCKET_TIME_OUT_MINUTE, LocalDateTime.now().format(DateUtils.yyyyMMdd_HHmm));
+                    long count = redis.opsForHash().increment(key, ad.getCompanyId().toString(), 1);
+                    redis.expire(key, 7, TimeUnit.DAYS);
+                    int threshold = 50;
+                    if (count > threshold) {
+                        String content = String.format("广告主: %d. 1分钟内调用超时超过%d次, 请注意", ad.getCompanyId(), threshold);
+                        WeChatRobotMsg robotMsg = WeChatRobotMsg.buildText().content(content).build();
+                        weChatRobotService.notify(Const.ERROR_WEB_HOOK, robotMsg);
+                    }
+                });
+                return null;
+            }
             //if (rootCause instanceof HttpServerErrorException) {
             //    log.warn("requestTraceUri fail. server error. func:{} adUri:{} err:{}", func, adUri, rootCause.getMessage());
             //    return null;

@@ -207,7 +207,7 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
             log.info("callbackConvert callback:{} resp:{}", uriString, resp);
             return resp;
         } catch (Exception e) {
-            log.error("callbackConvert fail. callback:{} err:{}", callback, e.getMessage(), e);
+            log.warn("callbackConvert fail. callback:{} err:{}", callback, e.getMessage(), e);
             return null;
         }
     }

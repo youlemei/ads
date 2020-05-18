@@ -62,6 +62,11 @@ public class Const {
      */
     public static final String CONVERT_DAY_ACTUAL_AMOUNT = "convert_day_actual_amount_%s";
 
+    /**
+     * redis-hash click_socket_time_out_minute_minute {companyId: count}
+     */
+    public static final String CLICK_SOCKET_TIME_OUT_MINUTE = "click_socket_time_out_minute_%s";
+
     public static final String ERROR_WEB_HOOK = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=db98068e-b60b-493c-826b-8936d814a7d1";
 
 }
