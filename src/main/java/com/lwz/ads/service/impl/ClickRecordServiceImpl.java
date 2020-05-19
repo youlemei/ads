@@ -251,10 +251,11 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                 redisUtils.execute(redis -> {
                     String key = String.format(Const.CLICK_SOCKET_TIME_OUT_MINUTE, LocalDateTime.now().format(DateUtils.yyyyMMdd_HHmm));
                     long count = redis.opsForHash().increment(key, ad.getCompanyId().toString(), 1);
-                    redis.expire(key, 7, TimeUnit.DAYS);
-                    int threshold = 50;
-                    if (count > threshold) {
-                        String content = String.format("广告主: %d. 1分钟内调用超时超过%d次, 请注意", ad.getCompanyId(), threshold);
+                    redis.expire(key, 2, TimeUnit.DAYS);
+                    int threshold = 100;
+                    if (count % threshold == 0) {
+                        String content = String.format("广告主: %d. 广告: %s. 1分钟内调用超时达到%d次, 请注意. url: %s",
+                                ad.getCompanyId(), ad.getAdName(), count, ad.getTraceUrl());
                         WeChatRobotMsg robotMsg = WeChatRobotMsg.buildText().content(content).build();
                         weChatRobotService.notify(Const.ERROR_WEB_HOOK, robotMsg);
                     }
