@@ -107,20 +107,24 @@ public class ClickController {
 
     private ResponseEntity check(LocalDateTime clickTime, Advertisement ad, PromoteRecord promoteRecord,
                                  Long adId, Long channelId, TraceTypeEnum traceType) {
+
         if (promoteRecord == null || ad == null) {
             log.warn("click fail. 广告投放记录不存在. adId:{} channel:{}", adId, channelId);
             return ResponseEntity.badRequest().build();
         }
+
         TraceTypeEnum adTraceType = TraceTypeEnum.valueOfType(ad.getTraceType());
         if (adTraceType == TraceTypeEnum.REDIRECT && traceType == TraceTypeEnum.ASYNC) {
             log.info("click fail. 暂不支持302转异步. adId:{} channel:{}", adId, channelId);
             return ResponseEntity.badRequest().body("暂不支持302转异步");
         }
+
         if (!ad.getTraceStatus() || clickTime.isAfter(ad.getEndTime())
                 || promoteRecord.getPromoteStatus().intValue() != PromoteStatusEnum.RUNNING.getStatus()) {
             log.info("click fail. adId:{} channelId:{} 已停止推广", adId, channelId);
             return ResponseEntity.badRequest().body("已停止推广");
         }
+
         String date = clickTime.format(DateUtils.yyyyMMdd);
         Integer adClickLimit = ad.getClickDayLimit();
         if (adClickLimit != null && adClickLimit > 0) {
@@ -130,6 +134,7 @@ public class ClickController {
                 return ResponseEntity.badRequest().body("点击已超过每日上限");
             }
         }
+
         Integer adConvertLimit = ad.getConvertDayLimit();
         if (adConvertLimit != null && adConvertLimit > 0) {
             Integer dayConvert = redisUtils.get(String.format(Const.AD_CONVERT_DAY_LIMIT_KEY, date, ad.getId()), Integer.class);
@@ -138,6 +143,7 @@ public class ClickController {
                 return ResponseEntity.badRequest().body("转化已超过每日上限");
             }
         }
+
         Integer clickDayLimit = promoteRecord.getClickDayLimit();
         if (clickDayLimit != null && clickDayLimit > 0) {
             Integer dayClick = redisUtils.get(String.format(Const.CLICK_DAY_LIMIT_KEY, date, promoteRecord.getId()), Integer.class);
@@ -146,6 +152,7 @@ public class ClickController {
                 return ResponseEntity.badRequest().body("点击已超过每日上限");
             }
         }
+
         Integer convertDayLimit = promoteRecord.getConvertDayLimit();
         if (convertDayLimit != null && convertDayLimit > 0) {
             Integer dayConvert = redisUtils.get(String.format(Const.CONVERT_DAY_LIMIT_KEY, date, promoteRecord.getId()), Integer.class);
@@ -154,6 +161,7 @@ public class ClickController {
                 return ResponseEntity.badRequest().body("转化已超过每日上限");
             }
         }
+
         return null;
     }
 

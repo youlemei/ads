@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lwz.ads.constant.ClickStatusEnum;
 import com.lwz.ads.constant.Const;
 import com.lwz.ads.constant.ConvertStatusEnum;
+import com.lwz.ads.constant.PromoteStatusEnum;
 import com.lwz.ads.mapper.ConvertRecordMapper;
 import com.lwz.ads.mapper.entity.Advertisement;
 import com.lwz.ads.mapper.entity.ClickRecord;
@@ -124,6 +125,12 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
     }
 
     private boolean isDeduct(PromoteRecord promoteRecord, Advertisement ad, String today) {
+
+        if (promoteRecord.getPromoteStatus().intValue() != PromoteStatusEnum.RUNNING.getStatus()) {
+            log.info("deduct. pid:{} 已停止推广", promoteRecord.getId());
+            return true;
+        }
+
         Integer convertDayLimit = promoteRecord.getConvertDayLimit();
         if (convertDayLimit != null && convertDayLimit > 0) {
             Integer dayConvert = redisUtils.get(String.format(Const.CONVERT_DAY_LIMIT_KEY, today, promoteRecord.getId()), Integer.class);
@@ -132,6 +139,7 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
                 return true;
             }
         }
+
         Integer adConvertDayLimit = ad.getConvertDayLimit();
         if (adConvertDayLimit != null && adConvertDayLimit > 0) {
             Integer adDayConvert = redisUtils.get(String.format(Const.AD_CONVERT_DAY_LIMIT_KEY, today, ad.getId()), Integer.class);
@@ -140,11 +148,13 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
                 return true;
             }
         }
+
         if (promoteRecord.getDeductRate() != null && promoteRecord.getDeductRate() > 0) {
             int index = random.nextInt(100);
             log.info("saveConvert pid:{} deduct:{} index:{}", promoteRecord.getId(), promoteRecord.getDeductRate(), index);
             return index < promoteRecord.getDeductRate();
         }
+
         return false;
     }
 

@@ -1,7 +1,6 @@
 package com.lwz.ads.controller;
 
 import com.lwz.ads.bean.Response;
-import com.lwz.ads.constant.PromoteStatusEnum;
 import com.lwz.ads.mapper.entity.Advertisement;
 import com.lwz.ads.mapper.entity.ClickRecord;
 import com.lwz.ads.mapper.entity.ConvertRecord;
@@ -12,6 +11,7 @@ import com.lwz.ads.service.impl.ConvertRecordServiceImpl;
 import com.lwz.ads.service.impl.PromoteRecordServiceImpl;
 import com.lwz.ads.util.DateUtils;
 import com.lwz.ads.util.IPUtils;
+import com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
@@ -60,19 +60,16 @@ public class CallbackController {
                 log.warn("callback invalid param. date:{} clickId:{}", date, clickId);
                 return Response.with(HttpStatus.BAD_REQUEST);
             }
+
             ClickRecord clickRecord = clickRecordService.getBaseMapper().selectByIdWithDate(clickId, date);
             if (clickRecord == null) {
                 log.warn("callback fail. 点击记录不存在 date:{} clickId:{}", date, clickId);
                 return Response.with(HttpStatus.BAD_REQUEST);
             }
+
             Advertisement ad = advertisementService.getById(clickRecord.getAdId());
             PromoteRecord promoteRecord = promoteRecordService.lambdaQuery()
                     .eq(PromoteRecord::getAdId, clickRecord.getAdId()).eq(PromoteRecord::getChannelId, clickRecord.getChannelId()).one();
-            if (!ad.getTraceStatus() || now.isAfter(ad.getEndTime())
-                    || promoteRecord.getPromoteStatus().intValue() != PromoteStatusEnum.RUNNING.getStatus()) {
-                log.info("callback fail. date:{} clickId:{} 已停止推广", date, clickId);
-                return Response.fail("已停止推广");
-            }
 
             //保存转化记录, 核减
             ConvertRecord convertRecord = convertRecordService.saveConvert(clickRecord, promoteRecord, ad, date);
@@ -84,7 +81,10 @@ public class CallbackController {
             log.info("callback success. date:{} clickId:{}", date, clickId);
             return Response.success();
         } catch (DuplicateKeyException e) {
-            log.info("callback duplicate date:{} clickId:{}", date, clickId);
+            log.info("callback duplicate. date:{} clickId:{}", date, clickId);
+            return Response.success();
+        } catch (MySQLSyntaxErrorException e) {
+            log.info("callback click_record is deleted. date:{} clickId:{} err:{}", date, clickId, e.getMessage());
             return Response.success();
         } catch (Exception e) {
             log.error("callback fail. date:{} clickId:{} err:{}", date, clickId, e.getMessage(), e);
