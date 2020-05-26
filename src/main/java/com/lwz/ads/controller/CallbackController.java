@@ -15,12 +15,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
-import java.sql.SQLSyntaxErrorException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -83,9 +83,9 @@ public class CallbackController {
         } catch (DuplicateKeyException e) {
             log.info("callback duplicate. date:{} clickId:{}", date, clickId);
             return Response.success();
-        //} catch (SQLSyntaxErrorException e) {
-        //    log.info("callback click_record is deleted. date:{} clickId:{} err:{}", date, clickId, e.getMessage());
-        //    return Response.success();
+        } catch (BadSqlGrammarException e) {
+            log.info("callback click_record is deleted. date:{} clickId:{} err:{}", date, clickId, e.getMessage());
+            return Response.success();
         } catch (Exception e) {
             log.error("callback fail. date:{} clickId:{} err:{}", date, clickId, e.getMessage(), e);
             return Response.with(HttpStatus.INTERNAL_SERVER_ERROR);
