@@ -1,8 +1,10 @@
 package com.lwz.ads.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.lwz.ads.mapper.entity.ClickRecord;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lwz.ads.bean.CountSum;
+import com.lwz.ads.mapper.entity.ClickRecord;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
@@ -28,13 +30,20 @@ public interface ClickRecordMapper extends BaseMapper<ClickRecord> {
 
     int updateWithDate(@Param("me") ClickRecord me, @Param("to") ClickRecord to, @Param("date") String date);
 
-    @Update("create table if not exists click_record_${date} like click_record")
-    int createTable(String date);
+    IPage<ClickRecord> selectPageWithDate(Page<ClickRecord> page,
+                                          @Param("adId") Long adId, @Param("channelId") Long channelId,
+                                          @Param("mac") String mac, @Param("date") String date);
 
+    /**
+     * 统计
+     */
     List<CountSum> countClickSum(String date);
 
     List<CountSum> countDeduplicateClickSum(String date);
 
+    /**
+     * 重试
+     */
     List<ClickRecord> selectReceiveClick(@Param("end") LocalDateTime end, @Param("date") String date);
 
     @Update("update click_record_${date} set retry_times = retry_times + 1, edit_time = now() where id = #{clickId}")
@@ -42,6 +51,12 @@ public interface ClickRecordMapper extends BaseMapper<ClickRecord> {
 
     @Select("select count(*) from click_record_${date} where retry_times >= 3")
     long countRetryMax(String date);
+
+    /**
+     * 建表
+     */
+    @Update("create table if not exists click_record_${date} like click_record")
+    int createTable(String date);
 
     @Update("drop table if exists click_record_${date}")
     int deleteTable(String date);

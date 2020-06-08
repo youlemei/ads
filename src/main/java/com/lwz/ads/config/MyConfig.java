@@ -1,6 +1,8 @@
 package com.lwz.ads.config;
 
 import com.alibaba.fastjson.support.spring.GenericFastJsonRedisSerializer;
+import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.pagination.optimize.JsqlParserCountOptimize;
 import io.lettuce.core.AbstractRedisClient;
 import io.netty.channel.EventLoopGroup;
 import lombok.extern.slf4j.Slf4j;
@@ -68,6 +70,14 @@ public class MyConfig {
         requestFactory.setReadTimeout(5000);
         restTemplate.setRequestFactory(requestFactory);
         return restTemplate;
+    }
+
+    @Bean
+    public PaginationInterceptor paginationInterceptor() {
+        PaginationInterceptor paginationInterceptor = new PaginationInterceptor();
+        // 开启 count 的 join 优化,只针对部分 left join
+        paginationInterceptor.setCountSqlParser(new JsqlParserCountOptimize(true));
+        return paginationInterceptor;
     }
 
     @Bean
