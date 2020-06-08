@@ -1,10 +1,13 @@
 package com.lwz.ads.bean;
 
+import lombok.Data;
+
 import java.util.List;
 
 /**
  * @author liweizhou 2020/6/8
  */
+@Data
 public class PageResponse<T> extends Response<List<T>> {
 
     private long pageIndex;
@@ -13,30 +16,6 @@ public class PageResponse<T> extends Response<List<T>> {
 
     private long total;
 
-    public long getPageIndex() {
-        return pageIndex;
-    }
-
-    public void setPageIndex(long pageIndex) {
-        this.pageIndex = pageIndex;
-    }
-
-    public long getPageSize() {
-        return pageSize;
-    }
-
-    public void setPageSize(long pageSize) {
-        this.pageSize = pageSize;
-    }
-
-    public long getTotal() {
-        return total;
-    }
-
-    public void setTotal(long total) {
-        this.total = total;
-    }
-
     public static <T> PageResponse<T> success(long pageIndex, long pageSize, long total, List<T> data){
         PageResponse<T> response = new PageResponse<>();
         response.setPageIndex(pageIndex);
@@ -44,6 +23,10 @@ public class PageResponse<T> extends Response<List<T>> {
         response.setTotal(total);
         response.setData(data);
         return response;
+    }
+
+    public static <T> PageResponse<T> empty(){
+        return new PageResponse<>();
     }
 
 }

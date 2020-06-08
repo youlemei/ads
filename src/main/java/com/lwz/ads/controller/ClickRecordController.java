@@ -6,6 +6,7 @@ import com.lwz.ads.bean.PageResponse;
 import com.lwz.ads.mapper.entity.ClickRecord;
 import com.lwz.ads.service.impl.ClickRecordServiceImpl;
 import com.lwz.ads.util.DateUtils;
+import com.lwz.ads.util.IPUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
 
 /**
@@ -29,9 +31,16 @@ public class ClickRecordController {
 
     @GetMapping
     public PageResponse<ClickRecord> list(Long adId, Long channelId, String mac, String date,
+                                         HttpServletRequest request,
                                          @RequestParam(defaultValue = "1") long pageIndex,
                                          @RequestParam(defaultValue = "10") long pageSize) {
-        log.info("list adId:{} channelId:{} mac:{} date:{}", adId, channelId, mac, date);
+        String ip = IPUtils.getRealIp(request);
+        log.info("list adId:{} channelId:{} mac:{} date:{} ip:{}", adId, channelId, mac, date, ip);
+
+        if (!IPUtils.isLocalhost(ip)) {
+            return PageResponse.empty();
+        }
+
         if (StringUtils.isEmpty(date)) {
             date = DateUtils.yyyyMMdd.format(LocalDate.now());
         } else {

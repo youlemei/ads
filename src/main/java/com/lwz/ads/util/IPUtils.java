@@ -8,10 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * @author liweizhou 2020/2/17
@@ -30,7 +27,10 @@ public class IPUtils {
      * @return
      */
     public static boolean isLocalhost(String host){
-        return "localhost".equalsIgnoreCase(host) || "2020funfantasy.cn".equalsIgnoreCase(host) || Objects.equals(ip, host);
+        return "localhost".equalsIgnoreCase(host)
+                || "2020funfantasy.cn".equalsIgnoreCase(host)
+                || "127.0.0.1".equalsIgnoreCase(host)
+                || Objects.equals(ip, host);
     }
 
     private static String ip;
@@ -70,28 +70,33 @@ public class IPUtils {
         } catch (SocketException e) {
             return null;
         }
-        List<String> ipList = new ArrayList<>();
+        LinkedList<String> ipList = new LinkedList<>();
         while (nis.hasMoreElements()) {
             NetworkInterface ni = nis.nextElement();
-            if ("eth0".equalsIgnoreCase(ni.getName())) {
+            boolean eth0 = "eth0".equalsIgnoreCase(ni.getName());
+            if (eth0) {
                 Enumeration<NetworkInterface> subNis = ni.getSubInterfaces();
                 while (subNis.hasMoreElements()) {
-                    getHostAddress(ipList, subNis.nextElement());
+                    getHostAddress(ipList, subNis.nextElement(), eth0);
                 }
             }
-            getHostAddress(ipList, ni);
+            getHostAddress(ipList, ni, eth0);
         }
         return ipList;
     }
 
-    private static void getHostAddress(List<String> ipList, NetworkInterface ni) {
+    private static void getHostAddress(LinkedList<String> ipList, NetworkInterface ni, boolean first) {
         Enumeration<InetAddress> ips = ni.getInetAddresses();
         while (ips.hasMoreElements()) {
             InetAddress inet = ips.nextElement();
             String ip = inet.getHostAddress();
             if (ip.indexOf(":") == -1) {
                 // 不使用IPv6
-                ipList.add(ip);
+                if (first) {
+                    ipList.addFirst(ip);
+                } else {
+                    ipList.addLast(ip);
+                }
             }
         }
     }
@@ -116,16 +121,6 @@ public class IPUtils {
                 }
             }
         }
-        /*
-        String proxyClientIp = httpServletRequest.getHeader("Proxy-Client-IP");
-        if (notUnknownText(proxyClientIp)) {
-            return proxyClientIp;
-        }
-        String WLProxyClientIp = httpServletRequest.getHeader("WL-Proxy-Client-IP");
-        if (notUnknownText(WLProxyClientIp)) {
-            return WLProxyClientIp;
-        }
-        */
         return httpServletRequest.getRemoteAddr();
     }
 

@@ -18,32 +18,14 @@ public class Response<T> {
 
     public static <T> Response<T> success(T data){
         Response<T> response = new Response<>();
-        response.data = data;
-        return response;
-    }
-
-    public static <T> Response<T> success(T data, String msg){
-        Response<T> response = new Response<>();
-        response.data = data;
-        response.msg = msg;
-        return response;
-    }
-
-    public static <T> Response<T> fail(String msg){
-        return fail(400, msg);
-    }
-
-    public static <T> Response<T> fail(int code, String msg){
-        Response<T> response = new Response<>();
-        response.code = code;
-        response.msg = msg;
+        response.setData(data);
         return response;
     }
 
     public static <T> Response<T> with(HttpStatus httpStatus){
         Response<T> response = new Response<>();
-        response.code = httpStatus.value();
-        response.msg = httpStatus.getReasonPhrase();
+        response.setCode(httpStatus.value());
+        response.setMsg(httpStatus.getReasonPhrase());
         return response;
     }
 
