@@ -235,9 +235,10 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                 return null;
             }
 
-            //log.info("{} uri:{}", func ,adUri);
             ResponseEntity<String> resp = restTemplate.getForEntity(adUri.encode().toUri(), String.class);
-            log.info("{} uri:{} resp:{}", func, adUri, resp);
+            String body = resp.getBody();
+            log.info("{} adId:{} uri:{} code:{} body:{}", func, ad.getId(), adUri,
+                    resp.getStatusCodeValue(), body.substring(0, Math.max(100, body.length())));
             return resp;
 
         } catch (Exception e) {
@@ -254,7 +255,8 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                     redis.expire(key, 2, TimeUnit.DAYS);
                     int threshold = 100;
                     if (count % threshold == 0) {
-                        String content = String.format("广告主: %d. 广告: %s. 1分钟内调用超时达到%d次, 请注意. url: %s",
+                        String content = String.format("时间: %s 广告主: %d 广告: %s 1分钟内调用超时达到%d次, 请注意. url: %s",
+                                LocalDateTime.now().format(DateUtils.DEFAULT_FORMATTER),
                                 ad.getCompanyId(), ad.getAdName(), count, ad.getTraceUrl());
                         WeChatRobotMsg robotMsg = WeChatRobotMsg.buildText().content(content).build();
                         weChatRobotService.notify(Const.ERROR_WEB_HOOK, robotMsg);

@@ -2,6 +2,7 @@ package com.lwz.ads.bean;
 
 import lombok.Data;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -26,7 +27,9 @@ public class PageResponse<T> extends Response<List<T>> {
     }
 
     public static <T> PageResponse<T> empty(){
-        return new PageResponse<>();
+        PageResponse<T> response = new PageResponse<>();
+        response.setData(Collections.emptyList());
+        return response;
     }
 
 }

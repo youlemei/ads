@@ -177,7 +177,7 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
         if (StringUtils.hasText(callback)) {
 
             //调用渠道转化链接
-            ResponseEntity<String> resp = callbackConvert(callback);
+            ResponseEntity<String> resp = callbackConvert(callback, convertRecord);
 
             if (resp == null || !resp.getStatusCode().is2xxSuccessful()) {
                 getBaseMapper().incrRetryTimes(convertRecord.getClickId());
@@ -204,7 +204,7 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
         log.info("notifyConvert success. clickId:{}", convertRecord.getClickId());
     }
 
-    private ResponseEntity<String> callbackConvert(String callback) {
+    private ResponseEntity<String> callbackConvert(String callback, ConvertRecord convertRecord) {
         try {
             //识别callback不是指向本机
             UriComponents uri = UriComponentsBuilder.fromHttpUrl(StringUtils.trimWhitespace(callback)).build();
@@ -214,7 +214,10 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
             String uriString = uri.toUriString();
             log.info("callbackConvert callback:{}", callback);
             ResponseEntity<String> resp = restTemplate.getForEntity(uri.encode().toUri(), String.class);
-            log.info("callbackConvert callback:{} resp:{}", uriString, resp);
+            String body = resp.getBody();
+            log.info("callbackConvert adId:{} channelId:{} callback:{} code:{} body:{}",
+                    convertRecord.getAdId(), convertRecord.getChannelId(), uriString,
+                    resp.getStatusCodeValue(), body.substring(0, Math.max(100, body.length())));
             return resp;
         } catch (Exception e) {
             log.warn("callbackConvert fail. callback:{} err:{}", callback, e.getMessage(), e);
