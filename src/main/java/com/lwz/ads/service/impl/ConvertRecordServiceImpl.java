@@ -217,7 +217,7 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
             String body = resp.getBody();
             log.info("callbackConvert adId:{} channelId:{} callback:{} code:{} body:{}",
                     convertRecord.getAdId(), convertRecord.getChannelId(), uriString,
-                    resp.getStatusCodeValue(), body.substring(0, Math.max(100, body.length())));
+                    resp.getStatusCodeValue(), body.substring(0, Math.min(100, body.length())));
             return resp;
         } catch (Exception e) {
             log.warn("callbackConvert fail. callback:{} err:{}", callback, e.getMessage(), e);
