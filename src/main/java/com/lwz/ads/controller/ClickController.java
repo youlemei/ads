@@ -57,6 +57,7 @@ public class ClickController {
                                         @RequestParam Long adId, @RequestParam Long channelId,
                                         @RequestParam String type, @RequestParam Map<String, Object> request){
         try {
+            long start = System.currentTimeMillis();
             log.info("click adId:{} channelId:{} request:{} ip:{}", adId, channelId, request, IPUtils.getRealIp(httpServletRequest));
 
             //参数检查
@@ -83,7 +84,8 @@ public class ClickController {
             switch (traceType) {
                 case ASYNC:
                     clickRecordService.asyncHandleClick(clickRecord, ad);
-                    log.info("click asyncHandleClick ok. adId:{} channelId:{}", adId, channelId);
+                    double cost = (System.currentTimeMillis() - start) / 1000D;
+                    log.info("click asyncHandleClick ok. adId:{} channelId:{} {}s", adId, channelId, cost);
                     return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body("OK");
                 case REDIRECT:
                     //302
