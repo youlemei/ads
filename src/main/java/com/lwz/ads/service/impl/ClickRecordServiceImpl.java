@@ -238,7 +238,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
             ResponseEntity<String> resp = restTemplate.getForEntity(adUri.encode().toUri(), String.class);
             String body = resp.getBody();
             log.info("{} adId:{} uri:{} code:{} body:{}", func, ad.getId(), adUri,
-                    resp.getStatusCodeValue(), body.substring(0, Math.min(100, body.length())));
+                    resp.getStatusCodeValue(), body != null ? body.substring(0, Math.min(100, body.length())) : null);
             return resp;
 
         } catch (Exception e) {
@@ -264,10 +264,6 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                 });
                 return null;
             }
-            //if (rootCause instanceof HttpServerErrorException) {
-            //    log.warn("requestTraceUri fail. server error. func:{} adUri:{} err:{}", func, adUri, rootCause.getMessage());
-            //    return null;
-            //}
 
             return null;
         }

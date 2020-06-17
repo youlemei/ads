@@ -16,6 +16,7 @@ import com.lwz.ads.service.IConvertRecordService;
 import com.lwz.ads.util.DateUtils;
 import com.lwz.ads.util.IPUtils;
 import com.lwz.ads.util.RedisUtils;
+import com.lwz.ads.util.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -217,7 +218,7 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
             String body = resp.getBody();
             log.info("callbackConvert adId:{} channelId:{} callback:{} code:{} body:{}",
                     convertRecord.getAdId(), convertRecord.getChannelId(), uriString,
-                    resp.getStatusCodeValue(), body.substring(0, Math.min(100, body.length())));
+                    resp.getStatusCodeValue(), body != null ? body.substring(0, Math.min(100, body.length())) : null);
             return resp;
         } catch (Exception e) {
             log.warn("callbackConvert fail. callback:{} err:{}", callback, e.getMessage(), e);
