@@ -9,6 +9,7 @@ import com.lwz.ads.mapper.entity.PromoteRecord;
 import com.lwz.ads.service.impl.AdvertisementServiceImpl;
 import com.lwz.ads.service.impl.ClickRecordServiceImpl;
 import com.lwz.ads.service.impl.PromoteRecordServiceImpl;
+import com.lwz.ads.util.Clock;
 import com.lwz.ads.util.DateUtils;
 import com.lwz.ads.util.IPUtils;
 import com.lwz.ads.util.RedisUtils;
@@ -57,7 +58,7 @@ public class ClickController {
                                         @RequestParam Long adId, @RequestParam Long channelId,
                                         @RequestParam String type, @RequestParam Map<String, Object> request){
         try {
-            long start = System.currentTimeMillis();
+            Clock clock = new Clock();
             log.info("click adId:{} channelId:{} request:{} ip:{}", adId, channelId, request, IPUtils.getRealIp(httpServletRequest));
 
             //参数检查
@@ -84,8 +85,7 @@ public class ClickController {
             switch (traceType) {
                 case ASYNC:
                     clickRecordService.asyncHandleClick(clickRecord, ad);
-                    double cost = (System.currentTimeMillis() - start) / 1000D;
-                    log.info("click asyncHandleClick ok. adId:{} channelId:{} {}s", adId, channelId, cost);
+                    log.info("click asyncHandleClick ok. adId:{} channelId:{} {}", adId, channelId, clock.tag());
                     return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body("OK");
                 case REDIRECT:
                     //302
