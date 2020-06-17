@@ -138,7 +138,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
             String actualKey = String.format(Const.CLICK_DAY_ACTUAL_AMOUNT, date, pid);
             int hashCode = (clickRecord.getIp() + clickRecord.getMac()).hashCode();
             redis.opsForSet().add(actualKey, hashCode);
-            redis.expire(actualKey, 7, TimeUnit.DAYS);
+            redis.expire(actualKey, 1, TimeUnit.DAYS);
         });
         return clickRecord;
     }
