@@ -21,7 +21,6 @@ import org.springframework.core.NestedExceptionUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -76,7 +75,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     private int deleteDaysAgo;
 
     @Override
-    @Transactional
+    //@Transactional
     public ClickRecord saveClick(LocalDateTime clickTime, Map<String, Object> request, String type, PromoteRecord promoteRecord, Advertisement ad) {
         Clock clock = new Clock();
         String clickId = UUID.randomUUID().toString().replaceAll("-", "");
@@ -148,13 +147,13 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
     @Async
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    //@Transactional(propagation = Propagation.REQUIRES_NEW)
     public void asyncHandleClick(ClickRecord clickRecord, Advertisement ad) {
         handleClick(clickRecord, ad);
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    //@Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleClick(ClickRecord clickRecord, Advertisement ad) {
 
         if (clickRecord.getClickStatus().intValue() != ClickStatusEnum.RECEIVED.getStatus()) {
@@ -186,7 +185,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     }
 
     @Override
-    @Transactional
+    //@Transactional
     public URI redirectHandleClick(ClickRecord clickRecord, Advertisement ad) {
 
         TraceTypeEnum traceType = TraceTypeEnum.valueOfType(ad.getTraceType());
@@ -291,7 +290,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     }
 
     @Override
-    @Transactional
+    //@Transactional
     public void createTable() {
         IntStream.range(-1, createDays).forEach(day -> {
             String date = LocalDateTime.now().plusDays(day).format(DateUtils.yyyyMMdd);
@@ -300,7 +299,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     }
 
     @Override
-    @Transactional
+    //@Transactional
     public void deleteClickTable() {
         LocalDateTime deleteDay = LocalDateTime.now().plusDays(-deleteDaysAgo);
         for (int i = 0; i < 30; i++) {
