@@ -82,7 +82,8 @@ public class CallbackController {
                 convertRecordService.asyncNotifyConvert(convertRecord);
             }
 
-            log.info("callback success. date:{} clickId:{} {}", date, clickId, clock.tag());
+            log.info("callback success. date:{} clickId:{} adId:{} channelId:{} {}", date, clickId,
+                    clickRecord.getAdId(), clickRecord.getChannelId(), clock.tag());
             return Response.success();
         } catch (DuplicateKeyException e) {
             log.info("callback duplicate. date:{} clickId:{}", date, clickId);

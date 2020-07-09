@@ -202,7 +202,8 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
         clickTo.setClickStatus(ClickStatusEnum.CONVERTED.getStatus());
         clickRecordService.getBaseMapper().updateByIdWithDate(clickTo, convertRecord.getClickTime().format(DateUtils.yyyyMMdd));
 
-        log.info("notifyConvert success. clickId:{}", convertRecord.getClickId());
+        log.info("notifyConvert success. adId:{} channelId:{} clickId:{}",
+                convertRecord.getAdId(), convertRecord.getChannelId(), convertRecord.getClickId());
     }
 
     private ResponseEntity<String> callbackConvert(String callback, ConvertRecord convertRecord) {
@@ -212,16 +213,17 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
             if (IPUtils.isLocalhost(uri.getHost())) {
                 throw new UnknownHostException();
             }
-            String uriString = uri.toUriString();
-            log.info("callbackConvert callback:{}", callback);
+            log.info("callbackConvert adId:{} channelId:{} callback:{}",
+                    convertRecord.getAdId(), convertRecord.getChannelId(), callback);
             ResponseEntity<String> resp = restTemplate.getForEntity(uri.encode().toUri(), String.class);
             String body = resp.getBody();
             log.info("callbackConvert adId:{} channelId:{} callback:{} code:{} body:{}",
-                    convertRecord.getAdId(), convertRecord.getChannelId(), uriString,
+                    convertRecord.getAdId(), convertRecord.getChannelId(), callback,
                     resp.getStatusCodeValue(), body != null ? body.substring(0, Math.min(100, body.length())) : null);
             return resp;
         } catch (Exception e) {
-            log.warn("callbackConvert fail. callback:{} err:{}", callback, e.getMessage(), e);
+            log.warn("callbackConvert fail. adId:{} channelId:{} callback:{} err:{}",
+                    convertRecord.getAdId(), convertRecord.getChannelId(), callback, e.getMessage(), e);
             return null;
         }
     }

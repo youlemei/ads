@@ -164,7 +164,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         String date = clickRecord.getCreateTime().format(DateUtils.yyyyMMdd);
         UriComponents adUri = buildAdTraceUri(clickRecord.getId(), ad, date, clickRecord);
 
-        ResponseEntity<String> resp = requestTraceUri("asyncHandleClick", adUri, ad);
+        ResponseEntity<String> resp = requestTraceUri(adUri, ad, clickRecord);
 
         if (resp == null || !resp.getStatusCode().is2xxSuccessful()) {
             //增加重试次数
@@ -181,7 +181,8 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         to.setEditTime(LocalDateTime.now());
         getBaseMapper().updateWithDate(me, to, date);
 
-        log.info("asyncHandleClick success. date:{} clickId:{}", date, clickRecord.getId());
+        log.info("asyncHandleClick success. adId:{} channelId:{} date:{} clickId:{}",
+                ad.getId(), clickRecord.getChannelId(), date, clickRecord.getId());
     }
 
     @Override
@@ -199,7 +200,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
             String date = clickRecord.getCreateTime().format(DateUtils.yyyyMMdd);
             UriComponents adUri = buildAdTraceUri(clickRecord.getId(), ad, date, clickRecord);
 
-            ResponseEntity<String> resp = requestTraceUri("redirectHandleClick", adUri, ad);
+            ResponseEntity<String> resp = requestTraceUri(adUri, ad, clickRecord);
 
             ClickRecord to = new ClickRecord();
             to.setId(clickRecord.getId());
@@ -220,38 +221,27 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         throw new RuntimeException("unknowns error");
     }
 
-    private ResponseEntity<String> requestTraceUri(String func, UriComponents adUri, Advertisement ad) {
+    private ResponseEntity<String> requestTraceUri(UriComponents adUri, Advertisement ad, ClickRecord clickRecord) {
             //识别uri不是指向本机
         if (IPUtils.isLocalhost(adUri.getHost())) {
-            log.error("requestTraceUri uri指向本机. adUri:{}", adUri);
+            log.error("requestTraceUri uri指向本机. adId:{} channelId:{} adUri:{}", ad.getId(), clickRecord.getChannelId(), adUri);
             return null;
         }
-        return doRequestTraceUri(func, adUri, 1, ad);
-    }
-
-    private ResponseEntity<String> doRequestTraceUri(String func, UriComponents adUri, int times, Advertisement ad) {
         try {
-
-            int maxRetryTimes = 2;
-            if (times > maxRetryTimes) {
-                log.warn("requestTraceUri retry times > {}", maxRetryTimes);
-                return null;
-            }
-
             ResponseEntity<String> resp = restTemplate.getForEntity(adUri.encode().toUri(), String.class);
             String body = resp.getBody();
-            log.info("{} adId:{} uri:{} code:{} body:{}", func, ad.getId(), adUri,
+            log.info("requestTraceUri success. adId:{} channelId:{} uri:{} code:{} body:{}",
+                    ad.getId(), clickRecord.getChannelId(), adUri,
                     resp.getStatusCodeValue(), body != null ? body.substring(0, Math.min(100, body.length())) : null);
             return resp;
 
         } catch (Exception e) {
 
-            log.warn("requestTraceUri fail. func:{} adUri:{} err:{}", func, adUri, e.getMessage(), e);
+            log.warn("requestTraceUri fail. adId:{} channelId:{} adUri:{} err:{}",
+                    ad.getId(), clickRecord.getChannelId(), adUri, e.getMessage(), e);
 
             Throwable rootCause = NestedExceptionUtils.getRootCause(e);
             if (rootCause instanceof SocketTimeoutException) {
-                log.warn("requestTraceUri fail. socket timeout. func:{} adId:{} company:{} adUri:{} err:{}",
-                        func, ad.getId(), ad.getCompanyId(), adUri, rootCause.getMessage());
                 redisUtils.execute(redis -> {
                     String key = String.format(Const.CLICK_SOCKET_TIME_OUT_MINUTE, LocalDateTime.now().format(DateUtils.yyyyMMdd_HHmm));
                     long count = redis.opsForHash().increment(key, ad.getCompanyId().toString(), 1);
