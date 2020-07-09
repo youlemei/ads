@@ -114,6 +114,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         String date = clickTime.format(DateUtils.yyyyMMdd);
         getBaseMapper().insertWithDate(clickRecord, date);
         clock.tag();
+
         if (promoteRecord.getClickDayLimit() != null && promoteRecord.getClickDayLimit() > 0) {
             redisUtils.execute(redis -> {
                 String limitKey = String.format(Const.CLICK_DAY_LIMIT_KEY, date, promoteRecord.getId());
@@ -141,7 +142,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
             redis.opsForSet().add(actualKey, hashCode);
             redis.expire(actualKey, 1, TimeUnit.DAYS);
         });
-        log.info("saveClick adId:{} channelId:{} {}", ad.getId(), promoteRecord.getChannelId());
+        log.info("saveClick adId:{} channelId:{} {}", ad.getId(), promoteRecord.getChannelId(), clock.tag());
         return clickRecord;
     }
 
@@ -226,18 +227,19 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
             log.error("requestTraceUri uri指向本机. adId:{} channelId:{} adUri:{}", ad.getId(), clickRecord.getChannelId(), adUri);
             return null;
         }
+        Clock clock = new Clock();
         try {
             ResponseEntity<String> resp = restTemplate.getForEntity(adUri.encode().toUri(), String.class);
             String body = resp.getBody();
-            log.info("requestTraceUri success. adId:{} channelId:{} uri:{} code:{} body:{}",
-                    ad.getId(), clickRecord.getChannelId(), adUri,
+            log.info("requestTraceUri success. adId:{} channelId:{} {} uri:{} code:{} body:{}",
+                    ad.getId(), clickRecord.getChannelId(), clock.tag(), adUri,
                     resp.getStatusCodeValue(), body != null ? body.substring(0, Math.min(100, body.length())) : null);
             return resp;
 
         } catch (Exception e) {
 
-            log.warn("requestTraceUri fail. adId:{} channelId:{} adUri:{} err:{}",
-                    ad.getId(), clickRecord.getChannelId(), adUri, e.getMessage(), e);
+            log.warn("requestTraceUri fail. adId:{} channelId:{} {} adUri:{} err:{}",
+                    ad.getId(), clickRecord.getChannelId(), clock.tag(), adUri, e.getMessage(), e);
 
             Throwable rootCause = NestedExceptionUtils.getRootCause(e);
             if (rootCause instanceof SocketTimeoutException) {

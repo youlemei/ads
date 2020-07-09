@@ -13,10 +13,7 @@ import com.lwz.ads.mapper.entity.ClickRecord;
 import com.lwz.ads.mapper.entity.ConvertRecord;
 import com.lwz.ads.mapper.entity.PromoteRecord;
 import com.lwz.ads.service.IConvertRecordService;
-import com.lwz.ads.util.DateUtils;
-import com.lwz.ads.util.IPUtils;
-import com.lwz.ads.util.RedisUtils;
-import com.lwz.ads.util.SpringContextHolder;
+import com.lwz.ads.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -60,6 +57,7 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
     @Override
     @Transactional
     public ConvertRecord saveConvert(ClickRecord clickRecord, PromoteRecord promoteRecord, Advertisement ad, String date) {
+        Clock clock = new Clock();
         if (lambdaQuery().eq(ConvertRecord::getClickId, clickRecord.getId()).count() > 0) {
             return null;
         }
@@ -88,6 +86,7 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
 
         //核减
         boolean deduct = isDeduct(promoteRecord, ad, today);
+        clock.tag();
         if (deduct) {
             convertRecord.setConvertStatus(ConvertStatusEnum.DEDUCTED.getStatus());
             save(convertRecord);
@@ -97,12 +96,16 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
             to.setEditTime(now);
             to.setClickStatus(ClickStatusEnum.DEDUCTED.getStatus());
             clickRecordService.getBaseMapper().updateByIdWithDate(to, date);
+            log.info("saveConvert deduct adId:{} channelId:{} clickId:{} date:{} {}", promoteRecord.getAdId(),
+                    promoteRecord.getChannelId(), clickRecord.getId(), date, clock.tag());
             return null;
         }
 
         //转化
         convertRecord.setConvertStatus(ConvertStatusEnum.CONVERTED.getStatus());
         save(convertRecord);
+        clock.tag();
+
         if (promoteRecord.getConvertDayLimit() != null && promoteRecord.getConvertDayLimit() > 0) {
             redisUtils.execute(redis -> {
                 String limitKey = String.format(Const.CONVERT_DAY_LIMIT_KEY, today, promoteRecord.getId());
@@ -122,6 +125,8 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
             redis.opsForHash().increment(amountKey, promoteRecord.getAdId() + "_" + promoteRecord.getChannelId(), 1);
             redis.expire(amountKey, 7, TimeUnit.DAYS);
         });
+        log.info("saveConvert convert adId:{} channelId:{} clickId:{} date:{} {}", promoteRecord.getAdId(),
+                promoteRecord.getChannelId(), clickRecord.getId(), date, clock.tag());
         return convertRecord;
     }
 
