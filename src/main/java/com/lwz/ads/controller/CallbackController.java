@@ -9,6 +9,7 @@ import com.lwz.ads.service.impl.AdvertisementServiceImpl;
 import com.lwz.ads.service.impl.ClickRecordServiceImpl;
 import com.lwz.ads.service.impl.ConvertRecordServiceImpl;
 import com.lwz.ads.service.impl.PromoteRecordServiceImpl;
+import com.lwz.ads.util.Clock;
 import com.lwz.ads.util.DateUtils;
 import com.lwz.ads.util.IPUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +52,7 @@ public class CallbackController {
     public Response callback(HttpServletRequest httpServletRequest,
                              @RequestParam String date, @RequestParam String clickId){
         try {
+            Clock clock = new Clock();
             log.info("callback date:{} clickId:{} ip:{}", date, clickId, IPUtils.getRealIp(httpServletRequest));
 
             //检查
@@ -70,15 +72,17 @@ public class CallbackController {
             Advertisement ad = advertisementService.getById(clickRecord.getAdId());
             PromoteRecord promoteRecord = promoteRecordService.lambdaQuery()
                     .eq(PromoteRecord::getAdId, clickRecord.getAdId()).eq(PromoteRecord::getChannelId, clickRecord.getChannelId()).one();
+            clock.tag();
 
             //保存转化记录, 核减
             ConvertRecord convertRecord = convertRecordService.saveConvert(clickRecord, promoteRecord, ad, date);
+            clock.tag();
             if (convertRecord != null) {
                 //异步回调渠道
                 convertRecordService.asyncNotifyConvert(convertRecord);
             }
 
-            log.info("callback success. date:{} clickId:{}", date, clickId);
+            log.info("callback success. date:{} clickId:{} {}", date, clickId, clock.tag());
             return Response.success();
         } catch (DuplicateKeyException e) {
             log.info("callback duplicate. date:{} clickId:{}", date, clickId);

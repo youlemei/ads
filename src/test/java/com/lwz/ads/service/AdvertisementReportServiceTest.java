@@ -27,11 +27,6 @@ public class AdvertisementReportServiceTest {
     private RedisUtils redisUtils;
 
     @Test
-    public void test() throws Exception{
-        advertisementReportService.updateYesterdayReport();
-    }
-
-    @Test
     public void testLock() throws Exception{
         String uuid = UUID.randomUUID().toString();
         System.out.println(redisUtils.lock("lwz", uuid, 1000));

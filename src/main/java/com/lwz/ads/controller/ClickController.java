@@ -78,9 +78,11 @@ public class ClickController {
             if (result != null) {
                 return result;
             }
+            clock.tag();
 
             //保存点击记录
             ClickRecord clickRecord = clickRecordService.saveClick(clickTime, request, type, promoteRecord, ad);
+            clock.tag();
 
             switch (traceType) {
                 case ASYNC:

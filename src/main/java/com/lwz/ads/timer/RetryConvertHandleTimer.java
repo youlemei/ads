@@ -1,7 +1,5 @@
 package com.lwz.ads.timer;
 
-import com.lwz.ads.constant.ConvertStatusEnum;
-import com.lwz.ads.mapper.entity.ConvertRecord;
 import com.lwz.ads.service.impl.ConvertRecordServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -26,14 +24,7 @@ public class RetryConvertHandleTimer {
         LocalDateTime start = now.plusDays(-2);
         LocalDateTime end = now;
 
-        //通知渠道
-        convertRecordService.lambdaQuery()
-                .between(ConvertRecord::getCreateTime, start, end)
-                .eq(ConvertRecord::getConvertStatus, ConvertStatusEnum.CONVERTED.getStatus())
-                .lt(ConvertRecord::getRetryTimes, 3)
-                .list()
-                .forEach(convertRecord -> convertRecordService.notifyConvert(convertRecord));
-
+        convertRecordService.retryConvert(start, end);
     }
 
 }

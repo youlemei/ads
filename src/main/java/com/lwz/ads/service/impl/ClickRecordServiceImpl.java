@@ -63,6 +63,9 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     @Autowired
     private WeChatRobotService weChatRobotService;
 
+    @Autowired
+    private AdvertisementServiceImpl advertisementService;
+
     @Value("${system.web.scheme:http}")
     private String scheme;
 
@@ -314,4 +317,25 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
             getBaseMapper().deleteTable(date);
         }
     }
+
+    @Override
+    public void retryClick(String date, LocalDateTime end) {
+        ClickRecordServiceImpl clickRecordService = SpringContextHolder.getBean(ClickRecordServiceImpl.class);
+        getBaseMapper().selectReceiveClick(end, date)
+                .forEach(clickRecord -> {
+                    Advertisement ad = advertisementService.getById(clickRecord.getAdId());
+                    TraceTypeEnum adTraceType = TraceTypeEnum.valueOfType(ad.getTraceType());
+                    if (adTraceType == TraceTypeEnum.REDIRECT) {
+                        //丢弃
+                        ClickRecord to = new ClickRecord();
+                        to.setClickStatus(ClickStatusEnum.DISCARDED.getStatus());
+                        to.setEditor("system");
+                        to.setEditTime(LocalDateTime.now());
+                        getBaseMapper().updateByIdWithDate(to, date);
+                    } else {
+                        clickRecordService.handleClick(clickRecord, ad);
+                    }
+                });
+    }
+
 }

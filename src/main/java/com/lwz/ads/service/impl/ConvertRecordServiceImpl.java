@@ -226,4 +226,15 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
         }
     }
 
+    @Override
+    public void retryConvert(LocalDateTime start, LocalDateTime end) {
+        ConvertRecordServiceImpl convertRecordService = SpringContextHolder.getBean(ConvertRecordServiceImpl.class);
+        lambdaQuery()
+                .between(ConvertRecord::getCreateTime, start, end)
+                .eq(ConvertRecord::getConvertStatus, ConvertStatusEnum.CONVERTED.getStatus())
+                .lt(ConvertRecord::getRetryTimes, 3)
+                .list()
+                .forEach(convertRecord -> convertRecordService.notifyConvert(convertRecord));
+    }
+
 }

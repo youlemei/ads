@@ -6,6 +6,8 @@ import com.lwz.ads.mapper.entity.ClickRecord;
 import com.lwz.ads.mapper.entity.ConvertRecord;
 import com.lwz.ads.mapper.entity.PromoteRecord;
 
+import java.time.LocalDateTime;
+
 /**
  * <p>
  * 转化记录 服务类
@@ -34,4 +36,6 @@ public interface IConvertRecordService extends IService<ConvertRecord> {
      */
     void asyncNotifyConvert(ConvertRecord convertRecord);
     void notifyConvert(ConvertRecord convertRecord);
+
+    void retryConvert(LocalDateTime start, LocalDateTime end);
 }

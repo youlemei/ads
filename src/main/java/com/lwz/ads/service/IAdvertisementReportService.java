@@ -3,6 +3,8 @@ package com.lwz.ads.service;
 import com.lwz.ads.mapper.entity.AdvertisementReport;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.time.LocalDate;
+
 /**
  * <p>
  * 广告报表, 按日汇总 服务类
@@ -16,10 +18,10 @@ public interface IAdvertisementReportService extends IService<AdvertisementRepor
     /**
      * 更新今日点击/转化
      */
-    void updateTodayReport();
+    void updateReportWithRedis();
 
     /**
      * 统计昨日点击/转化
      */
-    void updateYesterdayReport();
+    void updateReportWithMySQL(LocalDate date);
 }

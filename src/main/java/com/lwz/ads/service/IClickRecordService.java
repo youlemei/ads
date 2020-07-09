@@ -58,4 +58,6 @@ public interface IClickRecordService extends IService<ClickRecord> {
      * 删2个月前的点击记录
      */
     void deleteClickTable();
+
+    void retryClick(String date, LocalDateTime end);
 }

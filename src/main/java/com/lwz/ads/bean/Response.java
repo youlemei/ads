@@ -29,4 +29,11 @@ public class Response<T> {
         return response;
     }
 
+    public static <T> Response<T> fail(int code, String msg){
+        Response<T> response = new Response<>();
+        response.setCode(code);
+        response.setMsg(msg);
+        return response;
+    }
+
 }
