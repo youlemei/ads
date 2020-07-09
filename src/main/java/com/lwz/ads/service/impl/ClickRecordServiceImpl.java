@@ -13,10 +13,7 @@ import com.lwz.ads.mapper.entity.ClickRecord;
 import com.lwz.ads.mapper.entity.PromoteRecord;
 import com.lwz.ads.service.IClickRecordService;
 import com.lwz.ads.service.WeChatRobotService;
-import com.lwz.ads.util.DateUtils;
-import com.lwz.ads.util.IPUtils;
-import com.lwz.ads.util.RedisUtils;
-import com.lwz.ads.util.SpringContextHolder;
+import com.lwz.ads.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -81,7 +78,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     @Override
     @Transactional
     public ClickRecord saveClick(LocalDateTime clickTime, Map<String, Object> request, String type, PromoteRecord promoteRecord, Advertisement ad) {
-
+        Clock clock = new Clock();
         String clickId = UUID.randomUUID().toString().replaceAll("-", "");
         ClickRecord clickRecord = new ClickRecord()
                 .setId(clickId)
@@ -116,6 +113,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
         String date = clickTime.format(DateUtils.yyyyMMdd);
         getBaseMapper().insertWithDate(clickRecord, date);
+        clock.tag();
         if (promoteRecord.getClickDayLimit() != null && promoteRecord.getClickDayLimit() > 0) {
             redisUtils.execute(redis -> {
                 String limitKey = String.format(Const.CLICK_DAY_LIMIT_KEY, date, promoteRecord.getId());
@@ -143,6 +141,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
             redis.opsForSet().add(actualKey, hashCode);
             redis.expire(actualKey, 1, TimeUnit.DAYS);
         });
+        log.info("saveClick adId:{} channelId:{} {}", ad.getId(), promoteRecord.getChannelId());
         return clickRecord;
     }
 
