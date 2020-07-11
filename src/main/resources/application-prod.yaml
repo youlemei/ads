@@ -8,7 +8,7 @@ spring:
     username: ads_server
     password: 2Ad9c4A70
     druid:
-      max-active: 20
+      max-active: 10
       filter:
         stat:
           enabled: true
@@ -24,16 +24,17 @@ spring:
   task:
     scheduling:
       pool:
-        size: 30
+        size: 20
     execution:
       pool:
         core-size: 100
+        max-size: 200
   redis:
     host: localhost
     port: 6379
     lettuce:
       pool:
-        max-active: 50
+        max-active: 10
 
 click_record_create_days: 8
 

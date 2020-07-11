@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.NestedExceptionUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -32,9 +33,12 @@ import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
@@ -61,6 +65,9 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
     @Autowired
     private AdvertisementServiceImpl advertisementService;
+
+    @Autowired
+    private ThreadPoolTaskExecutor retryExecutor;
 
     @Value("${system.web.scheme:http}")
     private String scheme;
@@ -310,22 +317,39 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
     @Override
     public void retryClick(String date, LocalDateTime end) {
-        ClickRecordServiceImpl clickRecordService = SpringContextHolder.getBean(ClickRecordServiceImpl.class);
-        getBaseMapper().selectReceiveClick(end, date)
-                .forEach(clickRecord -> {
-                    Advertisement ad = advertisementService.getById(clickRecord.getAdId());
-                    TraceTypeEnum adTraceType = TraceTypeEnum.valueOfType(ad.getTraceType());
-                    if (adTraceType == TraceTypeEnum.REDIRECT) {
-                        //丢弃
-                        ClickRecord to = new ClickRecord();
-                        to.setClickStatus(ClickStatusEnum.DISCARDED.getStatus());
-                        to.setEditor("system");
-                        to.setEditTime(LocalDateTime.now());
-                        getBaseMapper().updateByIdWithDate(to, date);
-                    } else {
-                        clickRecordService.handleClick(clickRecord, ad);
-                    }
-                });
+        List<ClickRecord> clickRecordList = getBaseMapper().selectReceiveClick(end, date);
+        int groupSize = 1000;
+        int group = clickRecordList.size() / groupSize + Math.min(clickRecordList.size() % groupSize, 1);
+        CountDownLatch countDownLatch = new CountDownLatch(group);
+        for (int i = 0; i < clickRecordList.size(); i+= groupSize) {
+            List<ClickRecord> clickRecords = clickRecordList.subList(i, Math.min(i + groupSize, clickRecordList.size()));
+            retryExecutor.execute(()->{
+                try {
+                    clickRecords.forEach(clickRecord -> {
+                        Advertisement ad = advertisementService.getById(clickRecord.getAdId());
+                        TraceTypeEnum adTraceType = TraceTypeEnum.valueOfType(ad.getTraceType());
+                        if (adTraceType == TraceTypeEnum.REDIRECT) {
+                            //丢弃
+                            ClickRecord to = new ClickRecord();
+                            to.setClickStatus(ClickStatusEnum.DISCARDED.getStatus());
+                            to.setEditor("system");
+                            to.setEditTime(LocalDateTime.now());
+                            getBaseMapper().updateByIdWithDate(to, date);
+                        } else {
+                            handleClick(clickRecord, ad);
+                        }
+                    });
+                    clickRecords.clear();
+                } finally {
+                    countDownLatch.countDown();
+                }
+            });
+        }
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            log.error("retryClick interrupt. err:{}", e.getMessage(), e);
+        }
     }
 
 }
