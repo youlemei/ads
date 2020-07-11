@@ -82,16 +82,6 @@ public class MyConfig {
     }
 
     @Bean
-    public ThreadPoolTaskExecutor retryExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(100);
-        executor.setMaxPoolSize(100);
-        executor.setQueueCapacity(1000);
-        executor.setThreadNamePrefix("retry-executor-");
-        return executor;
-    }
-
-    @Bean
     public RedisHealthIndicator redisHealthIndicator(RedisConnectionFactory redisConnectionFactory){
         return new RedisHealthIndicator(redisConnectionFactory) {
             @Override
