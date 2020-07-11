@@ -3,6 +3,7 @@ package com.lwz.ads.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.lwz.ads.bean.DingTalkRobotMsg;
 import com.lwz.ads.bean.WeChatRobotMsg;
 import com.lwz.ads.constant.ClickStatusEnum;
 import com.lwz.ads.constant.Const;
@@ -11,9 +12,14 @@ import com.lwz.ads.mapper.ClickRecordMapper;
 import com.lwz.ads.mapper.entity.Advertisement;
 import com.lwz.ads.mapper.entity.ClickRecord;
 import com.lwz.ads.mapper.entity.PromoteRecord;
+import com.lwz.ads.service.DingTalkRobotService;
 import com.lwz.ads.service.IClickRecordService;
 import com.lwz.ads.service.WeChatRobotService;
-import com.lwz.ads.util.*;
+import com.lwz.ads.util.Clock;
+import com.lwz.ads.util.DateUtils;
+import com.lwz.ads.util.IPUtils;
+import com.lwz.ads.util.RedisUtils;
+import com.lwz.ads.util.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,9 +27,7 @@ import org.springframework.core.NestedExceptionUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
@@ -40,7 +44,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -66,6 +69,9 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
     @Autowired
     private WeChatRobotService weChatRobotService;
+
+    @Autowired
+    private DingTalkRobotService dingTalkRobotService;
 
     @Autowired
     private AdvertisementServiceImpl advertisementService;
@@ -254,15 +260,15 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
             if (rootCause instanceof SocketTimeoutException) {
                 redisUtils.execute(redis -> {
                     String key = String.format(Const.CLICK_SOCKET_TIME_OUT_MINUTE, LocalDateTime.now().format(DateUtils.yyyyMMdd_HHmm));
-                    long count = redis.opsForHash().increment(key, ad.getCompanyId().toString(), 1);
+                    long count = redis.opsForHash().increment(key, ad.getId().toString(), 1);
                     redis.expire(key, 2, TimeUnit.DAYS);
                     int threshold = 100;
                     if (count % threshold == 0) {
                         String content = String.format("时间: %s 广告主: %d 广告: %s 1分钟内调用超时达到%d次, 请注意. url: %s",
                                 LocalDateTime.now().format(DateUtils.DEFAULT_FORMATTER),
                                 ad.getCompanyId(), ad.getAdName(), count, ad.getTraceUrl());
-                        WeChatRobotMsg robotMsg = WeChatRobotMsg.buildText().content(content).build();
-                        weChatRobotService.notify(Const.ERROR_WEB_HOOK, robotMsg);
+                        weChatRobotService.notify(Const.ERROR_WEB_HOOK, WeChatRobotMsg.buildText().content(content).build());
+                        dingTalkRobotService.notify(Const.DING_WARN_WEB_HOOK, DingTalkRobotMsg.buildText().content(content).build());
                     }
                 });
                 return null;
