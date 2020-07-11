@@ -84,9 +84,8 @@ public class MyConfig {
     @Bean
     public ThreadPoolTaskExecutor retryExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(20);
-        executor.setMaxPoolSize(50);
-        executor.setKeepAliveSeconds(60);
+        executor.setCorePoolSize(100);
+        executor.setMaxPoolSize(100);
         executor.setQueueCapacity(1000);
         executor.setThreadNamePrefix("retry-executor-");
         return executor;

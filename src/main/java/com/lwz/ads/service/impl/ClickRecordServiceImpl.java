@@ -187,7 +187,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         to.setEditTime(LocalDateTime.now());
         getBaseMapper().updateWithDate(me, to, date);
 
-        log.info("asyncHandleClick success. adId:{} channelId:{} date:{} clickId:{}",
+        log.info("handleClick success. adId:{} channelId:{} date:{} clickId:{}",
                 ad.getId(), clickRecord.getChannelId(), date, clickRecord.getId());
     }
 
