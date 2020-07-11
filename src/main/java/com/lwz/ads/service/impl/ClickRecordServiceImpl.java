@@ -70,7 +70,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     @Autowired
     private AdvertisementServiceImpl advertisementService;
 
-    private ThreadPoolExecutor retryExecutor = new ThreadPoolExecutor(100, 100, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(1000), new CustomizableThreadFactory("retry-executor-"));
+    private ThreadPoolExecutor retryExecutor = new ThreadPoolExecutor(100, 100, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000), new CustomizableThreadFactory("retry-executor-"));
 
     @Value("${system.web.scheme:http}")
     private String scheme;
@@ -321,7 +321,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     @Override
     public void retryClick(String date, LocalDateTime end) {
         List<ClickRecord> clickRecordList = getBaseMapper().selectReceiveClick(end, date);
-        int groupSize = 1000;
+        int groupSize = 100;
         int group = clickRecordList.size() / groupSize + Math.min(clickRecordList.size() % groupSize, 1);
         CountDownLatch countDownLatch = new CountDownLatch(group);
         for (int i = 0; i < clickRecordList.size(); i+= groupSize) {
@@ -342,7 +342,6 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                             handleClick(clickRecord, ad);
                         }
                     });
-                    clickRecords.clear();
                 } finally {
                     countDownLatch.countDown();
                 }

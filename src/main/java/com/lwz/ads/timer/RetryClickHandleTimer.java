@@ -29,11 +29,13 @@ public class RetryClickHandleTimer {
 
         //重试1分钟前-两天内
         LocalDateTime now = LocalDateTime.now().plusMinutes(-1);
-        String today = now.format(DateUtils.yyyyMMdd);
-        clickRecordService.retryClick(today, now);
 
         String yesterday = now.plusDays(-1).format(DateUtils.yyyyMMdd);
         clickRecordService.retryClick(yesterday, null);
+
+        String today = now.format(DateUtils.yyyyMMdd);
+        clickRecordService.retryClick(today, now);
+
     }
 
 
