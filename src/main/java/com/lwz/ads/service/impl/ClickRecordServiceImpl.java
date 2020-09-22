@@ -262,7 +262,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                     String key = String.format(Const.CLICK_SOCKET_TIME_OUT_MINUTE, LocalDateTime.now().format(DateUtils.yyyyMMdd_HHmm));
                     long count = redis.opsForHash().increment(key, ad.getId().toString(), 1);
                     redis.expire(key, 2, TimeUnit.DAYS);
-                    int threshold = 100;
+                    int threshold = 500;
                     if (count % threshold == 0) {
                         String content = String.format("时间: %s 广告主: %d 广告: %s 1分钟内调用超时达到%d次, 请注意. url: %s",
                                 LocalDateTime.now().format(DateUtils.DEFAULT_FORMATTER),
