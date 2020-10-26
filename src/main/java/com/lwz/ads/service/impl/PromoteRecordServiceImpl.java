@@ -66,17 +66,31 @@ public class PromoteRecordServiceImpl extends ServiceImpl<PromoteRecordMapper, P
         }
 
         UriComponents adUri = UriComponentsBuilder.fromHttpUrl(ad.getTraceUrl()).build();
-        String callback = Const.CALLBACK;
         adUri.getQueryParams().forEach((key, list) -> {
             if (!CollectionUtils.isEmpty(list)) {
                 String value = list.get(0);
-                if (StringUtils.hasLength(value) && Const.PARAM_PATTERN.matcher(value).matches() && !value.toLowerCase().contains(callback)) {
-                    clickUriBuilder.queryParam(key, value);
+                if (StringUtils.hasLength(value) && Const.PARAM_PATTERN.matcher(value).matches()) {
+
+                    if (value.toLowerCase().contains(Const.CALLBACK)) {
+                        clickUriBuilder.queryParam(Const.CALLBACK, String.format("{%s}", Const.CALLBACK));
+                    }
+                    else if (value.toLowerCase().contains(Const.IP)) {
+                        clickUriBuilder.queryParam(Const.IP, String.format("{%s}", Const.IP));
+                    }
+                    else if (value.toLowerCase().contains(Const.IDFA)) {
+                        clickUriBuilder.queryParam(Const.IDFA, String.format("{%s}", Const.IDFA));
+                    }
+                    else if (value.toLowerCase().contains(Const.IMEI)) {
+                        clickUriBuilder.queryParam(Const.IMEI, String.format("{%s}", Const.IMEI));
+                    }
+                    else {
+                        clickUriBuilder.queryParam(key, value);
+                    }
+
                 }
             }
         });
 
-        clickUriBuilder.queryParam(Const.CALLBACK, "{callback}");
         String clickUri = clickUriBuilder.build().toUriString();
         PromoteRecord to = new PromoteRecord();
         to.setInPrice(ad.getInPrice());

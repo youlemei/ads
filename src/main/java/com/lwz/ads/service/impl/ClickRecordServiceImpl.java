@@ -116,11 +116,18 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                 String value = list.get(0);
                 if (StringUtils.hasLength(value) && Const.PARAM_PATTERN.matcher(value).matches()) {
                     String placeHolder = value.toLowerCase();
-                    if (placeHolder.contains(ip) && request.containsKey(key)) {
-                        Optional.ofNullable(request.get(key)).ifPresent(o -> clickRecord.setIp(o.toString()));
+                    if (placeHolder.contains(ip)) {
+                        Object ipParam = Optional.ofNullable(request.get(key)).orElseGet(() -> request.get(ip));
+                        if (ipParam != null) {
+                            clickRecord.setIp(ipParam.toString());
+                        }
                     }
-                    if ((placeHolder.contains(idfa) || placeHolder.contains(imei)) && request.containsKey(key)) {
-                        Optional.ofNullable(request.get(key)).ifPresent(o -> clickRecord.setMac(o.toString()));
+                    if (placeHolder.contains(idfa) || placeHolder.contains(imei)) {
+                        Object idfaParam = Optional.ofNullable(request.get(key)).orElseGet(() ->
+                                Optional.ofNullable(request.get(idfa)).orElseGet(() -> request.get(imei)));
+                        if (idfaParam != null) {
+                            clickRecord.setMac(idfaParam.toString());
+                        }
                     }
                 }
             }
@@ -177,8 +184,9 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         }
 
         String date = clickRecord.getCreateTime().format(DateUtils.yyyyMMdd);
-        UriComponents adUri = buildAdTraceUri(clickRecord.getId(), ad, date, clickRecord);
 
+        //请求
+        UriComponents adUri = buildAdTraceUri(clickRecord.getId(), ad, date, clickRecord);
         ResponseEntity<String> resp = requestTraceUri(adUri, ad, clickRecord);
 
         if (resp == null || !resp.getStatusCode().is2xxSuccessful()) {
@@ -213,8 +221,9 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         if (traceType == TraceTypeEnum.REDIRECT) {
 
             String date = clickRecord.getCreateTime().format(DateUtils.yyyyMMdd);
-            UriComponents adUri = buildAdTraceUri(clickRecord.getId(), ad, date, clickRecord);
 
+            //请求
+            UriComponents adUri = buildAdTraceUri(clickRecord.getId(), ad, date, clickRecord);
             ResponseEntity<String> resp = requestTraceUri(adUri, ad, clickRecord);
 
             ClickRecord to = new ClickRecord();
@@ -281,6 +290,9 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     private UriComponents buildAdTraceUri(String clickId, Advertisement ad, String date, ClickRecord clickRecord) {
         JSONObject paramJson = JSON.parseObject(clickRecord.getParamJson());
         String callback = Const.CALLBACK;
+        String ip = Const.IP;
+        String idfa = Const.IDFA;
+        String imei = Const.IMEI;
         UriComponentsBuilder adUriBuilder = UriComponentsBuilder.fromHttpUrl(ad.getTraceUrl());
         UriComponents traceUri = adUriBuilder.build();
         traceUri.getQueryParams().forEach((key, list) -> {
@@ -296,7 +308,20 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                                 .queryParam("clickId", clickId)
                                 .build();
                         adUriBuilder.replaceQueryParam(key, Arrays.asList(callbackUri.toUriString()));
-                    } else {
+                    }
+                    else if (value.toLowerCase().contains(ip)) {
+                        adUriBuilder.replaceQueryParam(key, Arrays.asList(Optional.ofNullable(paramJson.getString(key))
+                                .orElseGet(() -> Optional.ofNullable(paramJson.getString(ip)).orElse(""))));
+                    }
+                    else if (value.toLowerCase().contains(idfa)) {
+                        adUriBuilder.replaceQueryParam(key, Arrays.asList(Optional.ofNullable(paramJson.getString(key))
+                                .orElseGet(() -> Optional.ofNullable(paramJson.getString(idfa)).orElse(""))));
+                    }
+                    else if (value.toLowerCase().contains(imei)) {
+                        adUriBuilder.replaceQueryParam(key, Arrays.asList(Optional.ofNullable(paramJson.getString(key))
+                                .orElseGet(() -> Optional.ofNullable(paramJson.getString(imei)).orElse(""))));
+                    }
+                    else {
                         adUriBuilder.replaceQueryParam(key, Arrays.asList(Optional.ofNullable(paramJson.getString(key)).orElse("")));
                     }
                 }
