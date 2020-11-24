@@ -15,11 +15,7 @@ import com.lwz.ads.mapper.entity.PromoteRecord;
 import com.lwz.ads.service.DingTalkRobotService;
 import com.lwz.ads.service.IClickRecordService;
 import com.lwz.ads.service.WeChatRobotService;
-import com.lwz.ads.util.Clock;
-import com.lwz.ads.util.DateUtils;
-import com.lwz.ads.util.IPUtils;
-import com.lwz.ads.util.RedisUtils;
-import com.lwz.ads.util.SpringContextHolder;
+import com.lwz.ads.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -76,7 +72,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     @Autowired
     private AdvertisementServiceImpl advertisementService;
 
-    private ThreadPoolExecutor retryExecutor = new ThreadPoolExecutor(100, 100, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000), new CustomizableThreadFactory("retry-executor-"));
+    private ThreadPoolExecutor retryExecutor = new ThreadPoolExecutor(100, 100, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000), new CustomizableThreadFactory("retry-executor-"), new SmartRejectedExecutionHandler());
 
     @Value("${system.web.scheme:http}")
     private String scheme;
@@ -357,6 +353,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         CountDownLatch countDownLatch = new CountDownLatch(group);
         for (int i = 0; i < clickRecordList.size(); i+= groupSize) {
             List<ClickRecord> clickRecords = clickRecordList.subList(i, Math.min(i + groupSize, clickRecordList.size()));
+            //TODO: 根本原因是堵塞了, 使用Sentinel做熔断, 失败次数/概率过大的广告主, 直接跳过, 避免影响其他线程
             retryExecutor.execute(()->{
                 try {
                     clickRecords.forEach(clickRecord -> {
