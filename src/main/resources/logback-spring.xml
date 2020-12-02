@@ -22,6 +22,11 @@
         </encoder>
     </appender>
 
+    <appender name="FILE_APPENDER_ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="FILE_APPENDER"/>
+        <includeCallerData>true</includeCallerData>
+    </appender>
+
     <appender name="WE_CHAT_APPENDER" class="com.lwz.ads.util.WeChatAppender"/>
 
     <appender name="ERR_APPENDER" class="ch.qos.logback.classic.AsyncAppender">
@@ -40,7 +45,7 @@
 
     <springProfile name="prod">
         <root level="INFO">
-            <appender-ref ref="FILE_APPENDER"/>
+            <appender-ref ref="FILE_APPENDER_ASYNC"/>
             <appender-ref ref="ERR_APPENDER" />
         </root>
     </springProfile>
