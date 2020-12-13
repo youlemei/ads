@@ -83,6 +83,11 @@ public class PromoteRecordServiceImpl extends ServiceImpl<PromoteRecordMapper, P
                     else if (value.toLowerCase().contains(Const.IMEI)) {
                         clickUriBuilder.queryParam(Const.IMEI, String.format("{%s}", Const.IMEI));
                     }
+                    else if (value.toLowerCase().contains(Const.DT)
+                            ||value.toLowerCase().contains(Const.TS)
+                            || value.toLowerCase().contains(Const.TMS)) {
+                        //skip
+                    }
                     else {
                         clickUriBuilder.queryParam(key, value);
                     }

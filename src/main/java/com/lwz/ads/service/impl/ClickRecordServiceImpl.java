@@ -317,6 +317,21 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                         adUriBuilder.replaceQueryParam(key, Arrays.asList(Optional.ofNullable(paramJson.getString(key))
                                 .orElseGet(() -> Optional.ofNullable(paramJson.getString(imei)).orElse(""))));
                     }
+                    else if (value.toLowerCase().contains(Const.TS)) {
+                        adUriBuilder.replaceQueryParam(key, Arrays.asList(Optional.ofNullable(paramJson.getString(key))
+                                .orElseGet(() -> Optional.ofNullable(paramJson.getString(Const.TS))
+                                        .orElse(String.valueOf(System.currentTimeMillis() / 1000)))));
+                    }
+                    else if (value.toLowerCase().contains(Const.TMS)) {
+                        adUriBuilder.replaceQueryParam(key, Arrays.asList(Optional.ofNullable(paramJson.getString(key))
+                                .orElseGet(() -> Optional.ofNullable(paramJson.getString(Const.TMS))
+                                        .orElse(String.valueOf(System.currentTimeMillis())))));
+                    }
+                    else if (value.toLowerCase().contains(Const.DT)) {
+                        adUriBuilder.replaceQueryParam(key, Arrays.asList(Optional.ofNullable(paramJson.getString(key))
+                                .orElseGet(() -> Optional.ofNullable(paramJson.getString(Const.DT))
+                                        .orElse(LocalDateTime.now().format(DateUtils.DEFAULT_FORMATTER)))));
+                    }
                     else {
                         adUriBuilder.replaceQueryParam(key, Arrays.asList(Optional.ofNullable(paramJson.getString(key)).orElse("")));
                     }
