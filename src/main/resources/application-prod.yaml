@@ -41,5 +41,5 @@ click_record_delete_days_ago: 60
 
 system:
   web:
-    scheme: https
+    scheme: http
     domain: 2020funfantasy.cn
