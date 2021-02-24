@@ -37,7 +37,7 @@ spring:
         max-active: 10
 
 click_record_create_days: 8
-click_record_delete_days_ago: 60
+click_record_delete_days_ago: 30
 
 system:
   web:

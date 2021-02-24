@@ -5,7 +5,7 @@
         <file>/data/log/ads_${SERVER_PORT:-9999}/all.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>/data/log/ads_${SERVER_PORT:-9999}/all_%d{yyyy-MM-dd}_%i.log.zip</fileNamePattern>
-            <maxHistory>30</maxHistory>
+            <maxHistory>15</maxHistory>
             <cleanHistoryOnStart>true</cleanHistoryOnStart>
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
                 <maxFileSize>1024MB</maxFileSize>
