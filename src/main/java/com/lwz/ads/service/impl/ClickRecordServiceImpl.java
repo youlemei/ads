@@ -183,7 +183,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         UriComponents adUri = buildAdTraceUri(clickRecord.getId(), ad, date, clickRecord);
         ResponseEntity<String> resp = requestTraceUri(adUri, ad, clickRecord);
 
-        if (resp == null || !resp.getStatusCode().is2xxSuccessful()) {
+        if (resp == null || !resp.getStatusCode().is2xxSuccessful() || !resp.getStatusCode().is3xxRedirection()) {
             //增加重试次数
             getBaseMapper().incrRetryTimes(clickRecord.getId(), date);
             return;
