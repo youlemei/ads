@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.NestedExceptionUtils;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
@@ -133,33 +134,36 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         getBaseMapper().insertWithDate(clickRecord, date);
         clock.tag();
 
-        if (promoteRecord.getClickDayLimit() != null && promoteRecord.getClickDayLimit() > 0) {
-            redisUtils.execute(redis -> {
-                String limitKey = String.format(Const.CLICK_DAY_LIMIT_KEY, date, promoteRecord.getId());
-                redis.opsForValue().increment(limitKey, 1);
-                redis.expire(limitKey, 7, TimeUnit.DAYS);
-            });
-        }
-
-        if (ad.getClickDayLimit() != null && ad.getClickDayLimit() > 0) {
-            redisUtils.execute(redis -> {
-                String adLimitKey = String.format(Const.AD_CLICK_DAY_LIMIT_KEY, date, ad.getId());
-                redis.opsForValue().increment(adLimitKey, 1);
-                redis.expire(adLimitKey, 7, TimeUnit.DAYS);
-            });
-        }
-
         redisUtils.execute(redis -> {
-            String amountKey = String.format(Const.CLICK_DAY_AMOUNT, date);
-            String pid = promoteRecord.getAdId() + "_" + promoteRecord.getChannelId();
-            redis.opsForHash().increment(amountKey, pid, 1);
-            redis.expire(amountKey, 7, TimeUnit.DAYS);
 
-            String actualKey = String.format(Const.CLICK_DAY_ACTUAL_AMOUNT, date, pid);
-            int hashCode = (clickRecord.getIp() + clickRecord.getMac()).hashCode();
-            redis.opsForSet().add(actualKey, hashCode);
-            redis.expire(actualKey, 1, TimeUnit.DAYS);
+            redis.executePipelined((RedisCallback<?>) connection -> {
+
+                if (promoteRecord.getClickDayLimit() != null && promoteRecord.getClickDayLimit() > 0) {
+                    String limitKey = String.format(Const.CLICK_DAY_LIMIT_KEY, date, promoteRecord.getId());
+                    connection.incr(limitKey.getBytes());
+                    connection.expire(limitKey.getBytes(), 7 * 86400);
+                }
+
+                if (ad.getClickDayLimit() != null && ad.getClickDayLimit() > 0) {
+                    String adLimitKey = String.format(Const.AD_CLICK_DAY_LIMIT_KEY, date, ad.getId());
+                    connection.incr(adLimitKey.getBytes());
+                    connection.expire(adLimitKey.getBytes(), 7 * 86400);
+                }
+
+                String amountKey = String.format(Const.CLICK_DAY_AMOUNT, date);
+                String pid = promoteRecord.getAdId() + "_" + promoteRecord.getChannelId();
+                connection.hIncrBy(amountKey.getBytes(), pid.getBytes(), 1);
+                connection.expire(amountKey.getBytes(), 7 * 86400);
+
+                String actualKey = String.format(Const.CLICK_DAY_ACTUAL_AMOUNT, date, pid);
+                int hashCode = (clickRecord.getIp() + clickRecord.getMac()).hashCode();
+                connection.sAdd(actualKey.getBytes(), String.valueOf(hashCode).getBytes());
+                connection.expire(actualKey.getBytes(), 86400);
+
+                return null;
+            });
         });
+
         log.info("saveClick adId:{} channelId:{} {}", ad.getId(), promoteRecord.getChannelId(), clock.tag());
         return clickRecord;
     }
