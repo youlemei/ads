@@ -89,8 +89,4 @@ public class ClickRecordMapperTest {
         List<CountSum> countSums = mapper.countDeduplicateClickSum("20200203");
     }
 
-    @Test
-    public void testSelectReceiveClick() throws FileNotFoundException {
-        List<ClickRecord> clickRecordList = mapper.selectReceiveClick(LocalDateTime.now(), "20200203");
-    }
 }
