@@ -14,6 +14,7 @@
         <result column="mac" jdbcType="VARCHAR" property="mac" />
         <result column="param_json" jdbcType="VARCHAR" property="paramJson" />
         <result column="click_status" jdbcType="SMALLINT" property="clickStatus" />
+        <result column="retry_times" jdbcType="INTEGER" property="retryTimes" />
         <result column="edit_time" jdbcType="TIMESTAMP" property="editTime" />
         <result column="editor" jdbcType="VARCHAR" property="editor" />
         <result column="status" jdbcType="BOOLEAN" property="status" />
@@ -120,7 +121,7 @@
 
     <sql id="Base_Column_List">
         id, channel_id, ad_id, channel_creator, ad_creator, create_time, trace_type, ip,
-        mac, param_json, click_status, edit_time, editor, `status`, json_data
+        mac, param_json, click_status, retry_times, edit_time, editor, `status`, json_data
     </sql>
     <select id="selectByIdWithDate" resultMap="BaseResultMap">
         select
@@ -288,12 +289,10 @@
         <include refid="Base_Column_List" />
         from click_record_${date}
         <where>
-            <if test="end != null">
-                create_time &lt; #{end}
-            </if>
             and click_status = ${@com.lwz.ads.constant.ClickStatusEnum@RECEIVED.getStatus()}
-            and retry_times &lt; 3
+#             and retry_times &lt; 3
         </where>
+        limit #{limit}
     </select>
 
     <select id="selectPageWithDate" resultMap="BaseResultMap">

@@ -59,5 +59,5 @@ public interface IClickRecordService extends IService<ClickRecord> {
      */
     void deleteClickTable();
 
-    void retryClick(String date, LocalDateTime end);
+    void retryClick(String date);
 }

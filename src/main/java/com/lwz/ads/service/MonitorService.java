@@ -9,6 +9,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PreDestroy;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -44,5 +45,10 @@ public class MonitorService {
 
         log.info("monitor retryExecutor:{}", retryExecutor);
 
+    }
+
+    @PreDestroy
+    public void destroy() {
+        retryExecutor.shutdownNow();
     }
 }

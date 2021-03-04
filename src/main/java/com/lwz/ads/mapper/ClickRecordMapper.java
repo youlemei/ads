@@ -9,7 +9,6 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -44,7 +43,7 @@ public interface ClickRecordMapper extends BaseMapper<ClickRecord> {
     /**
      * 重试
      */
-    List<ClickRecord> selectReceiveClick(@Param("end") LocalDateTime end, @Param("date") String date);
+    List<ClickRecord> selectReceiveClick(@Param("date") String date, @Param("limit") int limit);
 
     @Update("update click_record_${date} set retry_times = retry_times + 1, edit_time = now() where id = #{clickId}")
     int incrRetryTimes(@Param("clickId") String clickId, @Param("date") String date);

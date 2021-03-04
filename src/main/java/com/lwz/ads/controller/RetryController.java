@@ -44,7 +44,7 @@ public class RetryController {
         LocalDateTime dateTime = DateUtils.toLocalDateTime(date);
 
         //重试
-        clickRecordService.retryClick(dateTime.format(DateUtils.yyyyMMdd), null);
+        clickRecordService.retryClick(dateTime.format(DateUtils.yyyyMMdd));
 
         //更新报表
         advertisementReportService.updateReportWithMySQL(dateTime.toLocalDate());

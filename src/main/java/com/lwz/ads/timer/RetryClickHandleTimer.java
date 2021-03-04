@@ -27,14 +27,11 @@ public class RetryClickHandleTimer {
             return;
         }
 
-        //重试1分钟前-两天内
-        LocalDateTime now = LocalDateTime.now().plusMinutes(-1);
+        //String yesterday = LocalDateTime.now().plusDays(-1).format(DateUtils.yyyyMMdd);
+        //clickRecordService.retryClick(yesterday);
 
-        String yesterday = now.plusDays(-1).format(DateUtils.yyyyMMdd);
-        clickRecordService.retryClick(yesterday, null);
-
-        String today = now.format(DateUtils.yyyyMMdd);
-        clickRecordService.retryClick(today, now);
+        String today = LocalDateTime.now().format(DateUtils.yyyyMMdd);
+        clickRecordService.retryClick(today);
 
     }
 
