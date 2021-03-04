@@ -17,7 +17,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 public class MonitorService {
 
     @Autowired
-    private ThreadPoolTaskExecutor taskExecutor;
+    private ThreadPoolTaskExecutor applicationTaskExecutor;
 
     @Autowired
     private ThreadPoolTaskScheduler taskScheduler;
@@ -28,7 +28,7 @@ public class MonitorService {
     @Scheduled(cron = "30 * * * * ?")
     public void monitor() {
 
-        log.info("monitor taskExecutor:{}", taskExecutor.getThreadPoolExecutor());
+        log.info("monitor taskExecutor:{}", applicationTaskExecutor.getThreadPoolExecutor());
 
         log.info("monitor taskScheduler:{}", taskScheduler.getScheduledExecutor());
 
