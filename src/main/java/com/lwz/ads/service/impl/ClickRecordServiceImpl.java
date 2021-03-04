@@ -14,6 +14,7 @@ import com.lwz.ads.mapper.entity.ClickRecord;
 import com.lwz.ads.mapper.entity.PromoteRecord;
 import com.lwz.ads.service.DingTalkRobotService;
 import com.lwz.ads.service.IClickRecordService;
+import com.lwz.ads.service.MonitorService;
 import com.lwz.ads.service.WeChatRobotService;
 import com.lwz.ads.util.*;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +36,6 @@ import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
@@ -67,7 +67,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     private AdvertisementServiceImpl advertisementService;
 
     @Autowired
-    private ThreadPoolExecutor retryExecutor;
+    private MonitorService monitorService;
 
     @Value("${system.web.scheme:http}")
     private String scheme;
@@ -367,7 +367,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         for (int i = 0; i < clickRecordList.size(); i+= groupSize) {
             List<ClickRecord> clickRecords = clickRecordList.subList(i, Math.min(i + groupSize, clickRecordList.size()));
             //TODO: 根本原因是堵塞了, 使用Sentinel做熔断, 失败次数/概率过大的广告主, 直接跳过, 避免影响其他线程
-            retryExecutor.execute(()->{
+            monitorService.getRetryExecutor().execute(()->{
                 try {
                     clickRecords.forEach(clickRecord -> {
                         Advertisement ad = advertisementService.getById(clickRecord.getAdId());
