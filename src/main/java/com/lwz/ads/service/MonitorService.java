@@ -41,7 +41,7 @@ public class MonitorService {
         Boolean retryWithNormal = redisUtils.execute(redis -> {
             return StringUtils.isEmpty(redis.opsForValue().get("retry_with_normal"));
         });
-        return retryWithNormal ? retryExecutor : forkJoinPool;
+        return retryWithNormal ? forkJoinPool : retryExecutor;
     }
 
     @Scheduled(cron = "30 * * * * ?")

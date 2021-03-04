@@ -361,49 +361,41 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
     @Override
     public void retryClick(String date) {
+
         int limit = 5000;
-
         while (true) {
+            Clock clock = new Clock();
             List<ClickRecord> clickRecordList = getBaseMapper().selectReceiveClick(date, limit);
-            log.info("retryClick total size:{} date:{}", clickRecordList.size(), date);
-            boolean finish = clickRecordList.size() < limit;
-
-            int groupSize = 10;
-            int group = clickRecordList.size() / groupSize + Math.min(clickRecordList.size() % groupSize, 1);
-            CountDownLatch countDownLatch = new CountDownLatch(group);
-            for (int i = 0; i < clickRecordList.size(); i+= groupSize) {
-                List<ClickRecord> clickRecords = clickRecordList.subList(i, Math.min(i + groupSize, clickRecordList.size()));
+            CountDownLatch countDownLatch = new CountDownLatch(clickRecordList.size());
+            for (ClickRecord clickRecord : clickRecordList) {
                 //TODO: 根本原因是堵塞了, 使用Sentinel做熔断, 失败次数/概率过大的广告主, 直接跳过, 避免影响其他线程
-                final int index = i;
                 monitorService.getRetryExecutor().execute(()->{
                     try {
-                        clickRecords.forEach(clickRecord -> {
-                            Advertisement ad = advertisementService.getById(clickRecord.getAdId());
-                            TraceTypeEnum adTraceType = TraceTypeEnum.valueOfType(ad.getTraceType());
-                            if (adTraceType == TraceTypeEnum.REDIRECT) {
-                                //丢弃
-                                ClickRecord to = new ClickRecord();
-                                to.setClickStatus(ClickStatusEnum.DISCARDED.getStatus());
-                                to.setEditor("system");
-                                to.setEditTime(LocalDateTime.now());
-                                getBaseMapper().updateByIdWithDate(to, date);
-                            } else {
-                                handleClick(clickRecord, ad);
-                            }
-                        });
+                        Advertisement ad = advertisementService.getById(clickRecord.getAdId());
+                        TraceTypeEnum adTraceType = TraceTypeEnum.valueOfType(ad.getTraceType());
+                        if (adTraceType == TraceTypeEnum.REDIRECT) {
+                            //丢弃
+                            ClickRecord to = new ClickRecord();
+                            to.setClickStatus(ClickStatusEnum.DISCARDED.getStatus());
+                            to.setEditor("system");
+                            to.setEditTime(LocalDateTime.now());
+                            getBaseMapper().updateByIdWithDate(to, date);
+                        } else {
+                            handleClick(clickRecord, ad);
+                        }
                     } finally {
-                        log.info("retryClick finish [{}] size:{}", index, clickRecords.size());
                         countDownLatch.countDown();
                     }
                 });
             }
             try {
                 countDownLatch.await();
+                log.info("retryClick finish size:{} date:{} {}", clickRecordList.size(), date, clock.tag());
             } catch (InterruptedException e) {
                 log.error("retryClick interrupt. err:{}", e.getMessage(), e);
             }
 
-            if (finish) {
+            if (clickRecordList.size() < limit) {
                 break;
             }
         }
