@@ -3,6 +3,7 @@ package com.lwz.ads.config;
 import com.alibaba.fastjson.support.spring.GenericFastJsonRedisSerializer;
 import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.pagination.optimize.JsqlParserCountOptimize;
+import com.lwz.ads.util.SmartRejectedExecutionHandler;
 import io.lettuce.core.AbstractRedisClient;
 import io.netty.channel.EventLoopGroup;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.client.RestTemplate;
 
@@ -25,6 +27,9 @@ import java.lang.management.MemoryManagerMXBean;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -70,6 +75,15 @@ public class MyConfig {
         requestFactory.setReadTimeout(10000);
         restTemplate.setRequestFactory(requestFactory);
         return restTemplate;
+    }
+
+    @Bean
+    public ThreadPoolExecutor retryExecutor() {
+        ThreadPoolExecutor retryExecutor = new ThreadPoolExecutor(100, 100, 0, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(10000),
+                new CustomizableThreadFactory("retry-executor-"),
+                new SmartRejectedExecutionHandler());
+        return retryExecutor;
     }
 
     @Bean

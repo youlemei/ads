@@ -23,7 +23,6 @@ import org.springframework.core.NestedExceptionUtils;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -31,17 +30,11 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import javax.annotation.PreDestroy;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
@@ -73,7 +66,8 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     @Autowired
     private AdvertisementServiceImpl advertisementService;
 
-    private ThreadPoolExecutor retryExecutor = new ThreadPoolExecutor(100, 100, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000), new CustomizableThreadFactory("retry-executor-"), new SmartRejectedExecutionHandler());
+    @Autowired
+    private ThreadPoolExecutor retryExecutor;
 
     @Value("${system.web.scheme:http}")
     private String scheme;
@@ -399,11 +393,6 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         } catch (InterruptedException e) {
             log.error("retryClick interrupt. err:{}", e.getMessage(), e);
         }
-    }
-
-    @PreDestroy
-    public void destroy() {
-        retryExecutor.shutdownNow();
     }
 
 }
