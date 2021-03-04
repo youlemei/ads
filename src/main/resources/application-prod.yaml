@@ -27,7 +27,7 @@ spring:
         size: 20
     execution:
       pool:
-        core-size: 100
+        core-size: 200
         max-size: 200
   redis:
     host: localhost
