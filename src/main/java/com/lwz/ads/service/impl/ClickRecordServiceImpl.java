@@ -183,9 +183,10 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         UriComponents adUri = buildAdTraceUri(clickRecord.getId(), ad, date, clickRecord);
         ResponseEntity<String> resp = requestTraceUri(adUri, ad, clickRecord);
 
-        if (resp == null || !resp.getStatusCode().is2xxSuccessful() || !resp.getStatusCode().is3xxRedirection()) {
+        if (resp == null || resp.getStatusCode().is4xxClientError() || resp.getStatusCode().is5xxServerError()) {
             //增加重试次数
             getBaseMapper().incrRetryTimes(clickRecord.getId(), date);
+            log.info("handleClick fail. adId:{} channelId:{} date:{} clickId:{}", ad.getId(), clickRecord.getChannelId(), date, clickRecord.getId());
             return;
         }
 
@@ -249,9 +250,9 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         try {
             ResponseEntity<String> resp = restTemplate.getForEntity(adUri.encode().toUri(), String.class);
             String body = resp.getBody();
-            log.info("requestTraceUri success. adId:{} channelId:{} {} uri:{} code:{} body:{}",
-                    ad.getId(), clickRecord.getChannelId(), clock.tag(), adUri,
-                    resp.getStatusCodeValue(), body != null ? body.substring(0, Math.min(100, body.length())) : null);
+            log.info("requestTraceUri success. adId:{} channelId:{} id:{} uri:{} code:{} body:{} {}",
+                    ad.getId(), clickRecord.getChannelId(), clickRecord.getId(), adUri,
+                    resp.getStatusCodeValue(), body != null ? body.substring(0, Math.min(100, body.length())) : null, clock.tag());
             return resp;
 
         } catch (Exception e) {
