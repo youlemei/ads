@@ -361,12 +361,14 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     @Override
     public void retryClick(String date, LocalDateTime end) {
         List<ClickRecord> clickRecordList = getBaseMapper().selectReceiveClick(end, date);
+        log.info("retryClick total size:{}", clickRecordList.size());
         int groupSize = 100;
         int group = clickRecordList.size() / groupSize + Math.min(clickRecordList.size() % groupSize, 1);
         CountDownLatch countDownLatch = new CountDownLatch(group);
         for (int i = 0; i < clickRecordList.size(); i+= groupSize) {
             List<ClickRecord> clickRecords = clickRecordList.subList(i, Math.min(i + groupSize, clickRecordList.size()));
             //TODO: 根本原因是堵塞了, 使用Sentinel做熔断, 失败次数/概率过大的广告主, 直接跳过, 避免影响其他线程
+            final int index = i;
             monitorService.getRetryExecutor().execute(()->{
                 try {
                     clickRecords.forEach(clickRecord -> {
@@ -384,6 +386,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                         }
                     });
                 } finally {
+                    log.info("retryClick finish [{}] size:{}", index, clickRecords.size());
                     countDownLatch.countDown();
                 }
             });
