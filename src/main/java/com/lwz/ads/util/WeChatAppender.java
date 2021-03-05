@@ -5,7 +5,6 @@ import ch.qos.logback.classic.spi.StackTraceElementProxy;
 import ch.qos.logback.classic.spi.ThrowableProxy;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import com.lwz.ads.bean.WeChatRobotMsg;
-import com.lwz.ads.constant.Const;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -25,6 +24,8 @@ public class WeChatAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
     private RestTemplate restTemplate;
 
     private HttpHeaders headers;
+
+    public static final String URL = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=db98068e-b60b-493c-826b-8936d814a7d1";
 
     public WeChatAppender() {
         restTemplate = new RestTemplate();
@@ -58,15 +59,17 @@ public class WeChatAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
             }
         }
 
-        notify(Const.ERROR_WEB_HOOK, WeChatRobotMsg.buildText().content(sb.toString()).build());
+
+        notify(sb.toString());
     }
 
-    public void notify(String webhook, WeChatRobotMsg msg){
+    public void notify(String err){
         try {
-            String resp = restTemplate.postForObject(webhook, new HttpEntity<>(msg, headers), String.class);
+            WeChatRobotMsg msg = WeChatRobotMsg.buildText().content(err).build();
+            String resp = restTemplate.postForObject(URL, new HttpEntity<>(msg, headers), String.class);
             log.info("notify ok. resp:{}", resp);
         } catch (Exception e) {
-            log.warn("notify fail. err:{}, webhook:{}, msg:{}", e.getMessage(), webhook, msg, e);
+            log.warn("notify fail. err:{}, webhook:{}, msg:{}", e.getMessage(), URL, err, e);
         }
     }
 }

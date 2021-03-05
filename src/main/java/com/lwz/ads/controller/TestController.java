@@ -1,6 +1,8 @@
 package com.lwz.ads.controller;
 
+import com.lwz.ads.service.SysConfigLoader;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,6 +17,9 @@ import java.util.Map;
 @Profile("dev")
 @RestController
 public class TestController {
+
+    @Autowired
+    private SysConfigLoader sysConfigLoader;
 
     @GetMapping("test")
     public String testUrlParam(@RequestParam Map<String, Object> param) {

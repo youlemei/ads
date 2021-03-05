@@ -1,6 +1,5 @@
 package com.lwz.ads.service;
 
-import com.lwz.ads.util.RedisUtils;
 import com.lwz.ads.util.SmartRejectedExecutionHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +29,7 @@ public class MonitorService {
     private ThreadPoolTaskScheduler taskScheduler;
 
     @Autowired
-    private RedisUtils redisUtils;
+    private SysConfigLoader sysConfigLoader;
 
     private ThreadPoolExecutor retryExecutor = new ThreadPoolExecutor(
             100, 100,
@@ -52,6 +51,8 @@ public class MonitorService {
         log.info("monitor taskScheduler:{}", taskScheduler.getScheduledExecutor());
 
         log.info("monitor retryExecutor:{}", retryExecutor);
+
+        log.info("monitor sysConfigLoader:{}", sysConfigLoader.monitor());
 
     }
 

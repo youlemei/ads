@@ -12,10 +12,7 @@ import com.lwz.ads.mapper.ClickRecordMapper;
 import com.lwz.ads.mapper.entity.Advertisement;
 import com.lwz.ads.mapper.entity.ClickRecord;
 import com.lwz.ads.mapper.entity.PromoteRecord;
-import com.lwz.ads.service.DingTalkRobotService;
-import com.lwz.ads.service.IClickRecordService;
-import com.lwz.ads.service.MonitorService;
-import com.lwz.ads.service.WeChatRobotService;
+import com.lwz.ads.service.*;
 import com.lwz.ads.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,17 +66,14 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     @Autowired
     private MonitorService monitorService;
 
+    @Autowired
+    private SysConfigLoader sysConfigLoader;
+
     @Value("${system.web.scheme:http}")
     private String scheme;
 
     @Value("${system.web.domain:localhost:9999}")
     private String domain;
-
-    @Value("${click_record_create_days:2}")
-    private int createDays;
-
-    @Value("${click_record_delete_days_ago:45}")
-    private int deleteDaysAgo;
 
     @Override
     //@Transactional
@@ -271,8 +265,8 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                         String content = String.format("时间: %s 广告主: %d 广告: %s 1分钟内调用超时达到%d次, 请注意. url: %s",
                                 LocalDateTime.now().format(DateUtils.DEFAULT_FORMATTER),
                                 ad.getCompanyId(), ad.getAdName(), count, ad.getTraceUrl());
-                        weChatRobotService.notify(Const.ERROR_WEB_HOOK, WeChatRobotMsg.buildText().content(content).build());
-                        dingTalkRobotService.notify(Const.DING_WARN_WEB_HOOK, DingTalkRobotMsg.buildText().content(content).build());
+                        weChatRobotService.notify(Const.WECHAT_ROBOT_URL, WeChatRobotMsg.buildText().content(content).build());
+                        dingTalkRobotService.notify(Const.DING_ROBOT_URL, DingTalkRobotMsg.buildText().content(content).build());
                     }
                 });
                 return null;
@@ -341,8 +335,8 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     }
 
     @Override
-    //@Transactional
     public void createTable() {
+        int createDays = sysConfigLoader.getInt("click_record_create_days", 2);
         IntStream.range(-1, createDays).forEach(day -> {
             String date = LocalDateTime.now().plusDays(day).format(DateUtils.yyyyMMdd);
             getBaseMapper().createTable(date);
@@ -350,8 +344,8 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     }
 
     @Override
-    //@Transactional
     public void deleteClickTable() {
+        int deleteDaysAgo = sysConfigLoader.getInt("click_record_delete_days_ago", 30);
         LocalDateTime deleteDay = LocalDateTime.now().plusDays(-deleteDaysAgo);
         for (int i = 0; i < 30; i++) {
             String date = deleteDay.plusDays(-i).format(DateUtils.yyyyMMdd);

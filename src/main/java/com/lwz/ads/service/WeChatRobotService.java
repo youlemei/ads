@@ -1,6 +1,7 @@
 package com.lwz.ads.service;
 
 import com.lwz.ads.bean.WeChatRobotMsg;
+import com.lwz.ads.constant.Const;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,9 @@ public class WeChatRobotService {
     @Autowired
     private RestTemplate restTemplate;
 
+    @Autowired
+    private SysConfigLoader sysConfigLoader;
+
     private HttpHeaders headers;
 
     public WeChatRobotService(){
@@ -30,7 +34,8 @@ public class WeChatRobotService {
 
     public void notify(String webhook, WeChatRobotMsg msg){
         try {
-            String resp = restTemplate.postForObject(webhook, new HttpEntity<>(msg, headers), String.class);
+            String url = sysConfigLoader.getString(webhook, Const.WECHAT_ROBOT_URL_DEF);
+            String resp = restTemplate.postForObject(url, new HttpEntity<>(msg, headers), String.class);
             // 成功: {"errcode":0,"errmsg":"ok"} 暂忽略失败
             // 一分钟只能发20次, 更好的做法是放到队列中限流执行
             log.info("notify ok. msg:{}, resp:{}", msg, resp);

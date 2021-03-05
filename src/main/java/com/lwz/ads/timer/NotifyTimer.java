@@ -47,7 +47,7 @@ public class NotifyTimer {
             WeChatRobotMsg msg = WeChatRobotMsg.buildText()
                     .content(String.format("重试告警: 点击重试超过3次的记录数:%s 转化重试超过3次的记录数:%s", clickCount, convertCount))
                     .build();
-            weChatRobotService.notify(Const.ERROR_WEB_HOOK, msg);
+            weChatRobotService.notify(Const.WECHAT_ROBOT_URL, msg);
         }
 
     }

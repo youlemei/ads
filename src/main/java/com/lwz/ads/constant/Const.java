@@ -73,8 +73,12 @@ public class Const {
      */
     public static final String CLICK_SOCKET_TIME_OUT_MINUTE = "click_socket_time_out_minute_%s";
 
-    public static final String ERROR_WEB_HOOK = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=db98068e-b60b-493c-826b-8936d814a7d1";
+    public static final String WECHAT_ROBOT_URL = "wechat_robot_url";
 
-    public static final String DING_WARN_WEB_HOOK = "https://oapi.dingtalk.com/robot/send?access_token=6ecdcd9fcf81adb32967d720e83b24f9c57bfb09456c1bb63a528c3c7e98a242";
+    public static final String DING_ROBOT_URL = "ding_robot_url";
+
+    public static final String WECHAT_ROBOT_URL_DEF = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=db98068e-b60b-493c-826b-8936d814a7d1";
+
+    public static final String DING_ROBOT_URL_DEF = "https://oapi.dingtalk.com/robot/send?access_token=6ecdcd9fcf81adb32967d720e83b24f9c57bfb09456c1bb63a528c3c7e98a242";
 
 }
