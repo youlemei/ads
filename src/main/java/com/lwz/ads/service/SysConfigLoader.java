@@ -32,7 +32,7 @@ public class SysConfigLoader {
                 .initialCapacity(16)
                 .maximumSize(1024)
                 .recordStats()
-                .refreshAfterWrite(Duration.ofSeconds(10))
+                .refreshAfterWrite(Duration.ofMinutes(1))
                 .build(key -> {
                     SysConfig sysConfig = ChainWrappers.lambdaQueryChain(sysConfigMapper).eq(SysConfig::getName, key).one();
                     return Optional.ofNullable(sysConfig == null ? null : sysConfig.getValue());

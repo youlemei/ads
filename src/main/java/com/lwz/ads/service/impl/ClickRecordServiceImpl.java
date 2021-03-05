@@ -347,7 +347,8 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     public void deleteClickTable() {
         int deleteDaysAgo = sysConfigLoader.getInt("click_record_delete_days_ago", 30);
         LocalDateTime deleteDay = LocalDateTime.now().plusDays(-deleteDaysAgo);
-        for (int i = 0; i < 30; i++) {
+        int range = 100;
+        for (int i = 0; i < range; i++) {
             String date = deleteDay.plusDays(-i).format(DateUtils.yyyyMMdd);
             getBaseMapper().deleteTable(date);
         }
