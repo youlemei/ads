@@ -290,7 +290,7 @@
         from click_record_${date}
         <where>
             and click_status = ${@com.lwz.ads.constant.ClickStatusEnum@RECEIVED.getStatus()}
-#             and retry_times &lt; 3
+            and retry_times &lt; 3
         </where>
         limit #{limit}
     </select>

@@ -27,8 +27,8 @@ public class RetryClickHandleTimer {
             return;
         }
 
-        //String yesterday = LocalDateTime.now().plusDays(-1).format(DateUtils.yyyyMMdd);
-        //clickRecordService.retryClick(yesterday);
+        String yesterday = LocalDateTime.now().plusDays(-1).format(DateUtils.yyyyMMdd);
+        clickRecordService.retryClick(yesterday);
 
         String today = LocalDateTime.now().format(DateUtils.yyyyMMdd);
         clickRecordService.retryClick(today);

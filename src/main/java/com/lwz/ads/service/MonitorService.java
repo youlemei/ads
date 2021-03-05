@@ -9,10 +9,12 @@ import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import javax.annotation.PreDestroy;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author liweizhou 2021/3/4
@@ -30,18 +32,16 @@ public class MonitorService {
     @Autowired
     private RedisUtils redisUtils;
 
-    private ThreadPoolExecutor retryExecutor = new ThreadPoolExecutor(100, 100, 0, TimeUnit.SECONDS,
+    private ThreadPoolExecutor retryExecutor = new ThreadPoolExecutor(
+            100, 100,
+            0, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(10000),
             new CustomizableThreadFactory("retry-executor-"),
-            new SmartRejectedExecutionHandler());
-
-    private ForkJoinPool forkJoinPool = new ForkJoinPool(100);
+            new SmartRejectedExecutionHandler()
+    );
 
     public ExecutorService getRetryExecutor() {
-        Boolean retryWithNormal = redisUtils.execute(redis -> {
-            return StringUtils.isEmpty(redis.opsForValue().get("retry_with_normal"));
-        });
-        return retryWithNormal ? forkJoinPool : retryExecutor;
+        return retryExecutor;
     }
 
     @Scheduled(cron = "30 * * * * ?")
@@ -53,13 +53,10 @@ public class MonitorService {
 
         log.info("monitor retryExecutor:{}", retryExecutor);
 
-        log.info("monitor forkJoinPool:{}", forkJoinPool);
-
     }
 
     @PreDestroy
     public void destroy() {
         retryExecutor.shutdownNow();
-        forkJoinPool.shutdownNow();
     }
 }
