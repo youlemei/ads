@@ -1,5 +1,6 @@
 package com.lwz.ads.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.lwz.ads.util.SmartRejectedExecutionHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +62,16 @@ public class MonitorService {
 
         log.info("monitor sysConfigLoader:{}", sysConfigLoader.monitor());
 
+        if (taskExecutor.getActiveCount() >= taskExecutor.getCorePoolSize()) {
+            log.error("taskExecutor is full! taskExecutor:{}", taskExecutor.getThreadPoolExecutor());
+        }
+
+    }
+
+    public JSONObject monitorMsg() {
+        JSONObject data = new JSONObject();
+        data.put("taskExecutor", taskExecutor.getThreadPoolExecutor().toString());
+        return data;
     }
 
     @PreDestroy
