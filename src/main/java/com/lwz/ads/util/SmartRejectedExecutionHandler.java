@@ -22,7 +22,7 @@ public class SmartRejectedExecutionHandler implements RejectedExecutionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(SmartRejectedExecutionHandler.class);
 
-    private int analyzeCount = 1;
+    private int analyzeCount = 2;
 
     @Override
     public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {

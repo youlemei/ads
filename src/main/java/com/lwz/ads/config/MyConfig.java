@@ -3,6 +3,7 @@ package com.lwz.ads.config;
 import com.alibaba.fastjson.support.spring.GenericFastJsonRedisSerializer;
 import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.pagination.optimize.JsqlParserCountOptimize;
+import com.lwz.ads.util.SmartRejectedExecutionHandler;
 import io.lettuce.core.AbstractRedisClient;
 import io.netty.channel.EventLoopGroup;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,7 @@ import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.redis.RedisHealthIndicator;
+import org.springframework.boot.task.TaskExecutorCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskDecorator;
@@ -94,6 +96,13 @@ public class MyConfig {
                     MDC.clear();
                 }
             };
+        };
+    }
+
+    @Bean
+    public TaskExecutorCustomizer taskExecutorCustomizer() {
+        return taskExecutor -> {
+            taskExecutor.setRejectedExecutionHandler(new SmartRejectedExecutionHandler());
         };
     }
 
