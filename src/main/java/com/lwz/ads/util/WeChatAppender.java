@@ -5,6 +5,7 @@ import ch.qos.logback.classic.spi.StackTraceElementProxy;
 import ch.qos.logback.classic.spi.ThrowableProxy;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import com.lwz.ads.bean.WeChatRobotMsg;
+import com.lwz.ads.constant.Const;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -25,7 +26,7 @@ public class WeChatAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
 
     private HttpHeaders headers;
 
-    public static final String URL = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=db98068e-b60b-493c-826b-8936d814a7d1";
+    public static final String URL = Const.WECHAT_ROBOT_URL_DEF;
 
     public WeChatAppender() {
         restTemplate = new RestTemplate();
