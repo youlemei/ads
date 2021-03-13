@@ -29,6 +29,7 @@ import java.lang.management.MemoryManagerMXBean;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.stream.Collectors;
 
 /**
@@ -70,8 +71,8 @@ public class MyConfig {
     public RestTemplate restTemplate() {
         RestTemplate restTemplate = new RestTemplate();
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(10000);
-        requestFactory.setReadTimeout(10000);
+        requestFactory.setConnectTimeout(5000);
+        requestFactory.setReadTimeout(5000);
         restTemplate.setRequestFactory(requestFactory);
         return restTemplate;
     }
@@ -100,10 +101,15 @@ public class MyConfig {
     }
 
     @Bean
-    public TaskExecutorCustomizer taskExecutorCustomizer() {
+    public TaskExecutorCustomizer taskExecutorCustomizer(RejectedExecutionHandler smartRejectedExecutionHandler) {
         return taskExecutor -> {
-            taskExecutor.setRejectedExecutionHandler(new SmartRejectedExecutionHandler());
+            taskExecutor.setRejectedExecutionHandler(smartRejectedExecutionHandler);
         };
+    }
+
+    @Bean
+    public RejectedExecutionHandler smartRejectedExecutionHandler() {
+        return new SmartRejectedExecutionHandler();
     }
 
     @Bean

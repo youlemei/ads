@@ -1,7 +1,6 @@
 package com.lwz.ads.service;
 
 import com.alibaba.fastjson.JSONObject;
-import com.lwz.ads.util.SmartRejectedExecutionHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.task.TaskDecorator;
@@ -13,6 +12,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.concurrent.Executor;
+import java.util.concurrent.RejectedExecutionHandler;
 
 /**
  * @author liweizhou 2021/3/4
@@ -33,6 +33,9 @@ public class MonitorService {
     @Autowired
     private TaskDecorator taskDecorator;
 
+    @Autowired
+    private RejectedExecutionHandler smartRejectedExecutionHandler;
+
     private ThreadPoolTaskExecutor retryExecutor;
 
     @PostConstruct
@@ -43,7 +46,7 @@ public class MonitorService {
         retryExecutor.setTaskDecorator(taskDecorator);
         retryExecutor.setQueueCapacity(5000);
         retryExecutor.setThreadNamePrefix("retry-executor-");
-        retryExecutor.setRejectedExecutionHandler(new SmartRejectedExecutionHandler());
+        retryExecutor.setRejectedExecutionHandler(smartRejectedExecutionHandler);
         retryExecutor.initialize();
     }
 
