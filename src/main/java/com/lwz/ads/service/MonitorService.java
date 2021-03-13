@@ -3,17 +3,15 @@ package com.lwz.ads.service;
 import com.lwz.ads.util.SmartRejectedExecutionHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.task.TaskDecorator;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Executor;
 
 /**
  * @author liweizhou 2021/3/4
@@ -31,15 +29,24 @@ public class MonitorService {
     @Autowired
     private SysConfigLoader sysConfigLoader;
 
-    private ThreadPoolExecutor retryExecutor = new ThreadPoolExecutor(
-            100, 100,
-            0, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(10000),
-            new CustomizableThreadFactory("retry-executor-"),
-            new SmartRejectedExecutionHandler()
-    );
+    @Autowired
+    private TaskDecorator taskDecorator;
 
-    public ExecutorService getRetryExecutor() {
+    private ThreadPoolTaskExecutor retryExecutor;
+
+    @PostConstruct
+    public void init() {
+        retryExecutor = new ThreadPoolTaskExecutor();
+        retryExecutor.setCorePoolSize(100);
+        retryExecutor.setMaxPoolSize(100);
+        retryExecutor.setTaskDecorator(taskDecorator);
+        retryExecutor.setQueueCapacity(5000);
+        retryExecutor.setThreadNamePrefix("retry-executor-");
+        retryExecutor.setRejectedExecutionHandler(new SmartRejectedExecutionHandler());
+        retryExecutor.initialize();
+    }
+
+    public Executor getRetryExecutor() {
         return retryExecutor;
     }
 
@@ -58,6 +65,6 @@ public class MonitorService {
 
     @PreDestroy
     public void destroy() {
-        retryExecutor.shutdownNow();
+        retryExecutor.shutdown();
     }
 }
