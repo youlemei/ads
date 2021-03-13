@@ -1,5 +1,6 @@
 package com.lwz.ads.config;
 
+import com.lwz.ads.util.MDCUtils;
 import com.lwz.ads.util.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -28,6 +29,7 @@ public class TimerAop {
         String uuid = UUID.randomUUID().toString();
 
         boolean lock = false;
+        MDCUtils.putContext("timer=" + timerName);
         try {
             lock = redisUtils.lock(timerName, uuid, 30);
             if (lock) {
@@ -35,6 +37,7 @@ public class TimerAop {
             }
             return null;
         } finally {
+            MDCUtils.clearContext();
             if (lock) {
                 redisUtils.unlock(timerName, uuid);
             }
