@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lwz.ads.bean.DingTalkRobotMsg;
-import com.lwz.ads.bean.WeChatRobotMsg;
 import com.lwz.ads.constant.ClickStatusEnum;
 import com.lwz.ads.constant.Const;
 import com.lwz.ads.constant.TraceTypeEnum;
@@ -265,7 +264,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                         String content = String.format("时间: %s 广告主: %d 广告: %s 1分钟内调用超时达到%d次, 请注意. url: %s",
                                 LocalDateTime.now().format(DateUtils.DEFAULT_FORMATTER),
                                 ad.getCompanyId(), ad.getAdName(), count, ad.getTraceUrl());
-                        weChatRobotService.notify(Const.WECHAT_ROBOT_URL, WeChatRobotMsg.buildText().content(content).build());
+                        //weChatRobotService.notify(Const.WECHAT_ROBOT_URL, WeChatRobotMsg.buildText().content(content).build());
                         dingTalkRobotService.notify(Const.DING_ROBOT_URL, DingTalkRobotMsg.buildText().content(content).build());
                     }
                 });
