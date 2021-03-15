@@ -17,7 +17,7 @@ public class MonitorController {
 
     @RequestMapping("/monitor")
     public Response retryConvert() {
-        return Response.success(monitorService.monitorMsg());
+        return Response.success(monitorService.monitorStat());
     }
 
 }

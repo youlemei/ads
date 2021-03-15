@@ -29,6 +29,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.net.SocketTimeoutException;
 import java.net.URI;
@@ -65,9 +66,6 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     private AdvertisementServiceImpl advertisementService;
 
     @Autowired
-    private MonitorService monitorService;
-
-    @Autowired
     private SysConfigLoader sysConfigLoader;
 
     @Autowired
@@ -83,6 +81,34 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     private String domain;
 
     private final ConcurrentMap<Long, ThreadPoolTaskExecutor> executorConcurrentMap = new ConcurrentHashMap<>();
+
+    private ThreadPoolTaskExecutor retryExecutor;
+
+    @PostConstruct
+    public void init() {
+        retryExecutor = new ThreadPoolTaskExecutor();
+        retryExecutor.setCorePoolSize(100);
+        retryExecutor.setMaxPoolSize(100);
+        retryExecutor.setTaskDecorator(taskDecorator);
+        retryExecutor.setQueueCapacity(1000);
+        retryExecutor.setThreadNamePrefix("retry-");
+        retryExecutor.setRejectedExecutionHandler(smartRejectedExecutionHandler);
+        retryExecutor.initialize();
+    }
+
+    @PreDestroy
+    public void destroy() {
+        retryExecutor.shutdown();
+        executorConcurrentMap.values().forEach(ExecutorConfigurationSupport::shutdown);
+    }
+
+    public ConcurrentMap<Long, ThreadPoolTaskExecutor> getExecutorConcurrentMap() {
+        return executorConcurrentMap;
+    }
+
+    public ThreadPoolTaskExecutor getRetryExecutor() {
+        return retryExecutor;
+    }
 
     @Override
     //@Transactional
@@ -175,7 +201,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
             e.setMaxPoolSize(50);
             e.setTaskDecorator(taskDecorator);
             e.setQueueCapacity(1000);
-            e.setThreadNamePrefix("ad-" + adId);
+            e.setThreadNamePrefix("ad-" + adId + "-");
             e.setRejectedExecutionHandler(smartRejectedExecutionHandler);
             e.initialize();
             return e;
@@ -383,7 +409,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
             List<ClickRecord> clickRecordList = getBaseMapper().selectReceiveClick(date, limit);
             CountDownLatch countDownLatch = new CountDownLatch(clickRecordList.size());
             for (ClickRecord clickRecord : clickRecordList) {
-                monitorService.getRetryExecutor().execute(()->{
+                retryExecutor.execute(()->{
                     try {
                         Advertisement ad = advertisementService.getById(clickRecord.getAdId());
                         TraceTypeEnum adTraceType = TraceTypeEnum.valueOfType(ad.getTraceType());
@@ -413,11 +439,6 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                 break;
             }
         }
-    }
-
-    @PreDestroy
-    public void destroy() {
-        executorConcurrentMap.values().forEach(ExecutorConfigurationSupport::shutdown);
     }
 
 }

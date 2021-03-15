@@ -1,18 +1,13 @@
 package com.lwz.ads.service;
 
 import com.alibaba.fastjson.JSONObject;
+import com.lwz.ads.service.impl.ClickRecordServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.task.TaskDecorator;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import java.util.concurrent.Executor;
-import java.util.concurrent.RejectedExecutionHandler;
 
 /**
  * @author liweizhou 2021/3/4
@@ -31,54 +26,37 @@ public class MonitorService {
     private SysConfigLoader sysConfigLoader;
 
     @Autowired
-    private TaskDecorator taskDecorator;
-
-    @Autowired
-    private RejectedExecutionHandler smartRejectedExecutionHandler;
-
-    private ThreadPoolTaskExecutor retryExecutor;
-
-    @PostConstruct
-    public void init() {
-        retryExecutor = new ThreadPoolTaskExecutor();
-        retryExecutor.setCorePoolSize(100);
-        retryExecutor.setMaxPoolSize(100);
-        retryExecutor.setTaskDecorator(taskDecorator);
-        retryExecutor.setQueueCapacity(1000);
-        retryExecutor.setThreadNamePrefix("retry-executor-");
-        retryExecutor.setRejectedExecutionHandler(smartRejectedExecutionHandler);
-        retryExecutor.initialize();
-    }
-
-    public Executor getRetryExecutor() {
-        return retryExecutor;
-    }
+    private ClickRecordServiceImpl clickRecordService;
 
     @Scheduled(cron = "30 * * * * ?")
     public void monitor() {
 
-        log.info("monitor taskExecutor:{}", taskExecutor.getThreadPoolExecutor());
+        monitorExecutor(taskExecutor);
 
-        log.info("monitor taskScheduler:{}", taskScheduler.getScheduledExecutor());
+        monitorExecutor(clickRecordService.getRetryExecutor());
 
-        log.info("monitor retryExecutor:{}", retryExecutor);
-
-        log.info("monitor sysConfigLoader:{}", sysConfigLoader.monitor());
-
-        if (taskExecutor.getActiveCount() >= taskExecutor.getCorePoolSize()) {
-            log.error("taskExecutor is full! taskExecutor:{}", taskExecutor.getThreadPoolExecutor());
-        }
+        clickRecordService.getExecutorConcurrentMap().values().forEach(this::monitorExecutor);
 
     }
 
-    public JSONObject monitorMsg() {
+    private void monitorExecutor(ThreadPoolTaskExecutor taskExecutor) {
+        log.info("monitor {}{}", taskExecutor.getThreadNamePrefix(), taskExecutor.getThreadPoolExecutor());
+
+        if (taskExecutor.getActiveCount() >= taskExecutor.getCorePoolSize()) {
+            log.error("monitor Executor is Full!!! {}{}", taskExecutor.getThreadNamePrefix(), taskExecutor.getThreadPoolExecutor());
+        }
+    }
+
+    public JSONObject monitorStat() {
         JSONObject data = new JSONObject();
-        data.put("taskExecutor", taskExecutor.getThreadPoolExecutor().toString());
+        executorStat(data, taskExecutor);
+        executorStat(data, clickRecordService.getRetryExecutor());
+        clickRecordService.getExecutorConcurrentMap().values().forEach(e -> executorStat(data, e));
         return data;
     }
 
-    @PreDestroy
-    public void destroy() {
-        retryExecutor.shutdown();
+    private void executorStat(JSONObject data, ThreadPoolTaskExecutor taskExecutor) {
+        data.put(taskExecutor.getThreadNamePrefix(), taskExecutor.getThreadPoolExecutor().toString());
     }
+
 }
