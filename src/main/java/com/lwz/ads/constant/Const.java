@@ -73,6 +73,12 @@ public class Const {
      */
     public static final String CLICK_SOCKET_TIME_OUT_MINUTE = "click_socket_time_out_minute_%s";
 
+    /**
+     * redis-hash click_cost_total_stat_yyyyMMdd
+     */
+    public static final String CLICK_COST_TOTAL_STAT = "click_cost_total_stat_%s";
+
+
     public static final String WECHAT_ROBOT_URL = "wechat_robot_url";
 
     public static final String DING_ROBOT_URL = "ding_robot_url";

@@ -11,7 +11,10 @@ import com.lwz.ads.mapper.ClickRecordMapper;
 import com.lwz.ads.mapper.entity.Advertisement;
 import com.lwz.ads.mapper.entity.ClickRecord;
 import com.lwz.ads.mapper.entity.PromoteRecord;
-import com.lwz.ads.service.*;
+import com.lwz.ads.service.DingTalkRobotService;
+import com.lwz.ads.service.IClickRecordService;
+import com.lwz.ads.service.SysConfigLoader;
+import com.lwz.ads.service.WeChatRobotService;
 import com.lwz.ads.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +37,7 @@ import javax.annotation.PreDestroy;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.IntStream;
@@ -236,11 +240,40 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         ClickRecord to = new ClickRecord();
         to.setClickStatus(ClickStatusEnum.UNCONVERTED.getStatus());
         to.setEditor("system");
-        to.setEditTime(LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now();
+        to.setEditTime(now);
         getBaseMapper().updateWithDate(me, to, date);
+
+        redisUtils.execute(redis->{
+            redis.executePipelined((RedisCallback<?>) connection -> {
+                long cost = ChronoUnit.MILLIS.between(clickRecord.getCreateTime(), now);
+                String range = inRange(cost);
+                byte[] key = String.format(Const.CLICK_COST_TOTAL_STAT, date).getBytes();
+                connection.hIncrBy(key, "total_count".getBytes(), 1);
+                connection.hIncrBy(key, "total_cost".getBytes(), cost);
+                connection.hIncrBy(key, range.getBytes(), 1);
+                return null;
+            });
+        });
 
         log.info("handleClick success. adId:{} channelId:{} date:{} clickId:{}",
                 ad.getId(), clickRecord.getChannelId(), date, clickRecord.getId());
+    }
+
+    private String inRange(long cost) {
+        if (cost < 1) {
+            return "count_0-1";
+        } else if (cost < 10) {
+            return "count_1-9";
+        } else if (cost < 100) {
+            return "count_10-99";
+        } else if (cost < 1000) {
+            return "count_100-999";
+        } else if (cost < 10000) {
+            return "count_1000-9999";
+        } else {
+            return "count_10000+";
+        }
     }
 
     @Override
