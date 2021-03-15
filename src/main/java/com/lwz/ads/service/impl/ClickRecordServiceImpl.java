@@ -197,8 +197,8 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     public void asyncHandleClick(ClickRecord clickRecord, Advertisement ad) {
         ThreadPoolTaskExecutor executor = executorConcurrentMap.computeIfAbsent(ad.getId(), adId -> {
             ThreadPoolTaskExecutor e = new ThreadPoolTaskExecutor();
-            e.setCorePoolSize(10);
-            e.setMaxPoolSize(20);
+            e.setCorePoolSize(20);
+            e.setMaxPoolSize(50);
             e.setTaskDecorator(taskDecorator);
             e.setQueueCapacity(100);
             e.setThreadNamePrefix("ad-" + adId + "-");
