@@ -2,12 +2,13 @@ package com.lwz.ads.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -24,12 +25,30 @@ public class SmartRejectedExecutionHandler implements RejectedExecutionHandler {
 
     private int analyzeCount = 1;
 
+    private final ConcurrentMap<Executor, Executor> executorConcurrentMap = new ConcurrentHashMap<>();
+
     @Override
     public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
 
         log.error("ThreadPool is full! Discard task! executor:{} task:{}", executor, r);
 
-        new Thread(() -> analyze(executor)).start();
+        Executor analyzer = executorConcurrentMap.computeIfAbsent(executor, key -> new ThreadPoolExecutor(
+                1, 1,
+                1, TimeUnit.MINUTES,
+                new ArrayBlockingQueue<>(1),
+                new CustomizableThreadFactory("analyze-"),
+                new ThreadPoolExecutor.DiscardPolicy()));
+
+        Map<String, String> contextMap = MDC.getCopyOfContextMap();
+        analyzer.execute(() -> {
+            MDC.setContextMap(contextMap);
+            try {
+                analyze(executor);
+            } finally {
+                MDC.clear();
+            }
+        });
+
     }
 
     private void analyze(ThreadPoolExecutor executor) {
@@ -66,7 +85,7 @@ public class SmartRejectedExecutionHandler implements RejectedExecutionHandler {
             wrappers.stream().limit(analyzeCount).forEach(threadWrapper -> {
                 String trace = Stream.of(threadWrapper.stackTrace).map(StackTraceElement::toString)
                         .collect(Collectors.joining("\n\t"));
-                log.error("ThreadPoolAnalyze same stack count:{} trace:\n\t{}", threadWrapper.threadList.size(), trace);
+                log.warn("ThreadPoolAnalyze same stack count:{} trace:\n\t{}", threadWrapper.threadList.size(), trace);
             });
 
         } catch (Throwable e) {
