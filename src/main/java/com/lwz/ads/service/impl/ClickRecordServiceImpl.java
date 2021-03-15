@@ -10,6 +10,7 @@ import com.lwz.ads.constant.TraceTypeEnum;
 import com.lwz.ads.mapper.ClickRecordMapper;
 import com.lwz.ads.mapper.entity.Advertisement;
 import com.lwz.ads.mapper.entity.ClickRecord;
+import com.lwz.ads.mapper.entity.Company;
 import com.lwz.ads.mapper.entity.PromoteRecord;
 import com.lwz.ads.service.DingTalkRobotService;
 import com.lwz.ads.service.IClickRecordService;
@@ -68,6 +69,9 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
     @Autowired
     private AdvertisementServiceImpl advertisementService;
+
+    @Autowired
+    private CompanyServiceImpl companyService;
 
     @Autowired
     private SysConfigLoader sysConfigLoader;
@@ -200,17 +204,34 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     //@Transactional(propagation = Propagation.REQUIRES_NEW)
     public void asyncHandleClick(ClickRecord clickRecord, Advertisement ad) {
         ThreadPoolTaskExecutor executor = executorConcurrentMap.computeIfAbsent(ad.getCompanyId(), companyId -> {
+            Company company = companyService.getById(companyId);
+            JSONObject config = JSON.parseObject(company.getJsonData());
+            int core = 20;
+            int max = 40;
+            int queue = 100;
+            if (config != null) {
+                core = config.getIntValue("core");
+                max = config.getIntValue("max");
+                queue = config.getIntValue("queue");
+            }
             ThreadPoolTaskExecutor e = new ThreadPoolTaskExecutor();
-            e.setCorePoolSize(50);
-            e.setMaxPoolSize(100);
+            e.setCorePoolSize(core);
+            e.setMaxPoolSize(max);
             e.setTaskDecorator(taskDecorator);
-            e.setQueueCapacity(200);
+            e.setQueueCapacity(queue);
             e.setThreadNamePrefix("company-" + companyId + "-");
             e.setRejectedExecutionHandler(smartRejectedExecutionHandler);
             e.initialize();
             return e;
         });
         executor.execute(() -> handleClick(clickRecord, ad));
+    }
+
+    public void removeExecutor(String id) {
+        ThreadPoolTaskExecutor executor = executorConcurrentMap.remove(id);
+        if (executor != null) {
+            executor.shutdown();
+        }
     }
 
     @Override

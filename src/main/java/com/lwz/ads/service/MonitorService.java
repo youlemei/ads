@@ -34,7 +34,7 @@ public class MonitorService {
         log.info("monitor [{}] {}", taskExecutor.getThreadNamePrefix(), taskExecutor.getThreadPoolExecutor());
 
         if (taskExecutor.getActiveCount() > taskExecutor.getCorePoolSize()) {
-            log.error("monitor Executor is Full!!! [{}] {}", taskExecutor.getThreadNamePrefix(), taskExecutor.getThreadPoolExecutor());
+            log.warn("monitor Executor is Full!!! [{}] {}", taskExecutor.getThreadNamePrefix(), taskExecutor.getThreadPoolExecutor());
         }
     }
 
