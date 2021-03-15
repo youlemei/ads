@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 
 /**
@@ -20,12 +19,6 @@ public class MonitorService {
     private ThreadPoolTaskExecutor taskExecutor;
 
     @Autowired
-    private ThreadPoolTaskScheduler taskScheduler;
-
-    @Autowired
-    private SysConfigLoader sysConfigLoader;
-
-    @Autowired
     private ClickRecordServiceImpl clickRecordService;
 
     @Scheduled(cron = "30 * * * * ?")
@@ -33,17 +26,15 @@ public class MonitorService {
 
         monitorExecutor(taskExecutor);
 
-        monitorExecutor(clickRecordService.getRetryExecutor());
-
         clickRecordService.getExecutorConcurrentMap().values().forEach(this::monitorExecutor);
 
     }
 
     private void monitorExecutor(ThreadPoolTaskExecutor taskExecutor) {
-        log.info("monitor {}{}", taskExecutor.getThreadNamePrefix(), taskExecutor.getThreadPoolExecutor());
+        log.info("monitor [{}]{}", taskExecutor.getThreadNamePrefix(), taskExecutor.getThreadPoolExecutor());
 
         if (taskExecutor.getActiveCount() >= taskExecutor.getCorePoolSize()) {
-            log.error("monitor Executor is Full!!! {}{}", taskExecutor.getThreadNamePrefix(), taskExecutor.getThreadPoolExecutor());
+            log.error("monitor Executor is Full!!! [{}]{}", taskExecutor.getThreadNamePrefix(), taskExecutor.getThreadPoolExecutor());
         }
     }
 
