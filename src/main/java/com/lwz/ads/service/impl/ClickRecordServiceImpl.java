@@ -199,13 +199,13 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     @Override
     //@Transactional(propagation = Propagation.REQUIRES_NEW)
     public void asyncHandleClick(ClickRecord clickRecord, Advertisement ad) {
-        ThreadPoolTaskExecutor executor = executorConcurrentMap.computeIfAbsent(ad.getId(), adId -> {
+        ThreadPoolTaskExecutor executor = executorConcurrentMap.computeIfAbsent(ad.getCompanyId(), companyId -> {
             ThreadPoolTaskExecutor e = new ThreadPoolTaskExecutor();
-            e.setCorePoolSize(20);
-            e.setMaxPoolSize(50);
+            e.setCorePoolSize(50);
+            e.setMaxPoolSize(100);
             e.setTaskDecorator(taskDecorator);
-            e.setQueueCapacity(100);
-            e.setThreadNamePrefix("ad-" + adId + "-");
+            e.setQueueCapacity(200);
+            e.setThreadNamePrefix("company-" + companyId + "-");
             e.setRejectedExecutionHandler(smartRejectedExecutionHandler);
             e.initialize();
             return e;
