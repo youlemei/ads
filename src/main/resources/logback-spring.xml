@@ -12,13 +12,13 @@
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
         <encoder>
-            <pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} -%5level ${PID} [%X{origin} %X{trace}] [%thread] %logger{0}:%line - %msg%n</pattern>
+            <pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} %5level ${PID} [%X{origin} %X{trace}] [%thread] %logger{0}:%line - %msg%n</pattern>
         </encoder>
     </appender>
 
     <appender name="CONSOLE_APPENDER" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{DEFAULT} -%highlight(%5p) ${PID} [%X{origin} %X{trace}] [%t] %c{0}:%L - %cyan(%m%n)</pattern>
+            <pattern>%d{DEFAULT} %highlight(%5p) ${PID} [%X{origin} %X{trace}] [%t] %c{0}:%L - %cyan(%m%n)</pattern>
         </encoder>
     </appender>
 
