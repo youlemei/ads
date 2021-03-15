@@ -17,9 +17,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.NestedExceptionUtils;
+import org.springframework.core.task.TaskDecorator;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.concurrent.ExecutorConfigurationSupport;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -27,12 +29,12 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.annotation.PreDestroy;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.stream.IntStream;
 
 /**
@@ -68,11 +70,19 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     @Autowired
     private SysConfigLoader sysConfigLoader;
 
+    @Autowired
+    private TaskDecorator taskDecorator;
+
+    @Autowired
+    private RejectedExecutionHandler smartRejectedExecutionHandler;
+
     @Value("${system.web.scheme:http}")
     private String scheme;
 
     @Value("${system.web.domain:localhost:9999}")
     private String domain;
+
+    private final ConcurrentMap<Long, ThreadPoolTaskExecutor> executorConcurrentMap = new ConcurrentHashMap<>();
 
     @Override
     //@Transactional
@@ -155,11 +165,22 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         return clickRecord;
     }
 
-    @Async
+    //@Async
     @Override
     //@Transactional(propagation = Propagation.REQUIRES_NEW)
     public void asyncHandleClick(ClickRecord clickRecord, Advertisement ad) {
-        handleClick(clickRecord, ad);
+        ThreadPoolTaskExecutor executor = executorConcurrentMap.computeIfAbsent(ad.getId(), adId -> {
+            ThreadPoolTaskExecutor e = new ThreadPoolTaskExecutor();
+            e.setCorePoolSize(50);
+            e.setMaxPoolSize(50);
+            e.setTaskDecorator(taskDecorator);
+            e.setQueueCapacity(1000);
+            e.setThreadNamePrefix("ad-" + adId);
+            e.setRejectedExecutionHandler(smartRejectedExecutionHandler);
+            e.initialize();
+            return e;
+        });
+        executor.execute(() -> handleClick(clickRecord, ad));
     }
 
     @Override
@@ -234,7 +255,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     }
 
     private ResponseEntity<String> requestTraceUri(UriComponents adUri, Advertisement ad, ClickRecord clickRecord) {
-            //识别uri不是指向本机
+        //识别uri不是指向本机
         if (IPUtils.isLocalhost(adUri.getHost())) {
             log.error("requestTraceUri uri指向本机. adId:{} channelId:{} adUri:{}", ad.getId(), clickRecord.getChannelId(), adUri);
             return null;
@@ -356,13 +377,12 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     @Override
     public void retryClick(String date) {
 
-        int limit = 5000;
+        int limit = 1000;
         while (true) {
             Clock clock = new Clock();
             List<ClickRecord> clickRecordList = getBaseMapper().selectReceiveClick(date, limit);
             CountDownLatch countDownLatch = new CountDownLatch(clickRecordList.size());
             for (ClickRecord clickRecord : clickRecordList) {
-                //TODO: 根本原因是堵塞了, 使用Sentinel做熔断, 失败次数/概率过大的广告主, 直接跳过, 避免影响其他线程
                 monitorService.getRetryExecutor().execute(()->{
                     try {
                         Advertisement ad = advertisementService.getById(clickRecord.getAdId());
@@ -393,6 +413,11 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                 break;
             }
         }
+    }
+
+    @PreDestroy
+    public void destroy() {
+        executorConcurrentMap.values().forEach(ExecutorConfigurationSupport::shutdown);
     }
 
 }

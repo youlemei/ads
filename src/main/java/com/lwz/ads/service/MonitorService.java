@@ -44,7 +44,7 @@ public class MonitorService {
         retryExecutor.setCorePoolSize(100);
         retryExecutor.setMaxPoolSize(100);
         retryExecutor.setTaskDecorator(taskDecorator);
-        retryExecutor.setQueueCapacity(5000);
+        retryExecutor.setQueueCapacity(1000);
         retryExecutor.setThreadNamePrefix("retry-executor-");
         retryExecutor.setRejectedExecutionHandler(smartRejectedExecutionHandler);
         retryExecutor.initialize();
