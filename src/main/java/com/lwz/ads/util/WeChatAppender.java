@@ -15,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Map;
 
 /**
  * @author liweizhou 2020/2/13
@@ -28,6 +29,8 @@ public class WeChatAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
 
     public static final String URL = Const.WECHAT_ROBOT_URL_DEF;
 
+    public static final String PORT = System.getenv().getOrDefault("SERVER_PORT", System.getProperty("SERVER_PORT", "9999"));
+
     public WeChatAppender() {
         restTemplate = new RestTemplate();
         headers = new HttpHeaders();
@@ -39,11 +42,14 @@ public class WeChatAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
 
         String time = LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getTimeStamp()), ZoneId.systemDefault())
                 .format(DateUtils.DEFAULT_FORMATTER);
+        Map<String, String> mdc = event.getMDCPropertyMap();
+
         StringBuilder sb = new StringBuilder()
-                .append(time).append(" ERROR ")
-                .append("[").append(System.getProperty("SERVER_PORT", "9999")).append("] ")
-                .append("[").append(event.getLoggerName()).append("]:")
-                .append(event.getCallerData()[0].getLineNumber()).append(" -- ")
+                .append(time).append(" ERROR ").append("[").append(PORT).append("] ")
+                .append("[").append(mdc.getOrDefault("origin", "")).append(" ")
+                .append(mdc.getOrDefault("trace", "")).append("]")
+                .append(event.getLoggerName().substring(event.getLoggerName().lastIndexOf(".") + 1))
+                .append(":").append(event.getCallerData()[0].getLineNumber()).append(" - ")
                 .append(event.getFormattedMessage());
 
         if (event.getThrowableProxy() instanceof ThrowableProxy) {
