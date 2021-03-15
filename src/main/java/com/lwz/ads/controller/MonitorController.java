@@ -26,9 +26,8 @@ public class MonitorController {
     }
 
     @RequestMapping("/refreshExecutor")
-    public Response refreshExecutor(@RequestParam String id) {
-        clickRecordService.removeExecutor(id);
-        return Response.success();
+    public Response refreshExecutor(@RequestParam Long id) {
+        return Response.success(clickRecordService.removeExecutor(id));
     }
 
 }

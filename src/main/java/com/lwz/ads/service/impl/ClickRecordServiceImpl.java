@@ -227,11 +227,13 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         executor.execute(() -> handleClick(clickRecord, ad));
     }
 
-    public void removeExecutor(String id) {
+    public boolean removeExecutor(Long id) {
         ThreadPoolTaskExecutor executor = executorConcurrentMap.remove(id);
         if (executor != null) {
             executor.shutdown();
+            return true;
         }
+        return false;
     }
 
     @Override
