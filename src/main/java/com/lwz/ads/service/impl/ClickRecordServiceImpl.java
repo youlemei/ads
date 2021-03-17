@@ -220,7 +220,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
             e.setTaskDecorator(taskDecorator);
             e.setQueueCapacity(queue);
             e.setThreadNamePrefix("company-" + companyId + "-");
-            e.setRejectedExecutionHandler(smartRejectedExecutionHandler);
+            e.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
             e.initialize();
             return e;
         });
