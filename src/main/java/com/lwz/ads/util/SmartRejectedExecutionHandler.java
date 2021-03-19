@@ -30,6 +30,11 @@ public class SmartRejectedExecutionHandler implements RejectedExecutionHandler {
     @Override
     public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
 
+        if (executor.isShutdown()) {
+            log.info("ThreadPool is shutdown! Discard task!");
+            return;
+        }
+
         log.error("ThreadPool is full! Discard task! executor:{} task:{}", executor, r);
 
         Executor analyzer = executorConcurrentMap.computeIfAbsent(executor, key -> new ThreadPoolExecutor(
@@ -58,7 +63,7 @@ public class SmartRejectedExecutionHandler implements RejectedExecutionHandler {
 
             threads.stream().map(Thread::getState).collect(Collectors.groupingBy(Function.identity()))
                     .forEach((state, stateList) -> {
-                        log.info("ThreadPoolAnalyze state:{} size:{}", state, stateList.size());
+                        log.info("analyze state:{} size:{}", state, stateList.size());
                     });
 
             List<ThreadWrapper> wrappers = new ArrayList<>();
