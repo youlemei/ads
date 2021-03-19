@@ -46,6 +46,10 @@ public class ClickRecordController {
             return PageResponse.empty();
         }
 
+        if (adId == null && mac == null) {
+            return PageResponse.empty();
+        }
+
         if (StringUtils.isEmpty(date)) {
             date = DateUtils.yyyyMMdd.format(LocalDate.now());
         } else {
