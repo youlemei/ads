@@ -46,7 +46,7 @@ public class ClickRecordController {
             return PageResponse.empty();
         }
 
-        if (adId == null && mac == null) {
+        if (adId == null && StringUtils.isEmpty(mac)) {
             return PageResponse.empty();
         }
 
