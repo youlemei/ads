@@ -29,7 +29,7 @@ public class TimerAop {
         String uuid = UUID.randomUUID().toString();
 
         boolean lock = false;
-        MDCUtils.putContext("timer=" + timerName);
+        MDCUtils.putContext("timer=" + joinPoint.getSignature().getName());
         try {
             lock = redisUtils.lock(timerName, uuid, 30);
             if (lock) {

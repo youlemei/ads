@@ -22,7 +22,7 @@ public class RetryClickHandleTimer {
     private int port;
 
     @Scheduled(fixedDelay = 10000)
-    public void work(){
+    public void retryClick(){
         if (port != 9999) {
             return;
         }

@@ -16,7 +16,7 @@ public class CreateClickUrlTimer {
     private PromoteRecordServiceImpl promoteRecordService;
 
     @Scheduled(fixedDelay = 3000)
-    public void work() {
+    public void createClickUrl() {
         promoteRecordService.lambdaQuery().eq(PromoteRecord::getPromoteStatus, PromoteStatusEnum.CREATING.getStatus()).list()
                 .parallelStream()
                 .forEach(promoteRecord -> {

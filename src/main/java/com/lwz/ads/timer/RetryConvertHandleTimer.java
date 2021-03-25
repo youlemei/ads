@@ -17,7 +17,7 @@ public class RetryConvertHandleTimer {
     private ConvertRecordServiceImpl convertRecordService;
 
     @Scheduled(fixedDelay = 60000)
-    public void work(){
+    public void retryConvert(){
 
         //重试1分钟前-两天内
         LocalDateTime now = LocalDateTime.now().plusMinutes(-1);

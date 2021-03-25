@@ -30,7 +30,7 @@ public class NotifyTimer {
     private WeChatRobotService weChatRobotService;
 
     @Scheduled(cron = "0 0 10 * * ?")
-    public void work(){
+    public void notifyRetry(){
         LocalDate nowDate = LocalDate.now();
 
         String yesterday = nowDate.plusDays(-1).format(DateUtils.yyyyMMdd);
