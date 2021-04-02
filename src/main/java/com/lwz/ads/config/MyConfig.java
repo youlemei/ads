@@ -90,11 +90,15 @@ public class MyConfig {
         return task -> {
             Map<String, String> contextMap = MDC.getCopyOfContextMap();
             return () -> {
-                MDC.setContextMap(contextMap);
+                if (contextMap != null) {
+                    MDC.setContextMap(contextMap);
+                }
                 try {
                     task.run();
                 } finally {
-                    MDC.clear();
+                    if (contextMap != null) {
+                        MDC.clear();
+                    }
                 }
             };
         };

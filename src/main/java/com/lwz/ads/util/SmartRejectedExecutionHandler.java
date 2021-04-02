@@ -46,11 +46,15 @@ public class SmartRejectedExecutionHandler implements RejectedExecutionHandler {
 
         Map<String, String> contextMap = MDC.getCopyOfContextMap();
         analyzer.execute(() -> {
-            MDC.setContextMap(contextMap);
+            if (contextMap != null) {
+                MDC.setContextMap(contextMap);
+            }
             try {
                 analyze(executor);
             } finally {
-                MDC.clear();
+                if (contextMap != null) {
+                    MDC.clear();
+                }
             }
         });
 
