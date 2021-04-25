@@ -8,7 +8,7 @@ spring:
     username: ads_server
     password: 2Ad9c4A70
     druid:
-      max-active: 20
+      max-active: 40
       filter:
         stat:
           enabled: true
