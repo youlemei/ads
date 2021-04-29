@@ -74,7 +74,7 @@ public class Const {
     public static final String CLICK_SOCKET_TIME_OUT_MINUTE = "click_socket_time_out_minute_%s";
 
     /**
-     * redis-hash click_cost_total_stat_yyyyMMdd
+     * redis-hash click_cost_total_stat_yyyyMMdd 不过期, 点击耗时监控
      */
     public static final String CLICK_COST_TOTAL_STAT = "click_cost_total_stat_%s";
 

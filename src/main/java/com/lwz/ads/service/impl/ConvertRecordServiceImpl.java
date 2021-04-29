@@ -123,7 +123,7 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
         redisUtils.execute(redis -> {
             String amountKey = String.format(Const.CONVERT_DAY_ACTUAL_AMOUNT, today);
             redis.opsForHash().increment(amountKey, promoteRecord.getAdId() + "_" + promoteRecord.getChannelId(), 1);
-            redis.expire(amountKey, 7, TimeUnit.DAYS);
+            redis.expire(amountKey, 2, TimeUnit.DAYS);
         });
         log.info("saveConvert convert adId:{} channelId:{} clickId:{} date:{} {}", promoteRecord.getAdId(),
                 promoteRecord.getChannelId(), clickRecord.getId(), date, clock.tag());
