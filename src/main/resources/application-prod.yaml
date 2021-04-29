@@ -31,7 +31,7 @@ spring:
         max-size: 50
         queue-capacity: 100
   redis:
-    host: localhost
+    host: 172.18.125.86
     port: 6379
     lettuce:
       pool:
