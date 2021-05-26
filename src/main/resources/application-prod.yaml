@@ -18,7 +18,7 @@ spring:
         profile-enable: true
       stat-view-servlet:
         enabled: true
-        allow: 127.0.0.1,58.248.229.148/24,183.36.117.243/24
+        allow: 127.0.0.1,58.248.229.148/24,218.107.36.67/24
         login-username: druid
         login-password: cAe3d8dF13
   task:
