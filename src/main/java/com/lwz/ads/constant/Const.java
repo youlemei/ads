@@ -26,7 +26,7 @@ public class Const {
     /**
      * like {callback}
      */
-    public static final Pattern PARAM_PATTERN = Pattern.compile("^\\{[a-zA-Z0-9]+}$");
+    public static final Pattern PARAM_PATTERN = Pattern.compile("^\\{.+}$");
 
     /**
      * redis-value click_day_limit_yyyyMMdd:pid
