@@ -5,7 +5,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lwz.ads.bean.PageResponse;
-import com.lwz.ads.constant.Const;
 import com.lwz.ads.mapper.entity.ClickRecord;
 import com.lwz.ads.service.impl.ClickRecordServiceImpl;
 import com.lwz.ads.util.DateUtils;
@@ -65,8 +64,9 @@ public class ClickRecordController {
             item.put("createTime", clickRecord.getCreateTime());
             item.put("mac", clickRecord.getMac());
             item.put("ip", clickRecord.getIp());
-            item.put("callback", JSON.parseObject(clickRecord.getParamJson()).get(Const.CALLBACK));
             item.put("clickStatus", clickRecord.getClickStatus());
+            JSONObject param = JSON.parseObject(clickRecord.getParamJson());
+            item.put("param", param);
             return item;
         }).collect(Collectors.toList());
         return PageResponse.success(pageInfo.getCurrent(), pageInfo.getSize(), pageInfo.getTotal(), list);
