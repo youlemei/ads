@@ -12,7 +12,7 @@ CREATE TABLE `advertisement` (
   `in_price` decimal(20,4) DEFAULT NULL COMMENT '接入单价',
   `trace_type` varchar(16) NOT NULL COMMENT '追踪方式 ASYNC:异步 REDIRECT:302跳转',
   `preview_url` varchar(1024) DEFAULT NULL COMMENT '预览链接',
-  `trace_url` varchar(1024) NOT NULL COMMENT '广告追踪链接',
+  `trace_url` varchar(2048) NOT NULL COMMENT '广告追踪链接',
   `deduplicate_type` smallint(6) DEFAULT '1' COMMENT '去重策略',
   `creator` varchar(32) DEFAULT NULL COMMENT '创建者',
   `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -156,7 +156,7 @@ CREATE TABLE `promote_record` (
   `in_price` decimal(20,4) DEFAULT NULL COMMENT '投放单价',
   `out_price` decimal(20,4) DEFAULT NULL COMMENT '投放单价',
   `deduct_rate` smallint(6) DEFAULT NULL COMMENT '扣量比例',
-  `trace_url` varchar(1024) DEFAULT NULL COMMENT '追踪链接',
+  `trace_url` varchar(2048) DEFAULT NULL COMMENT '追踪链接',
   `trace_type` varchar(16) NOT NULL COMMENT '追踪类型 ASYNC:异步 REDIRECT:302跳转',
   `click_day_limit` int(11) DEFAULT NULL COMMENT '每日点击上限',
   `convert_day_limit` int(11) DEFAULT NULL COMMENT '每日转化上限',
@@ -180,5 +180,3 @@ CREATE TABLE `sys_config` (
   `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY `sys_config_name_uindex` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统配置表';
-
-
