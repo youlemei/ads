@@ -17,6 +17,8 @@ public class Const {
 
     public static final String IMEI = "imei";
 
+    public static final String SIGN = "sign";
+
     public static final String DT = "dt";
 
     public static final String TS = "ts";

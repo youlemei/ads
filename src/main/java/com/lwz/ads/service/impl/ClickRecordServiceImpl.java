@@ -23,11 +23,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.NestedExceptionUtils;
 import org.springframework.core.task.TaskDecorator;
 import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.expression.Expression;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.concurrent.ExecutorConfigurationSupport;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
@@ -39,7 +43,10 @@ import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.stream.IntStream;
 
@@ -89,6 +96,8 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     private String domain;
 
     private final ConcurrentMap<Long, ThreadPoolTaskExecutor> executorConcurrentMap = new ConcurrentHashMap<>();
+
+    private final ConcurrentMap<String, Expression> spelExpressionParserMap = new ConcurrentHashMap<>();
 
     private ThreadPoolTaskExecutor retryExecutor;
 
@@ -380,17 +389,15 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
     private UriComponents buildAdTraceUri(String clickId, Advertisement ad, String date, ClickRecord clickRecord) {
         JSONObject paramJson = JSON.parseObject(clickRecord.getParamJson());
-        String callback = Const.CALLBACK;
-        String ip = Const.IP;
-        String idfa = Const.IDFA;
-        String imei = Const.IMEI;
+        String[] signKey = {null};
         UriComponentsBuilder adUriBuilder = UriComponentsBuilder.fromHttpUrl(ad.getTraceUrl());
         UriComponents traceUri = adUriBuilder.build();
         traceUri.getQueryParams().forEach((key, list) -> {
             if (!CollectionUtils.isEmpty(list)) {
                 String value = list.get(0);
                 if (StringUtils.hasLength(value) && Const.PARAM_PATTERN.matcher(value).matches()) {
-                    if (value.toLowerCase().contains(callback)) {
+                    value = value.toLowerCase();
+                    if (value.contains(Const.CALLBACK)) {
                         UriComponents callbackUri = UriComponentsBuilder.newInstance()
                                 .scheme(scheme)
                                 .host(domain)
@@ -398,41 +405,88 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                                 .queryParam("date", date)
                                 .queryParam("clickId", clickId)
                                 .build();
-                        adUriBuilder.replaceQueryParam(key, Arrays.asList(callbackUri.toUriString()));
+                        adUriBuilder.replaceQueryParam(key, callbackUri.toUriString());
                     }
-                    else if (value.toLowerCase().contains(ip)) {
-                        adUriBuilder.replaceQueryParam(key, Arrays.asList(Optional.ofNullable(paramJson.getString(key))
-                                .orElseGet(() -> Optional.ofNullable(paramJson.getString(ip)).orElse(""))));
+                    else if (value.contains(Const.IP)) {
+                        adUriBuilder.replaceQueryParam(key, Optional.ofNullable(paramJson.getString(key))
+                                .orElseGet(() -> Optional.ofNullable(paramJson.getString(Const.IP)).orElse("")));
                     }
-                    else if (value.toLowerCase().contains(idfa)) {
-                        adUriBuilder.replaceQueryParam(key, Arrays.asList(Optional.ofNullable(paramJson.getString(key))
-                                .orElseGet(() -> Optional.ofNullable(paramJson.getString(idfa)).orElse(""))));
+                    else if (value.contains(Const.IDFA)) {
+                        adUriBuilder.replaceQueryParam(key, Optional.ofNullable(paramJson.getString(key))
+                                .orElseGet(() -> Optional.ofNullable(paramJson.getString(Const.IDFA)).orElse("")));
                     }
-                    else if (value.toLowerCase().contains(imei)) {
-                        adUriBuilder.replaceQueryParam(key, Arrays.asList(Optional.ofNullable(paramJson.getString(key))
-                                .orElseGet(() -> Optional.ofNullable(paramJson.getString(imei)).orElse(""))));
+                    else if (value.contains(Const.IMEI)) {
+                        adUriBuilder.replaceQueryParam(key, Optional.ofNullable(paramJson.getString(key))
+                                .orElseGet(() -> Optional.ofNullable(paramJson.getString(Const.IMEI)).orElse("")));
                     }
-                    else if (value.toLowerCase().contains(Const.TS)) {
-                        adUriBuilder.replaceQueryParam(key, Arrays.asList(Optional.ofNullable(paramJson.getString(key))
+                    else if (value.contains(Const.SIGN)) {
+                        signKey[0] = key;
+                    }
+                    else if (value.contains(Const.TS)) {
+                        adUriBuilder.replaceQueryParam(key, Optional.ofNullable(paramJson.getString(key))
                                 .orElseGet(() -> Optional.ofNullable(paramJson.getString(Const.TS))
-                                        .orElse(String.valueOf(System.currentTimeMillis() / 1000)))));
+                                        .orElse(String.valueOf(System.currentTimeMillis() / 1000))));
                     }
-                    else if (value.toLowerCase().contains(Const.TMS)) {
-                        adUriBuilder.replaceQueryParam(key, Arrays.asList(Optional.ofNullable(paramJson.getString(key))
+                    else if (value.contains(Const.TMS)) {
+                        adUriBuilder.replaceQueryParam(key, Optional.ofNullable(paramJson.getString(key))
                                 .orElseGet(() -> Optional.ofNullable(paramJson.getString(Const.TMS))
-                                        .orElse(String.valueOf(System.currentTimeMillis())))));
+                                        .orElse(String.valueOf(System.currentTimeMillis()))));
                     }
-                    else if (value.toLowerCase().contains(Const.DT)) {
-                        adUriBuilder.replaceQueryParam(key, Arrays.asList(Optional.ofNullable(paramJson.getString(key))
+                    else if (value.contains(Const.DT)) {
+                        adUriBuilder.replaceQueryParam(key, Optional.ofNullable(paramJson.getString(key))
                                 .orElseGet(() -> Optional.ofNullable(paramJson.getString(Const.DT))
-                                        .orElse(LocalDateTime.now().format(DateUtils.DEFAULT_FORMATTER)))));
+                                        .orElse(LocalDateTime.now().format(DateUtils.DEFAULT_FORMATTER))));
                     }
                     else {
-                        adUriBuilder.replaceQueryParam(key, Arrays.asList(Optional.ofNullable(paramJson.getString(key)).orElse("")));
+                        adUriBuilder.replaceQueryParam(key, Optional.ofNullable(paramJson.getString(key)).orElse(""));
                     }
                 }
             }
         });
+        if (StringUtils.hasLength(signKey[0])) {
+
+            JSONObject jsonData = JSON.parseObject(ad.getJsonData());
+            if (jsonData != null && jsonData.containsKey(Const.SIGN)) {
+                String signScript = jsonData.getString(Const.SIGN);
+
+                StandardEvaluationContext context = new StandardEvaluationContext();
+                UriComponents tempUri = adUriBuilder.build();
+                MultiValueMap<String, String> queryParams = tempUri.getQueryParams();
+                traceUri.getQueryParams().forEach((key, list) -> {
+                    if (!CollectionUtils.isEmpty(list)) {
+                        String value = list.get(0);
+                        if (StringUtils.hasLength(value) && Const.PARAM_PATTERN.matcher(value).matches()) {
+                            value = value.toLowerCase();
+                            if (value.contains(Const.CALLBACK)) {
+                                context.setVariable(Const.CALLBACK, queryParams.getFirst(key));
+                            } else if (value.contains(Const.IP)) {
+                                context.setVariable(Const.IP, queryParams.getFirst(key));
+                            } else if (value.contains(Const.IDFA)) {
+                                context.setVariable(Const.IDFA, queryParams.getFirst(key));
+                            } else if (value.contains(Const.IMEI)) {
+                                context.setVariable(Const.IMEI, queryParams.getFirst(key));
+                            } else if (value.contains(Const.TS)) {
+                                context.setVariable(Const.TS, queryParams.getFirst(key));
+                            } else if (value.contains(Const.TMS)) {
+                                context.setVariable(Const.TMS, queryParams.getFirst(key));
+                            } else if (value.contains(Const.DT)) {
+                                context.setVariable(Const.DT, queryParams.getFirst(key));
+                            }
+                        }
+                    }
+                });
+
+                Expression expression = spelExpressionParserMap.computeIfAbsent(signScript, s -> {
+                    SpelExpressionParser parser = new SpelExpressionParser();
+                    Expression parseExpression = parser.parseExpression(signScript);
+                    return parseExpression;
+                });
+
+                Object sign = expression.getValue(context);
+
+                adUriBuilder.replaceQueryParam(signKey[0], sign);
+            }
+        }
         return adUriBuilder.build();
     }
 

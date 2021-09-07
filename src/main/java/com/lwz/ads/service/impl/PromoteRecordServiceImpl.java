@@ -85,7 +85,9 @@ public class PromoteRecordServiceImpl extends ServiceImpl<PromoteRecordMapper, P
                     }
                     else if (value.toLowerCase().contains(Const.DT)
                             ||value.toLowerCase().contains(Const.TS)
-                            || value.toLowerCase().contains(Const.TMS)) {
+                            || value.toLowerCase().contains(Const.TMS)
+                            || value.toLowerCase().contains(Const.SIGN)
+                    ) {
                         //skip
                     }
                     else {
