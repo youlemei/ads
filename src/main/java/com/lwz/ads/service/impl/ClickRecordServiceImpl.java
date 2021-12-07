@@ -31,6 +31,7 @@ import org.springframework.scheduling.concurrent.ExecutorConfigurationSupport;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.DigestUtils;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
@@ -550,5 +551,29 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
             }
         }
     }
+
+    public static void main(String[] args) {
+        SpelExpressionParser parser = new SpelExpressionParser();
+        Expression expression = parser.parseExpression(" T(org.springframework.util.DigestUtils).md5DigestAsHex((#idfa + '1' + #ts + #did + T(java.net.URLEncoder).encode(#callback, 'UTF-8') + 'e10adc3949ba59abbe56e057f20f883e').toLowerCase().getBytes()) ");
+        StandardEvaluationContext context = new StandardEvaluationContext();
+        context.setVariable("idfa", "78965433132");
+        context.setVariable("ts", "1616506127906");
+        context.setVariable("did", "9988778232323");
+        context.setVariable("callback", "https://www.example.com?xxx=XXXX");
+
+        Object sign = expression.getValue(context);
+        System.out.println(sign);
+
+
+        System.out.println(DigestUtils.md5DigestAsHex("78965433132116165061279069988778232323https%3A%2F%2Fwww.example.com%3Fxxx%3DXXXXe10adc3949ba59abbe56e057f20f883e".toLowerCase().getBytes()));
+    }
+
+    /*
+
+    {"sign":"T(org.springframework.util.DigestUtils).md5DigestAsHex((#idfa + ''1'' + #tms + ''xiaotongdc0423'' + T(java.net.URLEncoder).encode(#callback, ''UTF-8'') + ''ed2effae92c9f7178742f76bd0a8481f'').toLowerCase().getBytes())"}
+
+
+    */
+
 
 }
