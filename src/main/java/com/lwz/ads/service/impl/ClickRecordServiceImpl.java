@@ -44,10 +44,7 @@ import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.IntStream;
 
@@ -390,7 +387,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
     private UriComponents buildAdTraceUri(String clickId, Advertisement ad, String date, ClickRecord clickRecord) {
         JSONObject paramJson = JSON.parseObject(clickRecord.getParamJson());
-        String[] signKey = {null};
+        Map<String, String> signKeys = new HashMap<>();
         UriComponentsBuilder adUriBuilder = UriComponentsBuilder.fromHttpUrl(ad.getTraceUrl());
         UriComponents traceUri = adUriBuilder.build();
         traceUri.getQueryParams().forEach((key, list) -> {
@@ -421,7 +418,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                                 .orElseGet(() -> Optional.ofNullable(paramJson.getString(Const.IMEI)).orElse("")));
                     }
                     else if (value.contains(Const.SIGN)) {
-                        signKey[0] = key;
+                        signKeys.put(key, value);
                     }
                     else if (value.contains(Const.TS)) {
                         adUriBuilder.replaceQueryParam(key, Optional.ofNullable(paramJson.getString(key))
@@ -444,12 +441,9 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                 }
             }
         });
-        if (StringUtils.hasLength(signKey[0])) {
-
+        if (signKeys.size() > 0) {
             JSONObject jsonData = JSON.parseObject(ad.getJsonData());
             if (jsonData != null && jsonData.containsKey(Const.SIGN)) {
-                String signScript = jsonData.getString(Const.SIGN);
-
                 StandardEvaluationContext context = new StandardEvaluationContext();
                 UriComponents tempUri = adUriBuilder.build();
                 MultiValueMap<String, String> queryParams = tempUri.getQueryParams();
@@ -477,15 +471,16 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                     }
                 });
 
-                Expression expression = spelExpressionParserMap.computeIfAbsent(signScript, s -> {
-                    SpelExpressionParser parser = new SpelExpressionParser();
-                    Expression parseExpression = parser.parseExpression(signScript);
-                    return parseExpression;
+                signKeys.forEach((key, value) -> {
+                    String signScript = jsonData.getString(value);
+                    Expression expression = spelExpressionParserMap.computeIfAbsent(signScript, s -> {
+                        SpelExpressionParser parser = new SpelExpressionParser();
+                        Expression parseExpression = parser.parseExpression(signScript);
+                        return parseExpression;
+                    });
+                    Object sign = expression.getValue(context);
+                    adUriBuilder.replaceQueryParam(key, sign);
                 });
-
-                Object sign = expression.getValue(context);
-
-                adUriBuilder.replaceQueryParam(signKey[0], sign);
             }
         }
         return adUriBuilder.build();
