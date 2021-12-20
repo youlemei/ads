@@ -387,7 +387,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
     private UriComponents buildAdTraceUri(String clickId, Advertisement ad, String date, ClickRecord clickRecord) {
         JSONObject paramJson = JSON.parseObject(clickRecord.getParamJson());
-        Map<String, String> signKeys = new HashMap<>();
+        List<String> signKeys = new ArrayList<>();
         UriComponentsBuilder adUriBuilder = UriComponentsBuilder.fromHttpUrl(ad.getTraceUrl());
         UriComponents traceUri = adUriBuilder.build();
         traceUri.getQueryParams().forEach((key, list) -> {
@@ -418,7 +418,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                                 .orElseGet(() -> Optional.ofNullable(paramJson.getString(Const.IMEI)).orElse("")));
                     }
                     else if (value.contains(Const.SIGN)) {
-                        signKeys.put(key, value);
+                        signKeys.add(key);
                     }
                     else if (value.contains(Const.TS)) {
                         adUriBuilder.replaceQueryParam(key, Optional.ofNullable(paramJson.getString(key))
@@ -443,7 +443,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         });
         if (signKeys.size() > 0) {
             JSONObject jsonData = JSON.parseObject(ad.getJsonData());
-            if (jsonData != null && jsonData.containsKey(Const.SIGN)) {
+            if (jsonData != null) {
                 StandardEvaluationContext context = new StandardEvaluationContext();
                 UriComponents tempUri = adUriBuilder.build();
                 MultiValueMap<String, String> queryParams = tempUri.getQueryParams();
@@ -471,8 +471,11 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                     }
                 });
 
-                signKeys.forEach((key, value) -> {
-                    String signScript = jsonData.getString(value);
+                signKeys.forEach(key -> {
+                    String signScript = jsonData.getString(key);
+                    if (StringUtils.isEmpty(signScript)) {
+                        return;
+                    }
                     Expression expression = spelExpressionParserMap.computeIfAbsent(signScript, s -> {
                         SpelExpressionParser parser = new SpelExpressionParser();
                         Expression parseExpression = parser.parseExpression(signScript);
@@ -561,6 +564,11 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
 
         System.out.println(DigestUtils.md5DigestAsHex("78965433132116165061279069988778232323https%3A%2F%2Fwww.example.com%3Fxxx%3DXXXXe10adc3949ba59abbe56e057f20f883e".toLowerCase().getBytes()));
+
+
+        Expression kuaikan = parser.parseExpression("T(org.springframework.util.DigestUtils).md5DigestAsHex(#idfa.toUpperCase().getBytes()).toUpperCase()");
+        System.out.println(kuaikan.getValue(context));
+
     }
 
     /*
