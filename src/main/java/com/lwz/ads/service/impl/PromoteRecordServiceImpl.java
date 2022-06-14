@@ -65,7 +65,22 @@ public class PromoteRecordServiceImpl extends ServiceImpl<PromoteRecordMapper, P
             default:break;
         }
 
-        UriComponents adUri = UriComponentsBuilder.fromHttpUrl(ad.getTraceUrl()).build();
+        String clickUri = buildClickUrl(clickUriBuilder, ad.getTraceUrl());
+
+        PromoteRecord to = new PromoteRecord();
+        to.setInPrice(ad.getInPrice());
+        to.setTraceUrl(clickUri);
+        to.setPromoteStatus(PromoteStatusEnum.RUNNING.getStatus());
+        to.setEditor("system");
+        to.setEditTime(LocalDateTime.now());
+
+        update().eq("id", promoteRecord.getId()).eq("promote_status", PromoteStatusEnum.CREATING.getStatus()).update(to);
+
+        log.info("doCreateClickUrl success. adId:{} channelId:{} clickUri:{}", promoteRecord.getAdId(), promoteRecord.getChannelId(), clickUri);
+    }
+
+    private String buildClickUrl(UriComponentsBuilder clickUriBuilder, String traceUrl) {
+        UriComponents adUri = UriComponentsBuilder.fromHttpUrl(traceUrl).build();
         adUri.getQueryParams().forEach((key, list) -> {
             if (!CollectionUtils.isEmpty(list)) {
                 String value = list.get(0);
@@ -99,17 +114,19 @@ public class PromoteRecordServiceImpl extends ServiceImpl<PromoteRecordMapper, P
             }
         });
 
-        String clickUri = clickUriBuilder.build().toUriString();
-        PromoteRecord to = new PromoteRecord();
-        to.setInPrice(ad.getInPrice());
-        to.setTraceUrl(clickUri);
-        to.setPromoteStatus(PromoteStatusEnum.RUNNING.getStatus());
-        to.setEditor("system");
-        to.setEditTime(LocalDateTime.now());
+        return clickUriBuilder.build().toUriString();
+    }
 
-        update().eq("id", promoteRecord.getId()).eq("promote_status", PromoteStatusEnum.CREATING.getStatus()).update(to);
-
-        log.info("doCreateClickUrl success. adId:{} channelId:{} clickUri:{}", promoteRecord.getAdId(), promoteRecord.getChannelId(), clickUri);
+    public static void main(String[] args) {
+        PromoteRecordServiceImpl service = new PromoteRecordServiceImpl();
+        UriComponentsBuilder clickUriBuilder = UriComponentsBuilder.newInstance()
+                .scheme("http")
+                .host("localhost")
+                .path("click")
+                .queryParam("adId", 1)
+                .queryParam("channelId", 2);
+        String traceUrl = "https://alsc-ug-monitor-callback.alibaba.com/streamMonitor/click?__REQUEST_ID__={clickId}&__IDFA__={idfa}&__OS__=1&__MTS__={tms}&__CALLBACK_URL__={callback}&signature={sign}";
+        System.out.println(service.buildClickUrl(clickUriBuilder, traceUrl));
     }
 
 }

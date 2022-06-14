@@ -450,7 +450,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                 StandardEvaluationContext context = new StandardEvaluationContext();
                 UriComponents tempUri = adUriBuilder.build();
                 context.setVariable(Const.CLICK_ID, clickRecord.getId());
-                context.setVariable(Const.URL, tempUri.toUriString());
+                context.setVariable(Const.URL, tempUri.encode().toUriString());
                 MultiValueMap<String, String> queryParams = tempUri.getQueryParams();
                 traceUri.getQueryParams().forEach((key, list) -> {
                     if (!CollectionUtils.isEmpty(list)) {

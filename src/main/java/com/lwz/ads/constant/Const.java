@@ -25,7 +25,7 @@ public class Const {
 
     public static final String TMS = "tms";
 
-    public static final String CLICK_ID = "clickId";
+    public static final String CLICK_ID = "click_id";
 
     public static final String URL = "url";
 
