@@ -450,7 +450,9 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                 StandardEvaluationContext context = new StandardEvaluationContext();
                 UriComponents tempUri = adUriBuilder.build();
                 context.setVariable(Const.CLICK_ID, clickRecord.getId());
-                context.setVariable(Const.URL, tempUri.toUriString());
+                String tempUrl = tempUri.toUriString();
+                log.info("buildAdTraceUri tempUrl:{}", tempUrl);
+                context.setVariable(Const.URL, tempUrl);
                 MultiValueMap<String, String> queryParams = tempUri.getQueryParams();
                 traceUri.getQueryParams().forEach((key, list) -> {
                     if (!CollectionUtils.isEmpty(list)) {
@@ -487,7 +489,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                         return parseExpression;
                     });
                     Object sign = expression.getValue(context);
-                    log.info("buildAdTraceUri signScript:{} context:{} sign:{}", signScript, context, sign);
+                    log.info("buildAdTraceUri signScript:{} sign:{}", signScript, sign);
                     adUriBuilder.replaceQueryParam(key, sign);
                 });
             }
@@ -547,7 +549,13 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                 countDownLatch.await();
                 log.info("retryClick finish size:{} date:{} {}", clickRecordList.size(), date, clock.tag());
             } catch (InterruptedException e) {
-                log.error("retryClick interrupt. err:{}", e.getMessage(), e);
+                try {
+                    log.info("retryClick interrupt");
+                    countDownLatch.await(10, TimeUnit.SECONDS);
+                } catch (InterruptedException interruptedException) {
+                    log.info("retryClick interrupt");
+                }
+                break;
             }
 
             if (clickRecordList.size() < limit) {
