@@ -84,9 +84,10 @@ public class PromoteRecordServiceImpl extends ServiceImpl<PromoteRecordMapper, P
                         clickUriBuilder.queryParam(Const.IMEI, String.format("{%s}", Const.IMEI));
                     }
                     else if (value.toLowerCase().contains(Const.DT)
-                            ||value.toLowerCase().contains(Const.TS)
+                            || value.toLowerCase().contains(Const.TS)
                             || value.toLowerCase().contains(Const.TMS)
                             || value.toLowerCase().contains(Const.SIGN)
+                            || value.toLowerCase().contains(Const.CLICK_ID)
                     ) {
                         //skip
                     }

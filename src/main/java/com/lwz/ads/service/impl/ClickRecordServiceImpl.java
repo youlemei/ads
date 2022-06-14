@@ -435,6 +435,9 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                                 .orElseGet(() -> Optional.ofNullable(paramJson.getString(Const.DT))
                                         .orElse(LocalDateTime.now().format(DateUtils.DEFAULT_FORMATTER))));
                     }
+                    else if (value.contains(Const.CLICK_ID)) {
+                        adUriBuilder.replaceQueryParam(key, clickRecord.getId());
+                    }
                     else {
                         adUriBuilder.replaceQueryParam(key, Optional.ofNullable(paramJson.getString(key)).orElse(""));
                     }
@@ -446,6 +449,8 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
             if (jsonData != null) {
                 StandardEvaluationContext context = new StandardEvaluationContext();
                 UriComponents tempUri = adUriBuilder.build();
+                context.setVariable(Const.CLICK_ID, clickRecord.getId());
+                context.setVariable(Const.URL, tempUri.toUriString());
                 MultiValueMap<String, String> queryParams = tempUri.getQueryParams();
                 traceUri.getQueryParams().forEach((key, list) -> {
                     if (!CollectionUtils.isEmpty(list)) {

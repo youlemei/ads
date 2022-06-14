@@ -25,6 +25,11 @@ public class Const {
 
     public static final String TMS = "tms";
 
+    public static final String CLICK_ID = "clickId";
+
+    public static final String URL = "url";
+
+
     /**
      * like {callback}
      */
