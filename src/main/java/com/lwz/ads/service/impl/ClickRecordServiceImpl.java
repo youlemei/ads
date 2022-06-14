@@ -419,6 +419,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                     }
                     else if (value.contains(Const.SIGN)) {
                         signKeys.add(key);
+                        adUriBuilder.replaceQueryParam(key);
                     }
                     else if (value.contains(Const.TS)) {
                         adUriBuilder.replaceQueryParam(key, Optional.ofNullable(paramJson.getString(key))
@@ -450,7 +451,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                 StandardEvaluationContext context = new StandardEvaluationContext();
                 UriComponents tempUri = adUriBuilder.build();
                 context.setVariable(Const.CLICK_ID, clickRecord.getId());
-                String tempUrl = tempUri.toUriString();
+                String tempUrl = tempUri.encode().toUriString();
                 log.info("buildAdTraceUri tempUrl:{}", tempUrl);
                 context.setVariable(Const.URL, tempUrl);
                 MultiValueMap<String, String> queryParams = tempUri.getQueryParams();
