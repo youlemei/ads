@@ -125,7 +125,7 @@ public class PromoteRecordServiceImpl extends ServiceImpl<PromoteRecordMapper, P
                 .path("click")
                 .queryParam("adId", 1)
                 .queryParam("channelId", 2);
-        String traceUrl = "https://alsc-ug-monitor-callback.alibaba.com/streamMonitor/click?__REQUEST_ID__={clickId}&__IDFA__={idfa}&__OS__=1&__MTS__={tms}&__CALLBACK_URL__={callback}&signature={sign}";
+        String traceUrl = "https://alsc-ug-monitor-callback.alibaba.com/streamMonitor/click?request_id={click_id}&idfa={idfa}&os=1&mts={tms}&callback_url={callback}&signature={sign}&ip={ip}";
         System.out.println(service.buildClickUrl(clickUriBuilder, traceUrl));
     }
 

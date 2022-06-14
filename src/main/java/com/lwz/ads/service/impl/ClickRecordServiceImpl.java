@@ -450,7 +450,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                 StandardEvaluationContext context = new StandardEvaluationContext();
                 UriComponents tempUri = adUriBuilder.build();
                 context.setVariable(Const.CLICK_ID, clickRecord.getId());
-                context.setVariable(Const.URL, tempUri.encode().toUriString());
+                context.setVariable(Const.URL, tempUri.toUriString());
                 MultiValueMap<String, String> queryParams = tempUri.getQueryParams();
                 traceUri.getQueryParams().forEach((key, list) -> {
                     if (!CollectionUtils.isEmpty(list)) {
@@ -487,6 +487,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                         return parseExpression;
                     });
                     Object sign = expression.getValue(context);
+                    log.info("buildAdTraceUri signScript:{} context:{} sign:{}", signScript, context, sign);
                     adUriBuilder.replaceQueryParam(key, sign);
                 });
             }
