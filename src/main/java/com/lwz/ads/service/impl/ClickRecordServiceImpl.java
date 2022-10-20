@@ -258,6 +258,18 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         ResponseEntity<String> resp = requestTraceUri(adUri, ad, clickRecord);
 
         if (resp == null || resp.getStatusCode().is4xxClientError() || resp.getStatusCode().is5xxServerError()) {
+
+            JSONObject jsonData = JSON.parseObject(ad.getJsonData());
+            if (jsonData != null && jsonData.containsKey("dont_try_again")) {
+                ClickRecord to = new ClickRecord();
+                to.setId(clickRecord.getId());
+                to.setClickStatus(ClickStatusEnum.DISCARDED.getStatus());
+                to.setEditor("system");
+                to.setEditTime(LocalDateTime.now());
+                getBaseMapper().updateByIdWithDate(to, date);
+                return;
+            }
+
             //增加重试次数
             getBaseMapper().incrRetryTimes(clickRecord.getId(), date);
             log.info("handleClick fail. adId:{} channelId:{} date:{} clickId:{}", ad.getId(), clickRecord.getChannelId(), date, clickRecord.getId());
@@ -534,6 +546,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                         if (adTraceType == TraceTypeEnum.REDIRECT) {
                             //丢弃
                             ClickRecord to = new ClickRecord();
+                            to.setId(clickRecord.getId());
                             to.setClickStatus(ClickStatusEnum.DISCARDED.getStatus());
                             to.setEditor("system");
                             to.setEditTime(LocalDateTime.now());
@@ -592,6 +605,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
 
 
     */
+
 
 
 }
