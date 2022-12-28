@@ -196,7 +196,11 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                 String actualKey = String.format(Const.CLICK_DAY_ACTUAL_AMOUNT, date, pid);
                 int hashCode = (clickRecord.getIp() + clickRecord.getMac()).hashCode();
                 connection.sAdd(actualKey.getBytes(), String.valueOf(hashCode).getBytes());
-                connection.expire(actualKey.getBytes(), 86400);
+
+                LocalDateTime now = LocalDateTime.now();
+                LocalDateTime expireTime = now.plusDays(1).withHour(1).withMinute(0).withSecond(0).withNano(0);
+                long between = ChronoUnit.SECONDS.between(now, expireTime);
+                connection.expire(actualKey.getBytes(), between);
 
                 return null;
             });
@@ -579,12 +583,17 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     }
 
     public static void main(String[] args) {
+
+        //https://apps.apple.com/cn/app/id1165227346 | https://openapi.hellobike.com/advertising/impression/click?app=hellobikeApp&scenes=acquisition&source=mobuu&placetype=feed&idfa={idfa}&ip={ip}&ua={ua}&mac=&model=&os=1&clicktime={tms}&callback={callback}&accountid=11112&campaignid=&aid=&cid=&requestid=&sign={sign}&bizline=finance&usertype=pass&event_type=15
+
         SpelExpressionParser parser = new SpelExpressionParser();
         Expression expression = parser.parseExpression(" T(org.springframework.util.DigestUtils).md5DigestAsHex((#idfa + '1' + #ts + #did + T(java.net.URLEncoder).encode(#callback, 'UTF-8') + 'e10adc3949ba59abbe56e057f20f883e').toLowerCase().getBytes()) ");
         StandardEvaluationContext context = new StandardEvaluationContext();
         context.setVariable("idfa", "78965433132");
         context.setVariable("ts", "1616506127906");
-        context.setVariable("did", "9988778232323");
+        context.setVariable("tms", "1651234567123");
+        context.setVariable("ip", "22.22.22.22");
+        context.setVariable("ua", "M");
         context.setVariable("callback", "https://www.example.com?xxx=XXXX");
 
         Object sign = expression.getValue(context);
@@ -594,8 +603,19 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         System.out.println(DigestUtils.md5DigestAsHex("78965433132116165061279069988778232323https%3A%2F%2Fwww.example.com%3Fxxx%3DXXXXe10adc3949ba59abbe56e057f20f883e".toLowerCase().getBytes()));
 
 
-        Expression kuaikan = parser.parseExpression("T(org.springframework.util.DigestUtils).md5DigestAsHex(#idfa.toUpperCase().getBytes()).toUpperCase()");
+        Expression kuaikan = parser.parseExpression("T(org.springframework.util.DigestUtils).md5DigestAsHex( ('kuakeappid=591584458|callback=' + #callback + '|channel=kuake|dspid=1|idfamd5=' + T(org.springframework.util.DigestUtils).md5DigestAsHex(#idfa.getBytes()) + '|imeimd5=|ip=' + #ip + '|model=iPhone|oaidmd5=|timestamp=' + #tms + '|ua=' + #ua + '97777b384d6cf73aecaca4990df642dd').getBytes() )");
         System.out.println(kuaikan.getValue(context));
+
+
+        List<String> keys = Arrays.asList("channel", "dspid", "callback", "idfamd5", "oaidmd5", "imeimd5", "appid", "timestamp", "ip", "ua", "model");
+        keys.sort(String::compareTo);
+        System.out.println(keys);
+
+        //https://gw.fanli.com/api/v1/market/promotion/feedback.htm?appid=1&callback=2&channel=kuake&dspid=1&idfamd5=idfamd5&imeimd5=&ip=192.0.0.1&model=iPhone&oaidmd5=&timestamp=1643004640012&ua=M&sign=e75847a3998d0fc45ad6e2dd809da314
+
+
+        System.out.println(DigestUtils.md5DigestAsHex("T(org.springframework.util.DigestUtils).md5DigestAsHex( 'kuakeappid=591584458|callback=' + #callback + '|channel=kuake|dspid=1|idfamd5=' + T(org.springframework.util.DigestUtils).md5DigestAsHex(#idfa.getBytes()) + '|imeimd5=|ip=' + #ip + '|model=iPhone|oaidmd5=|timestamp=' + #tms + '|ua=' + #ua + '97777b384d6cf73aecaca4990df642dd' )".toLowerCase().getBytes()));
+
 
     }
 
