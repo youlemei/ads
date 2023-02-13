@@ -19,8 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
@@ -55,7 +53,6 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
     private RedisUtils redisUtils;
 
     @Override
-    @Transactional
     public ConvertRecord saveConvert(ClickRecord clickRecord, PromoteRecord promoteRecord, Advertisement ad, String date) {
         Clock clock = new Clock();
         if (lambdaQuery().eq(ConvertRecord::getClickId, clickRecord.getId()).count() > 0) {
@@ -166,13 +163,11 @@ public class ConvertRecordServiceImpl extends ServiceImpl<ConvertRecordMapper, C
 
     @Async
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void asyncNotifyConvert(ConvertRecord convertRecord) {
         notifyConvert(convertRecord);
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void notifyConvert(ConvertRecord convertRecord) {
 
         if (convertRecord.getConvertStatus().intValue() != ConvertStatusEnum.CONVERTED.getStatus()) {

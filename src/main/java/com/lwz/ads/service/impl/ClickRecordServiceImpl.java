@@ -126,7 +126,6 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     }
 
     @Override
-    //@Transactional
     public ClickRecord saveClick(LocalDateTime clickTime, Map<String, Object> request, String type, PromoteRecord promoteRecord, Advertisement ad) {
         Clock clock = new Clock();
         String clickId = UUID.randomUUID().toString().replaceAll("-", "");
@@ -210,9 +209,7 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
         return clickRecord;
     }
 
-    //@Async
     @Override
-    //@Transactional(propagation = Propagation.REQUIRES_NEW)
     public void asyncHandleClick(ClickRecord clickRecord, Advertisement ad) {
         ThreadPoolTaskExecutor executor = executorConcurrentMap.computeIfAbsent(ad.getCompanyId(), companyId -> {
             Company company = companyService.getById(companyId);
@@ -248,7 +245,6 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     }
 
     @Override
-    //@Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleClick(ClickRecord clickRecord, Advertisement ad) {
 
         if (clickRecord.getClickStatus().intValue() != ClickStatusEnum.RECEIVED.getStatus()) {
@@ -323,7 +319,6 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
     }
 
     @Override
-    //@Transactional
     public URI redirectHandleClick(ClickRecord clickRecord, Advertisement ad) {
 
         TraceTypeEnum traceType = TraceTypeEnum.valueOfType(ad.getTraceType());

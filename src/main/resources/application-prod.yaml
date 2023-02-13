@@ -18,7 +18,7 @@ spring:
         profile-enable: true
       stat-view-servlet:
         enabled: true
-        allow: 127.0.0.1,58.248.229.148/24,183.6.36.0/26,218.107.36.64/26
+        allow: 127.0.0.1,58.248.230.188
         login-username: druid
         login-password: cAe3d8dF13
   task:
@@ -31,8 +31,6 @@ spring:
         max-size: 50
         queue-capacity: 100
   redis:
-    host: 172.18.125.86
-    port: 6379
     lettuce:
       pool:
         max-active: 10

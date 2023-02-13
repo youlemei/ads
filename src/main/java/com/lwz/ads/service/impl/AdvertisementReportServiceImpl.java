@@ -13,7 +13,6 @@ import com.lwz.ads.util.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -47,7 +46,6 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
     private RedisUtils redisUtils;
 
     @Override
-    @Transactional
     public void updateReportWithRedis() {
 
         calculateRedisReport();
@@ -110,7 +108,6 @@ public class AdvertisementReportServiceImpl extends ServiceImpl<AdvertisementRep
     }
 
     @Override
-    @Transactional
     public void updateReportWithMySQL(LocalDate date) {
 
         calculateMySQLReport(date);
