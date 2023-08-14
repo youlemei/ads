@@ -46,7 +46,7 @@
     <springProfile name="prod">
         <root level="INFO">
             <appender-ref ref="FILE_APPENDER_ASYNC"/>
-            <appender-ref ref="ERR_APPENDER" />
+<!--             <appender-ref ref="ERR_APPENDER" /> -->
         </root>
     </springProfile>
 
