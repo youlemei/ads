@@ -192,14 +192,14 @@ public class ClickRecordServiceImpl extends ServiceImpl<ClickRecordMapper, Click
                 connection.hIncrBy(amountKey.getBytes(), pid.getBytes(), 1);
                 connection.expire(amountKey.getBytes(), 7 * 86400);
 
-                String actualKey = String.format(Const.CLICK_DAY_ACTUAL_AMOUNT, date, pid);
-                int hashCode = (clickRecord.getIp() + clickRecord.getMac()).hashCode();
-                connection.sAdd(actualKey.getBytes(), String.valueOf(hashCode).getBytes());
+                // String actualKey = String.format(Const.CLICK_DAY_ACTUAL_AMOUNT, date, pid);
+                // int hashCode = (clickRecord.getIp() + clickRecord.getMac()).hashCode();
+                // connection.sAdd(actualKey.getBytes(), String.valueOf(hashCode).getBytes());
 
-                LocalDateTime now = LocalDateTime.now();
-                LocalDateTime expireTime = now.plusDays(1).withHour(1).withMinute(0).withSecond(0).withNano(0);
-                long between = ChronoUnit.SECONDS.between(now, expireTime);
-                connection.expire(actualKey.getBytes(), between);
+                // LocalDateTime now = LocalDateTime.now();
+                // LocalDateTime expireTime = now.plusDays(1).withHour(1).withMinute(0).withSecond(0).withNano(0);
+                // long between = ChronoUnit.SECONDS.between(now, expireTime);
+                // connection.expire(actualKey.getBytes(), between);
 
                 return null;
             });
